@@ -1,0 +1,26 @@
+{
+  "name": "linkedin-ai-slop-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lokalne proxy Jev (TypeSafe System One) dla rozszerzenia LinkedIn AI Slop.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.6",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "linkedin-ai-slop",
+  "private": true,
+  "description": "Rozszerzenie LinkedIn + lokalne proxy Jev (TypeSafe System One).",
+  "scripts": {
+    "start": "npm --prefix server start",
+    "test": "npm --prefix server test",
+    "typecheck": "npm --prefix server run typecheck"
+  }
+}

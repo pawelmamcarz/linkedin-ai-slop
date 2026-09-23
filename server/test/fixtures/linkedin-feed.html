@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pl">
+  <body>
+    <main>
+      <!-- Klasyczny feed-shared-update-v2 + data-id -->
+      <div class="feed-shared-update-v2" data-id="urn:li:activity:111">
+        <div class="update-components-actor__title">
+          <span dir="ltr"><span aria-hidden="true">Ada Kowalska</span></span>
+        </div>
+        <div class="update-components-text">
+          Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%
+          after we stopped retrying 409s.
+        </div>
+        <div class="comments-comment-item">
+          <div class="update-components-text">komentarz testowy — nie oceniać</div>
+        </div>
+      </div>
+
+      <!-- Nowszy wrapper: tylko data-id -->
+      <div data-id="urn:li:activity:222">
+        <a href="/in/jan-nowak/">Jan Nowak</a>
+        <div class="feed-shared-inline-show-more-text">
+          I'm humbled and thrilled to announce that in a world where leadership matters,
+          consistency is key. Agree? 🚀
+        </div>
+      </div>
+
+      <!-- ugcPost + data-urn -->
+      <div class="feed-shared-update-v2" data-urn="urn:li:ugcPost:333">
+        <span class="update-components-actor__name">Ola</span>
+        <div class="feed-shared-update-v2__commentary">
+          We moved the cron to 02:15 UTC because EU traffic was colliding with the US batch.
+        </div>
+      </div>
+
+      <!-- 2026-ish main-feed-card -->
+      <article data-id="main-feed-card" componentkey="urn:li:activity:444">
+        <p componentkey="actor">Marek</p>
+        <div data-testid="expandable-text-box">
+          Hired two SDEs in Kraków. One from the intern class, one from a failed marketplace
+          startup. Both start Monday.
+        </div>
+      </article>
+
+      <!-- Zbyt krótki — skip -->
+      <div class="feed-shared-update-v2" data-id="urn:li:activity:555">
+        <div class="update-components-text">ok</div>
+      </div>
+
+      <!-- Gniazdo: wewnętrzny data-id nie powinien dublować rodzica -->
+      <div class="feed-shared-update-v2" data-id="urn:li:activity:666">
+        <div data-id="urn:li:activity:666">
+          <div class="update-components-text">
+            Nested wrapper should be de-duplicated. The public API now returns 429 with a
+            Retry-After header instead of a blank 500.
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

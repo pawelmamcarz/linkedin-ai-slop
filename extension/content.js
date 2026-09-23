@@ -1,0 +1,471 @@
+/**
+ * LinkedIn AI Slop — content script (Manifest V3).
+ * Selektory celowo szerokie: LinkedIn często zmienia klasy. Porażka = skip, nie crash.
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module.exports) {
+    module.exports = api;
+  }
+  root.LinkedInAiSlop = api;
+  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
+    const host = typeof location !== "undefined" ? location.hostname : "";
+    const isLinkedIn = host.endsWith("linkedin.com");
+    const isDemo =
+      typeof document !== "undefined" && document.documentElement?.dataset.slopDemo === "1";
+    if (isLinkedIn || isDemo) {
+      api.boot();
+    }
+  }
+})(typeof globalThis !== "undefined" ? globalThis : this, function factory() {
+  const DEFAULTS = {
+    enabled: true,
+    threshold: 0.65,
+    proxyUrl: "http://127.0.0.1:8787",
+  };
+
+  const MIN_TEXT_CHARS = 40;
+  const CONCURRENCY = 2;
+  const DEBOUNCE_MS = 280;
+  const INTERSECT_RATIO = 0.35;
+  const MAX_QUEUE = 40;
+
+  const POST_SELECTORS = [
+    "div.feed-shared-update-v2",
+    'div[data-id^="urn:li:activity"]',
+    'div[data-id^="urn:li:ugcPost"]',
+    'div[data-id^="urn:li:share"]',
+    'div[data-urn^="urn:li:activity"]',
+    'div[data-urn^="urn:li:ugcPost"]',
+    'div[data-urn^="urn:li:share"]',
+    'div[data-urn^="urn:li:aggregatedShare"]',
+    'article[data-id="main-feed-card"]',
+    'article[componentkey*="urn:li:activity"]',
+    "div.occludable-update",
+    'div[data-view-name="feed-full-update"]',
+    "li.feed-item",
+    '[data-testid="mainFeed"] [role="listitem"]',
+    "div[componentkey][role='listitem']",
+  ];
+
+  const TEXT_SELECTORS = [
+    ".update-components-text",
+    ".feed-shared-update-v2__commentary",
+    ".feed-shared-inline-show-more-text",
+    '[data-testid="expandable-text-box"]',
+    ".break-words span[dir='ltr']",
+    ".feed-shared-text",
+  ];
+
+  const AUTHOR_SELECTORS = [
+    '.update-components-actor__title span[aria-hidden="true"]',
+    ".update-components-actor__name",
+    ".update-components-actor__title",
+    'a[href*="/in/"]',
+    'a[href*="/company/"]',
+  ];
+
+  const SKIP_INSIDE = [
+    ".comments-comment-item",
+    ".comments-comments-list",
+    ".comments-comment-entity",
+    "form",
+  ];
+
+  const seen = new Set();
+  const inFlight = new Set();
+  const failedAt = new Map();
+  const queue = [];
+  let active = 0;
+  let settings = { ...DEFAULTS };
+  let debounceTimer = 0;
+  let observer = null;
+  let intersect = null;
+  let warnedProxy = false;
+  let selectorMissLogged = false;
+  let booted = false;
+  let generation = 0;
+
+  function findPostElements(root) {
+    const doc = root || document;
+    const found = [];
+    const seenEl = new Set();
+    for (const selector of POST_SELECTORS) {
+      let nodes = [];
+      try {
+        nodes = Array.from(doc.querySelectorAll(selector));
+      } catch {
+        continue;
+      }
+      for (const node of nodes) {
+        if (!node || node.nodeType !== 1) continue;
+        if (seenEl.has(node)) continue;
+        if (isSkipped(node)) continue;
+        seenEl.add(node);
+        found.push(node);
+      }
+    }
+    return found.filter((el) => !found.some((other) => other !== el && other.contains(el)));
+  }
+
+  function isSkipped(el) {
+    return SKIP_INSIDE.some((sel) => {
+      try {
+        return Boolean(el.closest(sel));
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  function extractPost(el) {
+    if (!el || isSkipped(el)) return null;
+    const id = postId(el);
+    const text = postText(el);
+    if (!id || !text || text.length < MIN_TEXT_CHARS) return null;
+    return { id, text, author: postAuthor(el) };
+  }
+
+  function postId(el) {
+    const attrs = ["data-id", "data-urn", "componentkey", "data-activity-urn"];
+    for (const attr of attrs) {
+      const value = el.getAttribute(attr);
+      if (value && /urn:li:(activity|ugcPost|share|aggregatedShare)/.test(value)) {
+        const match = value.match(/urn:li:(?:activity|ugcPost|share|aggregatedShare):[^\s,"]+/);
+        return match ? match[0] : value;
+      }
+    }
+    for (const attr of attrs) {
+      const nested = el.querySelector(`[${attr}]`);
+      const value = nested?.getAttribute(attr);
+      if (value && value.includes("urn:li:")) return value;
+    }
+    const href = el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]')?.getAttribute("href");
+    if (href) return href.split("?")[0];
+    return "hash:" + hashText(postText(el) || el.textContent || "");
+  }
+
+  function postText(el) {
+    for (const selector of TEXT_SELECTORS) {
+      let node = null;
+      try {
+        node = el.querySelector(selector);
+      } catch {
+        node = null;
+      }
+      if (!node || node.closest(".comments-comment-item")) continue;
+      const text = cleanText(node.innerText || node.textContent || "");
+      if (text.length >= MIN_TEXT_CHARS) return text.slice(0, 6000);
+    }
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(
+      ".comments-comment-item, .social-details-social-counts, button, nav, .update-components-actor",
+    ).forEach((n) => n.remove());
+    const fallback = cleanText(clone.innerText || "");
+    return fallback.length >= MIN_TEXT_CHARS ? fallback.slice(0, 6000) : "";
+  }
+
+  function postAuthor(el) {
+    for (const selector of AUTHOR_SELECTORS) {
+      let node = null;
+      try {
+        node = el.querySelector(selector);
+      } catch {
+        continue;
+      }
+      const text = cleanText(node?.innerText || node?.textContent || "");
+      if (text && text.length < 80) return text.split("\n")[0];
+    }
+    const aria = el.querySelector("[aria-label*='post by'], [aria-label*='posta']")?.getAttribute("aria-label");
+    if (aria) {
+      const m = aria.match(/post by (.+)/i) || aria.match(/posta[:\s]+(.+)/i);
+      if (m) return m[1].trim();
+    }
+    return "";
+  }
+
+  function cleanText(value) {
+    return String(value || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/…więcej|…more|see more|więcej$/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function hashText(text) {
+    let h = 2166136261;
+    const s = text.slice(0, 240);
+    for (let i = 0; i < s.length; i += 1) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16);
+  }
+
+  function ensureBadge(el) {
+    let badge = el.querySelector(":scope > .lais-badge");
+    if (!badge) {
+      if (typeof getComputedStyle === "function") {
+        const pos = getComputedStyle(el).position;
+        if (pos === "static") el.style.position = "relative";
+      } else {
+        el.style.position = el.style.position || "relative";
+      }
+      badge = (el.ownerDocument || document).createElement("div");
+      badge.className = "lais-badge lais-badge--pending";
+      badge.setAttribute("role", "status");
+      el.appendChild(badge);
+    }
+    return badge;
+  }
+
+  function setBadge(el, state, result) {
+    const badge = ensureBadge(el);
+    badge.className = `lais-badge lais-badge--${state}`;
+    if (state === "pending") {
+      badge.textContent = "Ocena…";
+      badge.title = "Czekam na Jev (proxy lokalne)";
+      return;
+    }
+    if (state === "error") {
+      badge.textContent = "Błąd";
+      badge.title = result?.message || "Nie udało się ocenić posta";
+      return;
+    }
+    if (!result) return;
+    badge.textContent = result.labelPl;
+    const pct = (n) => `${Math.round((n || 0) * 100)}%`;
+    badge.title = [
+      `Głos: ${result.voice}`,
+      `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
+      `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
+      `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
+      result.model ? `Model: ${result.model}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  async function loadSettings() {
+    if (typeof chrome === "undefined" || !chrome.storage?.sync) {
+      settings = { ...DEFAULTS };
+      return settings;
+    }
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(DEFAULTS, (stored) => {
+        settings = {
+          enabled: stored.enabled !== false,
+          threshold: Number(stored.threshold) || DEFAULTS.threshold,
+          proxyUrl: String(stored.proxyUrl || DEFAULTS.proxyUrl).replace(/\/$/, ""),
+        };
+        resolve(settings);
+      });
+    });
+  }
+
+  function scheduleScan() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(scan, DEBOUNCE_MS);
+  }
+
+  function scan() {
+    if (!settings.enabled) return;
+    const posts = findPostElements(document);
+    if (posts.length === 0) {
+      if (!selectorMissLogged) {
+        selectorMissLogged = true;
+        console.info("[linkedin-ai-slop] brak kart postów — selektory LinkedIn mogły się zmienić");
+      }
+      return;
+    }
+    selectorMissLogged = false;
+    for (const el of posts) {
+      if (intersect) intersect.observe(el);
+      if (!intersect || isInView(el)) enqueue(el);
+    }
+  }
+
+  function isInView(el) {
+    const rect = el.getBoundingClientRect();
+    const height = window.innerHeight || document.documentElement.clientHeight || 0;
+    return rect.bottom > 0 && rect.top < height && rect.height > 0;
+  }
+
+  function enqueue(el) {
+    if (!settings.enabled) return;
+    const post = extractPost(el);
+    if (!post) return;
+    if (seen.has(post.id) || inFlight.has(post.id)) return;
+    const failed = failedAt.get(post.id);
+    if (failed && Date.now() - failed < 15000) return;
+    if (queue.some((item) => item.id === post.id)) return;
+    if (queue.length >= MAX_QUEUE) queue.shift();
+    queue.push({ el, ...post, gen: generation });
+    pump();
+  }
+
+  function pump() {
+    while (active < CONCURRENCY && queue.length) {
+      const item = queue.shift();
+      if (!item || item.gen !== generation || seen.has(item.id)) continue;
+      active += 1;
+      inFlight.add(item.id);
+      evaluate(item)
+        .catch((error) => {
+          if (item.gen !== generation) return;
+          failedAt.set(item.id, Date.now());
+          setBadge(item.el, "error", { message: error.message });
+        })
+        .finally(() => {
+          inFlight.delete(item.id);
+          active -= 1;
+          pump();
+        });
+    }
+  }
+
+  async function evaluate(item) {
+    setBadge(item.el, "pending");
+    tryExpand(item.el);
+    const text = postText(item.el) || item.text;
+    const payload = {
+      postId: item.id,
+      text,
+      author: item.author || undefined,
+      threshold: settings.threshold,
+      proxyUrl: settings.proxyUrl,
+    };
+    const result = await requestEvaluation(payload);
+    if (item.gen !== generation) return;
+    seen.add(item.id);
+    setBadge(item.el, result.badge || "human", result);
+  }
+
+  function requestEvaluation(payload) {
+    if (typeof chrome !== "undefined" && chrome.runtime?.id && chrome.runtime.sendMessage) {
+      return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: "evaluate", payload }, (response) => {
+          const lastError = chrome.runtime.lastError;
+          if (lastError) {
+            reject(new Error(lastError.message));
+            return;
+          }
+          if (!response?.ok) {
+            const message = response?.body?.message || response?.body?.error || "Proxy nie oceniło posta";
+            noteProxy(message);
+            reject(new Error(message));
+            return;
+          }
+          resolve(response.body);
+        });
+      });
+    }
+    return fetch(`${settings.proxyUrl}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(async (response) => {
+      if (!response.ok) {
+        let message = `HTTP ${response.status}`;
+        try {
+          const err = await response.json();
+          message = err.message || err.error || message;
+        } catch {
+          /* puste ciało */
+        }
+        noteProxy(message);
+        throw new Error(message);
+      }
+      return response.json();
+    });
+  }
+
+  function noteProxy(message) {
+    if (warnedProxy) return;
+    warnedProxy = true;
+    console.warn("[linkedin-ai-slop] proxy:", message);
+  }
+
+  function tryExpand(el) {
+    const buttons = el.querySelectorAll("button, .see-more, .line-clamp-show-more-button");
+    for (const btn of buttons) {
+      if (btn.closest(".comments-comment-item, .comments-comments-list")) continue;
+      const label = `${btn.innerText || ""} ${btn.getAttribute("aria-label") || ""}`
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+      if (/^(…\s*)?(see more|show more|więcej|…more|…więcej)$/i.test(label)) {
+        try {
+          btn.click();
+        } catch {
+          /* LinkedIn czasem blokuje syntetyczny click — ocena idzie na skrócie */
+        }
+        break;
+      }
+    }
+  }
+
+  function watch() {
+    if (observer) observer.disconnect();
+    observer = new MutationObserver(scheduleScan);
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener("scroll", scheduleScan, { passive: true });
+
+    if (typeof IntersectionObserver === "function") {
+      intersect = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.intersectionRatio >= INTERSECT_RATIO) {
+              enqueue(entry.target);
+            }
+          }
+        },
+        { threshold: [0, INTERSECT_RATIO, 0.6] },
+      );
+    }
+    scheduleScan();
+  }
+
+  function clearBadges() {
+    document.querySelectorAll(".lais-badge").forEach((n) => n.remove());
+  }
+
+  async function boot() {
+    if (booted) return;
+    booted = true;
+    await loadSettings();
+    if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== "sync") return;
+        if (changes.enabled) settings.enabled = changes.enabled.newValue !== false;
+        if (changes.threshold) settings.threshold = Number(changes.threshold.newValue) || DEFAULTS.threshold;
+        if (changes.proxyUrl) {
+          settings.proxyUrl = String(changes.proxyUrl.newValue || DEFAULTS.proxyUrl).replace(/\/$/, "");
+        }
+        generation += 1;
+        queue.length = 0;
+        warnedProxy = false;
+        failedAt.clear();
+        if (!settings.enabled) {
+          clearBadges();
+          return;
+        }
+        seen.clear();
+        clearBadges();
+        scheduleScan();
+      });
+    }
+    if (!settings.enabled) return;
+    watch();
+  }
+
+  return {
+    boot,
+    findPostElements,
+    extractPost,
+    postId,
+    postText,
+    setBadge,
+    DEFAULTS,
+  };
+});
