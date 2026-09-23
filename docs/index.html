@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Rozszerzenie Chrome, które oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena przez TypeSafe Jev. Klucz zostaje w lokalnym proxy, nie na tej stronie."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+      <nav>
+        <a href="demo.html">Podgląd</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>LinkedIn AI Slop</h1>
+      <p class="lede">
+        Rozszerzenie do Chrome i Edge. Przy scrollowaniu feedu LinkedIn na karcie
+        pojawia się odznaka.
+      </p>
+      <ul class="pills" aria-label="Rodzaje odznak">
+        <li class="lais-badge lais-badge--human lais-badge--inline">Ludzki</li>
+        <li class="lais-badge lais-badge--mixed lais-badge--inline">Mieszany</li>
+        <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
+      </ul>
+
+      <section>
+        <h2>Co to jest</h2>
+        <p>
+          Gdy post wejdzie w widok (około 35% wysokości kadru), rozszerzenie
+          wyciąga jego tekst i prosi o ocenę. Odznaka ląduje w prawym górnym
+          rogu karty. Komentarze pod postem są pomijane, a tekst krótszy niż
+          40 znaków w ogóle nie wychodzi z przeglądarki.
+        </p>
+      </section>
+
+      <section>
+        <h2>TypeSafe Jev</h2>
+        <p>
+          Ocena idzie przez TypeSafe Jev API:
+          <code>POST https://api.typesafe.ai/v1/systemone</code>, model
+          <code>jev-latest</code>. Jedno wywołanie na post, cztery pytania:
+          <code>is_ai_slop</code>, <code>slop_intensity</code>,
+          <code>has_substance</code>, <code>voice</code>.
+        </p>
+        <p>
+          Kolor odznaki liczy kod w repozytorium
+          (<code>jev/thresholds.ts</code>), nie ta strona. Domyślny próg
+          <code>is_ai_slop</code> to 0.65.
+        </p>
+      </section>
+
+      <section>
+        <h2>Instalacja z repozytorium</h2>
+        <p>Rozszerzenia nie ma w Chrome Web Store. Ładuje się je z GitHuba.</p>
+        <ol class="steps">
+          <li>
+            Sklonuj albo pobierz
+            <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
+          </li>
+          <li>
+            Otwórz <code>chrome://extensions</code> (w Edge:
+            <code>edge://extensions</code>) i włącz tryb dewelopera.
+          </li>
+          <li>
+            Wybierz <strong>Załaduj rozpakowane</strong> i wskaż katalog
+            <code>extension/</code>.
+          </li>
+          <li>
+            W opcjach rozszerzenia włącz ocenę. Domyślny adres proxy to
+            <code>http://127.0.0.1:8787</code>. Przycisk <strong>Sprawdź proxy</strong>
+            powinien pokazać model <code>jev-latest</code>.
+          </li>
+        </ol>
+      </section>
+
+      <aside class="callout">
+        <h2>Proxy zostaje u Ciebie</h2>
+        <p>
+          Node trzyma <code>TYPESAFE_API_KEY</code> i woła Jev. Uruchamiasz je
+          lokalnie (<code>cd server</code>, potem <code>npm install</code> i
+          <code>npm start</code>) albo na innym hoście, który sam prowadzisz.
+          GitHub Pages serwuje tylko pliki z <code>docs/</code>. Nie ma tu
+          procesu Node, nie ma klucza i ta strona sama nie woła TypeSafe.
+        </p>
+      </aside>
+
+      <p class="actions">
+        <a class="button" href="demo.html">Zobacz odznaki</a>
+        <a class="button button-quiet" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Repozytorium</a>
+      </p>
+    </main>
+  </body>
+</html>
