@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="pl" data-slop-demo="1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Podgląd odznak — LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Statyczny podgląd odznak Ludzki, Mieszany i AI slop na kartach z tymi samymi selektorami co rozszerzenie."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+      <nav>
+        <a href="demo.html" aria-current="page">Podgląd</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+      </nav>
+    </header>
+    <div class="wrap">
+      <header class="page-head">
+        <h1>Podgląd odznak</h1>
+        <p class="note">
+          To nie jest LinkedIn. Karty używają tych samych selektorów co content
+          script (<code>feed-shared-update-v2</code>, <code>data-id</code>,
+          <code>article[data-id="main-feed-card"]</code>). Odznaki poniżej są
+          przykładem — strona działa bez proxy i bez klucza. Najedź, żeby
+          zobaczyć przykładowe prawdopodobieństwa.
+        </p>
+      </header>
+
+      <form class="proxy-form" id="proxy-form">
+        <label class="proxy-label" for="proxy-url">Adres proxy (opcjonalnie)</label>
+        <div class="proxy-row">
+          <input
+            id="proxy-url"
+            name="proxy"
+            type="url"
+            inputmode="url"
+            placeholder="zostaw puste — przykładowe odznaki"
+            autocomplete="off"
+            spellcheck="false"
+            value=""
+          />
+          <button class="button" type="submit">Oceń na żywo</button>
+          <button class="button button-quiet" type="button" id="restore">Przywróć przykłady</button>
+        </div>
+        <p>
+          Żywa ocena woła <code>POST /evaluate</code> na podanym adresie. Klucz
+          <code>TYPESAFE_API_KEY</code> zostaje na proxy — ta strona go nie
+          przyjmuje. Pages jest na HTTPS, więc <code>http://127.0.0.1</code>
+          przeglądarka zwykle blokuje. Proxy musi być osiągalne po HTTPS, a
+          jego <code>CORS_ORIGIN</code> musi puszczać tę stronę. Rozszerzenie
+          i tak woła proxy ze swojego service workera, nie stąd.
+        </p>
+        <p id="proxy-status" role="status"></p>
+      </form>
+
+      <main class="feed">
+        <div class="feed-shared-update-v2" data-id="urn:li:activity:9001">
+          <div
+            class="lais-badge lais-badge--human"
+            role="status"
+            title="Przykład statyczny (bez Jev)&#10;Głos: human&#10;AI slop: 8% (próg 65%)&#10;Intensywność: human (0.18)&#10;Substancja: tak (86%)"
+          >Ludzki</div>
+          <div class="menu" aria-hidden="true">⋯</div>
+          <div class="actor">
+            <div class="avatar" aria-hidden="true">AK</div>
+            <div>
+              <div class="update-components-actor__title">
+                <span dir="ltr"><span aria-hidden="true">Ada Kowalska</span></span>
+              </div>
+              <p class="meta">Płatności · 2 godz.</p>
+            </div>
+          </div>
+          <div class="update-components-text">
+            Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%
+            after we stopped retrying 409s from the EU batch window.
+          </div>
+          <div class="social" aria-hidden="true"><span>18 reakcji</span><span>4 komentarze</span></div>
+        </div>
+
+        <div data-id="urn:li:activity:9002">
+          <div
+            class="lais-badge lais-badge--slop"
+            role="status"
+            title="Przykład statyczny (bez Jev)&#10;Głos: ai_slop&#10;AI slop: 91% (próg 65%)&#10;Intensywność: heavy (1.72)&#10;Substancja: nie (22%)"
+          >AI slop</div>
+          <div class="menu" aria-hidden="true">⋯</div>
+          <div class="actor">
+            <div class="avatar" aria-hidden="true">JN</div>
+            <div>
+              <p class="who"><a href="/in/jan-nowak/">Jan Nowak</a></p>
+              <p class="meta">Lider transformacji · 5 godz.</p>
+            </div>
+          </div>
+          <div class="feed-shared-inline-show-more-text">
+            I'm humbled and thrilled to announce that in a world where leadership matters,
+            consistency is key and authenticity wins. Agree? Drop a comment if you want the
+            full playbook of synergy.
+          </div>
+          <div class="social" aria-hidden="true"><span>240 reakcji</span><span>86 komentarzy</span></div>
+        </div>
+
+        <div class="feed-shared-update-v2" data-urn="urn:li:ugcPost:9004">
+          <div
+            class="lais-badge lais-badge--mixed"
+            role="status"
+            title="Przykład statyczny (bez Jev)&#10;Głos: mixed&#10;AI slop: 41% (próg 65%)&#10;Intensywność: mixed (1.05)&#10;Substancja: tak (62%)"
+          >Mieszany</div>
+          <div class="menu" aria-hidden="true">⋯</div>
+          <div class="actor">
+            <div class="avatar" aria-hidden="true">EZ</div>
+            <div>
+              <span class="update-components-actor__name">Ewa Zielińska</span>
+              <p class="meta">Operacje sprzedaży · 1 dzień</p>
+            </div>
+          </div>
+          <div class="feed-shared-update-v2__commentary">
+            W tym kwartale stawiamy na synergię i autentyczność lidera. Konkret, który
+            został: czas wdrożenia nowego handlowca spadł z 11 do 6 dni, bo wycięliśmy
+            jeden ręczny krok w CRM.
+          </div>
+          <div class="social" aria-hidden="true"><span>37 reakcji</span><span>9 komentarzy</span></div>
+        </div>
+
+        <article data-id="main-feed-card" componentkey="urn:li:activity:9003">
+          <div
+            class="lais-badge lais-badge--human"
+            role="status"
+            title="Przykład statyczny (bez Jev)&#10;Głos: human&#10;AI slop: 11% (próg 65%)&#10;Intensywność: human (0.24)&#10;Substancja: tak (90%)"
+          >Ludzki</div>
+          <div class="menu" aria-hidden="true">⋯</div>
+          <div class="actor">
+            <div class="avatar" aria-hidden="true">M</div>
+            <div>
+              <p class="who"><span class="update-components-actor__name">Marek</span></p>
+              <p class="meta">Billing · 3 dni</p>
+            </div>
+          </div>
+          <div data-testid="expandable-text-box">
+            Hired two SDEs in Kraków last month. One from the intern class, one from a
+            marketplace that shut down in June. Both start Monday on the billing team.
+          </div>
+          <div class="social" aria-hidden="true"><span>9 reakcji</span><span>1 komentarz</span></div>
+        </article>
+      </main>
+    </div>
+    <script>
+      (function () {
+        const TEXT_SELECTORS = [
+          ".update-components-text",
+          ".feed-shared-update-v2__commentary",
+          ".feed-shared-inline-show-more-text",
+          '[data-testid="expandable-text-box"]',
+        ];
+        const AUTHOR_SELECTORS = [
+          '.update-components-actor__title span[aria-hidden="true"]',
+          ".update-components-actor__name",
+          ".update-components-actor__title",
+          'a[href*="/in/"]',
+        ];
+        const form = document.getElementById("proxy-form");
+        const input = document.getElementById("proxy-url");
+        const status = document.getElementById("proxy-status");
+        const badges = [...document.querySelectorAll("main.feed .lais-badge")];
+
+        badges.forEach((badge) => {
+          badge.dataset.label = badge.textContent.trim();
+          badge.dataset.title = badge.getAttribute("title") || "";
+          const state = [...badge.classList].find(
+            (name) => name.startsWith("lais-badge--") && name !== "lais-badge--inline",
+          );
+          badge.dataset.state = state ? state.slice("lais-badge--".length) : "human";
+        });
+
+        function posts() {
+          return [...document.querySelectorAll("main.feed > *")];
+        }
+
+        function setStatus(message, isError) {
+          status.textContent = message;
+          status.classList.toggle("is-error", Boolean(isError));
+        }
+
+        function restore() {
+          badges.forEach((badge) => {
+            badge.className = `lais-badge lais-badge--${badge.dataset.state}`;
+            badge.textContent = badge.dataset.label;
+            badge.title = badge.dataset.title;
+          });
+        }
+
+        function clean(value) {
+          return String(value || "").replace(/\s+/g, " ").trim();
+        }
+
+        function postText(el) {
+          for (const selector of TEXT_SELECTORS) {
+            const node = el.querySelector(selector);
+            const text = clean(node?.innerText || node?.textContent || "");
+            if (text.length >= 40) return text.slice(0, 6000);
+          }
+          return "";
+        }
+
+        function postAuthor(el) {
+          for (const selector of AUTHOR_SELECTORS) {
+            const text = clean(el.querySelector(selector)?.innerText || "");
+            if (text && text.length < 80) return text.split(" · ")[0];
+          }
+          return "";
+        }
+
+        function postId(el) {
+          for (const attr of ["data-id", "data-urn", "componentkey"]) {
+            const value = el.getAttribute(attr) || "";
+            const match = value.match(/urn:li:(?:activity|ugcPost|share):[^\s,"]+/);
+            if (match) return match[0];
+          }
+          return "";
+        }
+
+        function proxyBase(raw) {
+          const value = raw.trim().replace(/\/+$/, "").replace(/\/evaluate$/, "");
+          if (!value) return "";
+          let url;
+          try {
+            url = new URL(value);
+          } catch {
+            throw new Error("Podaj pełny adres, na przykład https://proxy.example.com");
+          }
+          if (url.protocol !== "http:" && url.protocol !== "https:") {
+            throw new Error("Dozwolony jest tylko adres http albo https.");
+          }
+          if (url.username || url.password) {
+            throw new Error("Nie wklejaj loginu ani klucza do adresu. Klucz zostaje na proxy.");
+          }
+          return url.origin + url.pathname.replace(/\/$/, "");
+        }
+
+        function applyResult(badge, result) {
+          const state = result.badge || "human";
+          badge.className = `lais-badge lais-badge--${state}`;
+          badge.textContent = result.labelPl || badge.dataset.label;
+          const pct = (n) => `${Math.round((Number(n) || 0) * 100)}%`;
+          badge.title = [
+            "Ocena na żywo",
+            `Głos: ${result.voice}`,
+            `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
+            `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
+            `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
+            result.model ? `Model: ${result.model}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+        }
+
+        async function evaluate(el, base) {
+          const text = postText(el);
+          const id = postId(el);
+          if (!text || !id) throw new Error("Nie udało się odczytać posta.");
+          const response = await fetch(`${base}/evaluate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              postId: id,
+              text,
+              author: postAuthor(el) || undefined,
+              threshold: 0.65,
+            }),
+          });
+          if (!response.ok) {
+            let message = `HTTP ${response.status}`;
+            try {
+              const err = await response.json();
+              message = err.message || err.error || message;
+            } catch {
+              /* puste ciało */
+            }
+            throw new Error(message);
+          }
+          return response.json();
+        }
+
+        document.getElementById("restore").addEventListener("click", () => {
+          input.value = "";
+          restore();
+          setStatus("Przywrócono przykładowe odznaki. Żywa ocena wymaga działającego proxy.", false);
+        });
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          let base = "";
+          try {
+            base = proxyBase(input.value);
+          } catch (error) {
+            setStatus(error.message, true);
+            return;
+          }
+          if (!base) {
+            restore();
+            setStatus("Pole puste — zostają przykładowe odznaki. Żywa ocena wymaga działającego proxy.", false);
+            return;
+          }
+
+          const httpsPage = location.protocol === "https:";
+          const httpProxy = base.startsWith("http://");
+          badges.forEach((badge) => {
+            badge.className = "lais-badge lais-badge--pending";
+            badge.textContent = "Ocena…";
+            badge.title = "Czekam na proxy";
+          });
+          setStatus("Pytam proxy… Klucz API stąd nie wychodzi.", false);
+
+          const outcomes = await Promise.all(
+            posts().map(async (el) => {
+              const badge = el.querySelector(":scope > .lais-badge");
+              try {
+                applyResult(badge, await evaluate(el, base));
+                return null;
+              } catch (error) {
+                return error;
+              }
+            }),
+          );
+          const failures = outcomes.filter(Boolean);
+          if (failures.length === outcomes.length) {
+            restore();
+            const detail = failures[0]?.message || "Proxy nie odpowiedziało.";
+            const mixed =
+              httpsPage && httpProxy
+                ? " Strona jest na HTTPS, więc przeglądarka blokuje adres http:// (także 127.0.0.1)."
+                : "";
+            setStatus(`Nie udało się ocenić na żywo (${detail}).${mixed} Zostały przykładowe odznaki.`, true);
+            return;
+          }
+          if (failures.length) {
+            setStatus(`Oceniono ${outcomes.length - failures.length} z ${outcomes.length}. Reszta została przy przykładzie.`, true);
+            posts().forEach((el, index) => {
+              if (outcomes[index]) {
+                const badge = el.querySelector(":scope > .lais-badge");
+                badge.className = `lais-badge lais-badge--${badge.dataset.state}`;
+                badge.textContent = badge.dataset.label;
+                badge.title = badge.dataset.title;
+              }
+            });
+            return;
+          }
+          setStatus("Odznaki pochodzą z proxy. Przywróć przykłady, żeby wrócić do wersji statycznej.", false);
+        });
+      })();
+    </script>
+  </body>
+</html>

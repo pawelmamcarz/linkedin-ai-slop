@@ -4,6 +4,8 @@ Rozszerzenie Chrome/Edge (Manifest V3) na feed LinkedIn. Przy scrollowaniu wyci�
 
 Klucz API zostaje w lokalnym proxy. Rozszerzenie go nie zawiera.
 
+Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.github.io/linkedin-ai-slop/) — opis i statyczny podgląd odznak (`docs/`). Proxy z `TYPESAFE_API_KEY` nie jest hostowane na Pages.
+
 ## Uruchomienie
 
 Potrzebny Node.js 20+.
