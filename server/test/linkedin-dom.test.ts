@@ -43,7 +43,7 @@ describe("selektory LinkedIn (fixture)", () => {
     const extracted = posts.map((el) => slop.extractPost(el)).filter(Boolean);
     const texts = extracted.map((p) => p!.text);
     assert.ok(texts.some((t) => t.includes("billing retry")));
-    assert.ok(texts.some((t) => t.includes("humbled to announce")));
+    assert.ok(texts.some((t) => t.includes("humbled and thrilled")));
     assert.ok(extracted.some((p) => p!.author.includes("Ada")));
     assert.ok(!texts.some((t) => t.length < 20));
   });
