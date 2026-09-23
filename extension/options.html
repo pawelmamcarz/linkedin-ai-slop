@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <title>LinkedIn AI Slop</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>LinkedIn AI Slop</h1>
+      <p class="lede">
+        Odznaki na Twoim feedzie. Tekst idzie do lokalnego proxy, a stamtąd do Jev
+        (<code>jev-latest</code>). Klucz API nie trafia do rozszerzenia.
+      </p>
+      <form id="settings">
+        <label class="check">
+          <input id="enabled" type="checkbox" />
+          Oceniaj posty podczas scrollowania
+        </label>
+        <label>
+          Próg AI slop
+          <span id="threshold-value">0.65</span>
+          <input id="threshold" type="range" min="0.15" max="0.95" step="0.05" />
+          <span class="hint">Noul <code>is_ai_slop</code> ≥ tego progu → odznaka „AI slop”.</span>
+        </label>
+        <label>
+          Adres proxy
+          <input id="proxy" type="url" required spellcheck="false" />
+          <span class="hint">Domyślnie <code>http://127.0.0.1:8787</code>. Inny host wymaga zgody w Chrome.</span>
+        </label>
+        <div class="actions">
+          <button type="submit">Zapisz</button>
+          <button type="button" id="check" class="secondary">Sprawdź proxy</button>
+        </div>
+        <p id="status" role="status"></p>
+      </form>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
