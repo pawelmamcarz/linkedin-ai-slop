@@ -30,7 +30,7 @@ Hosty w manifeście: LinkedIn, `https://proxy-production-ebcc.up.railway.app`, `
 
 To nie jest upload. Debug (`npm run safari:build`) zostaje ad-hoc: `CODE_SIGN_IDENTITY = -`, `CODE_SIGNING_REQUIRED = NO`, puste `DEVELOPMENT_TEAM`. Do sklepu idzie archiwum Release, nie ten build.
 
-Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Rozszerzenie: `com.mamcarz.linkedinaislop.extension`. Wersja: `0.2.3` (`extension/manifest.json` i `safari/Config/Shared.xcconfig`).
+Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Rozszerzenie: `com.mamcarz.linkedinaislop.extension`. Wersja: `0.2.4` (`extension/manifest.json` i `safari/Config/Shared.xcconfig`).
 
 `com.pawelmamcarz.linkedin-ai-slop` nie wchodzi na listę Bundle ID w App Store Connect (New App). Register tego App ID na developer.apple.com zwraca "not available". Używaj pary powyżej.
 

@@ -176,6 +176,7 @@
       proToken: "",
       byokProxyUrl: "",
       blurSlop: true,
+      minTextChars: 200,
     };
     const source = stored && typeof stored === "object" ? stored : {};
     const merged = { ...defaults, ...source };
@@ -196,7 +197,14 @@
       proToken,
       byokProxyUrl,
       blurSlop: merged.blurSlop !== false,
+      minTextChars: clampMinTextChars(merged.minTextChars),
     };
+  }
+
+  function clampMinTextChars(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 200;
+    return Math.min(2000, Math.max(40, Math.round(n)));
   }
 
   return {

@@ -200,6 +200,9 @@ describe("tryby proxy", () => {
     assert.equal(JSON.stringify(pro).includes("TYPESAFE"), false);
     assert.equal(api.resolveSettings({}).blurSlop, true);
     assert.equal(api.resolveSettings({ blurSlop: false }).blurSlop, false);
+    assert.equal(api.resolveSettings({}).minTextChars, 200);
+    assert.equal(api.resolveSettings({ minTextChars: 80 }).minTextChars, 80);
+    assert.equal(api.resolveSettings({ minTextChars: 1 }).minTextChars, 40);
   });
 });
 

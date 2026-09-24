@@ -268,7 +268,7 @@
           for (const selector of TEXT_SELECTORS) {
             const node = el.querySelector(selector);
             const text = clean(node?.innerText || node?.textContent || "");
-            if (text.length >= 40) return text.slice(0, 6000);
+            if (text.length >= 200) return text.slice(0, 6000);
           }
           return "";
         }

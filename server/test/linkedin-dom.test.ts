@@ -11,6 +11,10 @@ const slop = require("../../extension/content.js") as {
   extractPost: (el: HTMLElement) => { id: string; text: string; author: string } | null;
   setBadge: (el: HTMLElement, state: string, result?: Record<string, unknown>) => void;
   applySettings: (partial: { blurSlop?: boolean }) => { blurSlop: boolean };
+  substantiveText: (value: string) => string;
+  isOwnPost: (el: HTMLElement) => boolean;
+  actorHeader: (el: HTMLElement) => HTMLElement | null;
+  DEFAULTS: { minTextChars: number };
 };
 
 const fixture = readFileSync(resolve(import.meta.dirname, "fixtures/linkedin-feed.html"), "utf8");
@@ -253,6 +257,60 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.ok(badge!.classList.contains("lais-badge--info"));
     assert.equal(badge!.classList.contains("lais-badge--error"), false);
     assert.match(badge!.getAttribute("title") || "", /limit Demo/);
+  });
+
+  it("klasyfikuje tylko własny komentarz udostępnienia, nie tekst w środku", () => {
+    const posts = slop.findPostElements(document);
+    const outer = posts.find((el) => (el.getAttribute("data-urn") || "").includes("reshare-outer"));
+    const inner = posts.find((el) => (el.getAttribute("data-urn") || "").includes("reshare-inner"));
+    assert.ok(outer);
+    assert.ok(inner);
+    assert.equal(slop.extractPost(outer!), null);
+    const innerPost = slop.extractPost(inner!);
+    assert.ok(innerPost);
+    assert.match(innerPost!.text, /Inwestujemy pieniądze/);
+    assert.equal(innerPost!.text.includes("Bang!"), false);
+    assert.equal(innerPost!.author.includes("Tomasz"), true);
+    const sample = "Bang! #Czympojade jako przykład zastosowania RAG z Bielik AI i klasyfikatorów treści takich jak TypeSafe AI";
+    assert.ok(slop.substantiveText(sample).length < slop.DEFAULTS.minTextChars);
+    assert.equal(slop.substantiveText(sample).includes("#Czympojade"), false);
+  });
+
+  it("pomija posty zalogowanej osoby, gdy link aktora zgadza się z menu Ja", () => {
+    const posts = slop.findPostElements(document);
+    const own = posts.find((el) => (el.getAttribute("data-urn") || "").includes("own-long"));
+    assert.ok(own);
+    assert.equal(slop.isOwnPost(own!), true);
+    assert.equal(slop.extractPost(own!), null);
+    const other = posts.find((el) => (el.getAttribute("data-id") || "").includes("activity:111"));
+    assert.equal(slop.isOwnPost(other!), false);
+  });
+
+  it("baner AI slop siada pod nagłówkiem autora, nie na awatarze", () => {
+    const card = document.createElement("div");
+    card.className = "feed-shared-update-v2";
+    const actor = document.createElement("div");
+    actor.className = "update-components-actor";
+    actor.textContent = "Ada Kowalska";
+    const copy = document.createElement("div");
+    copy.className = "update-components-text";
+    copy.textContent = "Treść pod nagłówkiem, dość długa, żeby baner nie zasłaniał imienia ani awatara autora.";
+    card.append(actor, copy);
+    document.body.appendChild(card);
+    slop.setBadge(card, "slop", { labelPl: "AI slop", slopProbability: 0.9 });
+    const header = slop.actorHeader(card);
+    assert.equal(header, actor);
+    assert.equal(actor.closest(".lais-cover"), null);
+    assert.equal(actor.querySelector(".lais-banner"), null);
+    const cover = card.querySelector(":scope > .lais-cover.lais-cover--below-actor");
+    assert.ok(cover);
+    assert.equal(cover!.querySelector(".lais-reveal")?.textContent, "Pokaż");
+    cover!.querySelector(".lais-reveal")?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+    assert.equal(card.querySelector(".lais-cover"), null);
+    assert.equal(actor.nextElementSibling?.classList.contains("lais-banner"), true);
+    assert.equal(actor.nextElementSibling?.querySelector(".lais-reveal")?.textContent, "Ukryj");
+    const banner = actor.nextElementSibling as HTMLElement;
+    assert.equal(banner.style.getPropertyValue("position"), "relative");
   });
 });
 

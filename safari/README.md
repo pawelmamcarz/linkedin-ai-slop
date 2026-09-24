@@ -14,7 +14,7 @@ Entitlement `com.apple.security.network.client` jest w `LinkedInAISlop Extension
 
 Debug jest ad-hoc (`CODE_SIGN_IDENTITY = -`, `CODE_SIGNING_REQUIRED = NO`, puste `DEVELOPMENT_TEAM` na targetach Debug), żeby dało się załadować rozszerzenie bez konta Apple. Release (`safari/Config/Release.xcconfig`) jest pod Mac App Store: Automatic signing, Hardened Runtime, Team ID uzupełniasz sam. Checklist: [`store/SAFARI.md`](../store/SAFARI.md). Wysyłki nie ma.
 
-`MARKETING_VERSION` jest w `safari/Config/Shared.xcconfig` i ma być równy `extension/manifest.json` (teraz 0.2.3). Skrypty build i archive i tak podają wersję z manifestu do `xcodebuild`.
+`MARKETING_VERSION` jest w `safari/Config/Shared.xcconfig` i ma być równy `extension/manifest.json` (teraz 0.2.4). Skrypty build i archive i tak podają wersję z manifestu do `xcodebuild`.
 
 Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Safari Web Extension: `com.mamcarz.linkedinaislop.extension`.
 

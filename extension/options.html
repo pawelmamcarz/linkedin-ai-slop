@@ -23,6 +23,11 @@
         </label>
         <span class="hint">Cover AI slop posts. Domyślnie włączone. Baner na całą szerokość karty zakrywa treść z werdyktem AI slop. „Pokaż” odsłania jeden post, „Ukryj” zakrywa go z powrotem.</span>
         <label>
+          Minimalna długość własnego tekstu
+          <input id="min-text" type="number" min="40" max="2000" step="10" value="200" />
+          <span class="hint">Odznaka i baner pojawiają się tylko wtedy, gdy własny tekst posta ma co najmniej tyle znaków po odcięciu hashtagów, @wzmianek, linków i emoji. Domyślnie 200. Krótki komentarz przy udostępnieniu nie dostaje werdyktu posta w środku. Posty zalogowanej osoby są pomijane.</span>
+        </label>
+        <label>
           Próg AI slop
           <span id="threshold-value">0.65</span>
           <input id="threshold" type="range" min="0.15" max="0.95" step="0.05" />
