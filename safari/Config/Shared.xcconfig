@@ -1,0 +1,5 @@
+// Wersja aplikacji macOS. Trzymaj ją równą extension/manifest.json.
+// Firefox i paczka Chrome biorą wersję wprost z manifestu.
+// Przy kolejnej wysyłce do App Store podbij też CURRENT_PROJECT_VERSION.
+MARKETING_VERSION = 0.2.1
+CURRENT_PROJECT_VERSION = 1

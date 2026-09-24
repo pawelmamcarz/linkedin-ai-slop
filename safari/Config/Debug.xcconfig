@@ -1,0 +1,6 @@
+#include "Shared.xcconfig"
+
+// Debug zostaje niepodpisany. Team ID nie jest potrzebny.
+// Te same ustawienia są na targetach Debug w project.pbxproj
+// (CODE_SIGN_IDENTITY = -, CODE_SIGNING_REQUIRED = NO, DEVELOPMENT_TEAM puste).
+// Nie ustawiaj tu DEVELOPMENT_TEAM. Lokalna ścieżka: bash scripts/build-safari.sh

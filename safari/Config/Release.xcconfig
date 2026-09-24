@@ -1,0 +1,14 @@
+#include "Shared.xcconfig"
+
+// Archiwum Release do Mac App Store. To nie jest build Debug ad-hoc.
+// Team ID uzupełniasz w Xcode (Signing & Capabilities → Team)
+// albo lokalnie, bez commitu:
+//   safari/Config/Local.xcconfig  (gitignored), jedna linia:
+//   DEVELOPMENT_TEAM = TWOJE_TEAM_ID
+// albo przy xcodebuild: DEVELOPMENT_TEAM=TWOJE_TEAM_ID
+// Nie wpisuj prawdziwego ani przykładowego Team ID do tego pliku.
+CODE_SIGN_STYLE = Automatic
+CODE_SIGNING_REQUIRED = YES
+ENABLE_HARDENED_RUNTIME = YES
+
+#include? "Local.xcconfig"

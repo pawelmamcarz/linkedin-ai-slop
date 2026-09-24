@@ -75,3 +75,5 @@ Krótki EN (do 132 znaków):
 Marks LinkedIn posts Human, Mixed, or AI slop using Jev. The API key stays on the proxy, not in the extension.
 
 Długi opis PL i EN jest w `store/CHECKLIST.md`. Pojedynczy cel: tylko feed LinkedIn.
+
+Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%". Hover a scored badge to see "AI slop: N%".

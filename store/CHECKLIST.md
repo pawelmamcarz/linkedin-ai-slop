@@ -4,8 +4,17 @@ Paczka: `store/linkedin-ai-slop-extension.zip` (odtworzysz ją przez `npm run pa
 
 W zipie jest tylko zawartość `extension/`. `manifest.json` leży w korzeniu archiwum. Nie ma `server/`, `.env` ani `node_modules`.
 
+## Wersja 0.2.1
+
+v0.2.1 dodaje na ocenionych odznakach podpowiedź po najechaniu: "AI slop: N%". Publiczne Demo ma 60 ocen na minutę oraz 200 na dobę z jednego IP (`EVALUATE_DAILY_IP_CAP=200`).
+
+v0.2.1 adds a hover tip on scored badges: "AI slop: N%". The public Demo cap is 60 scores per minute and 200 per day per IP (`EVALUATE_DAILY_IP_CAP=200`).
+
+Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.1).
+
 ## Przed wysłaniem
 
+- [ ] Wersja w `extension/manifest.json` to 0.2.1
 - [ ] `npm run pack:extension` po ostatniej zmianie w `extension/`
 - [ ] W zipie są `icons/icon16.png`, `icons/icon48.png`, `icons/icon128.png`
 - [ ] Domyślny adres proxy to `https://proxy-production-ebcc.up.railway.app`
@@ -46,7 +55,7 @@ Produkt jest tylko na LinkedIn. Nie ma adapterów Facebooka, X ani Instagrama.
 | `http://127.0.0.1/*` i `http://localhost/*` | Lokalne proxy i podgląd `/demo`. |
 | `optional_host_permissions` | Własne proxy spoza listy: inny host Railway albo dowolny `http`/`https`. Przeglądarka pyta przy zapisie adresu. |
 
-Paczka Chromium (Chrome, Brave, Edge) to ten sam zip. Brave: [`BRAVE.md`](BRAVE.md). Firefox to osobny XPI (`npm run pack:firefox`): [`FIREFOX.md`](FIREFOX.md). AMO nie jest wysłane. Safari to projekt Xcode, nie ten zip: [`SAFARI.md`](SAFARI.md). App Store nie jest przygotowany.
+Paczka Chromium (Chrome, Brave, Edge) to ten sam zip. Brave: [`BRAVE.md`](BRAVE.md). Firefox to osobny XPI (`npm run pack:firefox`): [`FIREFOX.md`](FIREFOX.md). AMO nie jest wysłane. Safari to projekt Xcode, nie ten zip: [`SAFARI.md`](SAFARI.md). Checklist App Store Connect jest tam. Wysyłki nie ma.
 
 ## Ikona i zrzuty
 
@@ -70,11 +79,11 @@ Marks LinkedIn posts Human, Mixed, or AI slop using Jev. The API key stays on th
 
 LinkedIn AI Slop dodaje odznakę na karcie posta, gdy scrollujesz feed.
 
-Odznaki: Ludzki, Mieszany, AI slop. Najedź, żeby zobaczyć prawdopodobieństwa.
+Odznaki: Ludzki, Mieszany, AI slop. Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%".
 
 Jak to liczy: tekst widocznego posta idzie na proxy, a proxy pyta TypeSafe Jev (model jev-latest). Próg is_ai_slop ustawisz suwakiem. Domyślnie 0.65.
 
-Klucz TYPESAFE_API_KEY nie jest w rozszerzeniu. Domyślne proxy to publiczne demo na Railway (limit 60 ocen na minutę z jednego adresu IP). W opcjach: Demo, BYOK (własne proxy) albo Pro (token, nie klucz TypeSafe). Plany: https://pawelmamcarz.github.io/linkedin-ai-slop/pro.html
+Klucz TYPESAFE_API_KEY nie jest w rozszerzeniu. Domyślne proxy to publiczne demo na Railway (60 ocen na minutę i 200 na dobę z jednego adresu IP, `EVALUATE_DAILY_IP_CAP=200`). W opcjach: Demo, BYOK (własne proxy) albo Pro (token, nie klucz TypeSafe). Plany: https://pawelmamcarz.github.io/linkedin-ai-slop/pro.html
 
 Rozszerzenie trzyma tylko włącznik, próg i adres URL. Nie czyta skrzynki, nie publikuje postów, nie sprzedaje danych.
 
@@ -85,11 +94,11 @@ Polityka: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
 LinkedIn AI Slop badges a post card while you scroll the feed.
 
-Badges: Human, Mixed, AI slop. Hover for the probabilities.
+Badges: Human, Mixed, AI slop. Hover a scored badge to see "AI slop: N%".
 
 The visible post text goes to a proxy. The proxy asks TypeSafe Jev (model jev-latest). You can move the is_ai_slop threshold. The default is 0.65.
 
-TYPESAFE_API_KEY is not inside the extension. The default proxy is a public Railway demo (60 evaluations per minute per IP). Options: Demo, BYOK (your own proxy), or Pro (a token, not the TypeSafe key). Plans: https://pawelmamcarz.github.io/linkedin-ai-slop/en/pro.html
+TYPESAFE_API_KEY is not inside the extension. The default proxy is a public Railway demo (60 evaluations per minute and 200 per day per IP, `EVALUATE_DAILY_IP_CAP=200`). Options: Demo, BYOK (your own proxy), or Pro (a token, not the TypeSafe key). Plans: https://pawelmamcarz.github.io/linkedin-ai-slop/en/pro.html
 
 The extension stores only the toggle, the threshold, and the proxy URL. It does not read your inbox, publish posts, or sell data.
 

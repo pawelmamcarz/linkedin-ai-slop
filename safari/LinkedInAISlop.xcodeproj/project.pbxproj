@@ -33,6 +33,9 @@
 		A10000000000000000000009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1000000000000000000000A /* LinkedInAISlop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LinkedInAISlop.entitlements; sourceTree = "<group>"; };
 		A1000000000000000000000B /* LinkedInAISlopExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LinkedInAISlopExtension.entitlements; sourceTree = "<group>"; };
+		A10000000000000000000027 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		A10000000000000000000028 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		A10000000000000000000029 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,7 @@
 			children = (
 				A10000000000000000000015 /* LinkedInAISlop */,
 				A10000000000000000000016 /* LinkedInAISlop Extension */,
+				A1000000000000000000002A /* Config */,
 				A10000000000000000000017 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -80,6 +84,16 @@
 				A1000000000000000000000B /* LinkedInAISlopExtension.entitlements */,
 			);
 			path = "LinkedInAISlop Extension";
+			sourceTree = "<group>";
+		};
+		A1000000000000000000002A /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000029 /* Shared.xcconfig */,
+				A10000000000000000000027 /* Debug.xcconfig */,
+				A10000000000000000000028 /* Release.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000017 /* Products */ = {
@@ -247,6 +261,7 @@
 /* Begin XCBuildConfiguration section */
 		A1000000000000000000001B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000027 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -265,6 +280,7 @@
 		};
 		A1000000000000000000001C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000028 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -280,13 +296,13 @@
 		};
 		A1000000000000000000001D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000027 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = LinkedInAISlop/LinkedInAISlop.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -295,7 +311,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop;
 				PRODUCT_NAME = "LinkedIn AI Slop";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -305,14 +320,10 @@
 		};
 		A1000000000000000000001E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000028 /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = LinkedInAISlop/LinkedInAISlop.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CODE_SIGNING_REQUIRED = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LinkedInAISlop/Info.plist;
@@ -320,7 +331,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop;
 				PRODUCT_NAME = "LinkedIn AI Slop";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -330,12 +340,12 @@
 		};
 		A1000000000000000000001F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000027 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "LinkedInAISlop Extension/LinkedInAISlopExtension.entitlements";
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "LinkedInAISlop Extension/Info.plist";
@@ -344,7 +354,6 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -360,13 +369,9 @@
 		};
 		A10000000000000000000020 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000028 /* Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "LinkedInAISlop Extension/LinkedInAISlopExtension.entitlements";
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CODE_SIGNING_REQUIRED = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "LinkedInAISlop Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -374,7 +379,6 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
