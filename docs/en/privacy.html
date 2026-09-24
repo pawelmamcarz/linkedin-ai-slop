@@ -30,8 +30,9 @@
         <h2>What leaves the browser</h2>
         <p>
           When a post comes into view, the extension sends the post id, the text (up to 6000 characters),
-          and optionally the name visible on the card. Text shorter than 40 characters is not sent.
-          Comments under the post are skipped.
+          and optionally the name visible on the card. Own text shorter than 200 characters
+          (after hashtags, mentions, links, and emoji are removed) is not sent.
+          Comments under the post, and the nested reshare text, are skipped for the outer card.
         </p>
         <p>
           The default address is <code>https://proxy-production-ebcc.up.railway.app</code>.

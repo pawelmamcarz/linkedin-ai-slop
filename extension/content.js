@@ -31,9 +31,13 @@
     proToken: "",
     byokProxyUrl: "",
     blurSlop: true,
+    minTextChars: 200,
   };
 
-  const MIN_TEXT_CHARS = 40;
+  /** Domyślna minimalna długość własnego tekstu po odcięciu hashtagów, wzmianek, URL i emoji. */
+  const DEFAULT_MIN_TEXT_CHARS = 200;
+  const MIN_TEXT_CHARS_FLOOR = 40;
+  const MIN_TEXT_CHARS_CEILING = 2000;
   const CONCURRENCY = 2;
   const DEBOUNCE_MS = 280;
   const INTERSECT_RATIO = 0.35;
@@ -98,6 +102,40 @@
     'a[href*="/company/"]',
   ];
 
+  const ACTOR_HEADER_SELECTORS = [
+    ".update-components-actor",
+    ".feed-shared-actor",
+    ".update-components-actor__container",
+    '[data-view-name="feed-actor"]',
+    '[data-view-name="feed-header"]',
+    '[data-view-name="feed-header-actor"]',
+  ];
+
+  /** Kontenery cudzego posta w środku udostępnienia. Nie obejmują własnego komentarza autora. */
+  const NESTED_UPDATE_SELECTORS = [
+    ".feed-shared-update-v2__update-content-wrapper",
+    ".update-components-mini-update-v2",
+    ".feed-shared-mini-update-v2",
+    ".update-components-mini-update",
+    ".feed-shared-update-v2--nested",
+    ".update-components-reshared-content",
+    ".feed-shared-update-v2__reshared-content",
+    '[data-view-name="feed-reshared-update"]',
+    '[data-view-name="feed-reshare-content"]',
+    '[data-view-name="feed-reshare"]',
+  ];
+
+  const SELF_PROFILE_SELECTORS = [
+    ".global-nav__me a[href*='/in/']",
+    "a.global-nav__primary-link--me",
+    ".global-nav__me-content a[href*='/in/']",
+    "a[data-control-name='identity_profile_photo']",
+    "a[data-control-name='nav.settings_view_profile']",
+    "[data-view-name='nav-me'] a[href*='/in/']",
+    "a[data-view-name='navigation-me']",
+    "a[data-view-name='identity-self-profile']",
+  ];
+
   const SKIP_INSIDE = [
     ".comments-comment-item",
     ".comments-comments-list",
@@ -143,7 +181,149 @@
         found.push(node);
       }
     }
-    return found.filter((el) => !found.some((other) => other !== el && other.contains(el)));
+    return found.filter((el) => {
+      return !found.some((other) => {
+        if (other === el || !other.contains(el)) return false;
+        const inner = ownUrn(el);
+        const outer = ownUrn(other);
+        if (inner && outer && inner !== outer) return false;
+        return true;
+      });
+    });
+  }
+
+  function clampMinTextChars(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return DEFAULT_MIN_TEXT_CHARS;
+    return Math.min(MIN_TEXT_CHARS_CEILING, Math.max(MIN_TEXT_CHARS_FLOOR, Math.round(n)));
+  }
+
+  function minTextChars() {
+    return clampMinTextChars(settings.minTextChars);
+  }
+
+  function ownUrn(el) {
+    if (!el || el.nodeType !== 1) return "";
+    const attrs = ["data-id", "data-urn", "componentkey", "data-activity-urn"];
+    for (const attr of attrs) {
+      const value = el.getAttribute(attr);
+      if (!value || !/urn:li:(activity|ugcPost|share|aggregatedShare)/.test(value)) continue;
+      const match = value.match(/urn:li:(?:activity|ugcPost|share|aggregatedShare):[^\s,"]+/);
+      return match ? match[0] : value;
+    }
+    return "";
+  }
+
+  function matchesSelector(node, selector) {
+    try {
+      return Boolean(node?.matches?.(selector));
+    } catch {
+      return false;
+    }
+  }
+
+  function isInsideNestedUpdate(node, root) {
+    if (!node || !root || node === root) return false;
+    const rootUrn = ownUrn(root);
+    let current = node.nodeType === 1 ? node : node.parentElement;
+    while (current && current !== root) {
+      if (NESTED_UPDATE_SELECTORS.some((selector) => matchesSelector(current, selector))) return true;
+      const urn = ownUrn(current);
+      if (rootUrn && urn && urn !== rootUrn) return true;
+      current = current.parentElement;
+    }
+    return false;
+  }
+
+  function profileSlugFromHref(href) {
+    if (!href) return "";
+    try {
+      const url = new URL(href, "https://www.linkedin.com");
+      const match = url.pathname.match(/\/in\/([^/]+)/i);
+      return match ? decodeURIComponent(match[1]).replace(/\/$/, "").toLowerCase() : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function selfProfileSlug() {
+    const doc = typeof document !== "undefined" ? document : null;
+    if (!doc) return "";
+    for (const selector of SELF_PROFILE_SELECTORS) {
+      let nodes = [];
+      try {
+        nodes = Array.from(doc.querySelectorAll(selector));
+      } catch {
+        continue;
+      }
+      for (const node of nodes) {
+        const slug = profileSlugFromHref(node.getAttribute("href") || "");
+        if (slug) return slug;
+      }
+    }
+    let links = [];
+    try {
+      links = Array.from(doc.querySelectorAll("nav a[href*='/in/'], header a[href*='/in/'], .global-nav a[href*='/in/']"));
+    } catch {
+      links = [];
+    }
+    for (const link of links) {
+      const label = `${link.getAttribute("aria-label") || ""} ${link.innerText || ""}`.replace(/\s+/g, " ").trim();
+      if (!/^(me|ja)\b/i.test(label)) continue;
+      const slug = profileSlugFromHref(link.getAttribute("href") || "");
+      if (slug) return slug;
+    }
+    return "";
+  }
+
+  function isOwnProfileSurface() {
+    const self = selfProfileSlug();
+    if (!self || typeof location === "undefined") return false;
+    const page = profileSlugFromHref(location.pathname);
+    if (!page || page !== self) return false;
+    return /\/recent-activity(\/|$)/.test(location.pathname) || /\/in\/[^/]+\/?$/.test(location.pathname);
+  }
+
+  function actorProfileSlug(el) {
+    let links = [];
+    try {
+      links = Array.from(el.querySelectorAll('a[href*="/in/"]'));
+    } catch {
+      return "";
+    }
+    for (const link of links) {
+      if (link.closest(".comments-comment-item, .comments-comments-list")) continue;
+      if (isInsideNestedUpdate(link, el)) continue;
+      const slug = profileSlugFromHref(link.getAttribute("href") || "");
+      if (slug) return slug;
+    }
+    return "";
+  }
+
+  function isNestedCard(el) {
+    const parent = el?.parentElement?.closest?.(POST_SELECTORS.join(","));
+    return Boolean(parent && parent !== el);
+  }
+
+  function isOwnPost(el) {
+    const self = selfProfileSlug();
+    if (!self || !el) return false;
+    const actor = actorProfileSlug(el);
+    if (actor) return actor === self;
+    if (isOwnProfileSurface() && !isNestedCard(el)) return true;
+    return false;
+  }
+
+  function substantiveText(value) {
+    return String(value || "")
+      .replace(/https?:\/\/\S+/gi, " ")
+      .replace(/\bwww\.\S+/gi, " ")
+      .replace(/[#＃][\p{L}\p{N}_-]+/gu, " ")
+      .replace(/@[\p{L}\p{N}_.-]+/gu, " ")
+      .replace(/\p{Extended_Pictographic}/gu, " ")
+      .replace(/[\u{1F1E6}-\u{1F1FF}\u200D\uFE0F]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function isSkipped(el) {
@@ -157,10 +337,10 @@
   }
 
   function extractPost(el) {
-    if (!el || isSkipped(el)) return null;
+    if (!el || isSkipped(el) || isOwnPost(el)) return null;
     const id = postId(el);
     const text = postText(el);
-    if (!id || !text || text.length < MIN_TEXT_CHARS) return null;
+    if (!id || !text || substantiveText(text).length < minTextChars()) return null;
     return { id, text, author: postAuthor(el) };
   }
 
@@ -183,36 +363,57 @@
     return "hash:" + hashText(postText(el) || el.textContent || "");
   }
 
-  function postText(el) {
-    for (const selector of TEXT_SELECTORS) {
-      let node = null;
-      try {
-        node = el.querySelector(selector);
-      } catch {
-        node = null;
-      }
-      if (!node || node.closest(".comments-comment-item")) continue;
-      const text = cleanText(node.innerText || node.textContent || "");
-      if (text.length >= MIN_TEXT_CHARS) return text.slice(0, 6000);
+  function queryAll(root, selector) {
+    try {
+      return Array.from(root.querySelectorAll(selector));
+    } catch {
+      return [];
     }
-    const clone = el.cloneNode(true);
+  }
+
+  function stripNestedFromClone(clone, rootUrn) {
+    const drop = [];
+    for (const node of queryAll(clone, "*")) {
+      if (NESTED_UPDATE_SELECTORS.some((selector) => matchesSelector(node, selector))) {
+        drop.push(node);
+        continue;
+      }
+      const urn = ownUrn(node);
+      if (rootUrn && urn && urn !== rootUrn) drop.push(node);
+    }
+    for (const node of drop) {
+      if (node.isConnected) node.remove();
+    }
     clone.querySelectorAll(
-      ".comments-comment-item, .social-details-social-counts, button, nav, .update-components-actor",
-    ).forEach((n) => n.remove());
+      ".comments-comment-item, .comments-comments-list, .social-details-social-counts, button, nav, .update-components-actor",
+    ).forEach((node) => node.remove());
+  }
+
+  function postText(el) {
+    let best = "";
+    for (const selector of TEXT_SELECTORS) {
+      for (const node of queryAll(el, selector)) {
+        if (node.closest(".comments-comment-item, .comments-comments-list")) continue;
+        if (isInsideNestedUpdate(node, el)) continue;
+        const text = cleanText(node.innerText || node.textContent || "");
+        if (text.length > best.length) best = text;
+      }
+    }
+    if (best) return best.slice(0, 6000);
+    const clone = el.cloneNode(true);
+    stripNestedFromClone(clone, ownUrn(el));
     const fallback = cleanText(clone.innerText || "");
-    return fallback.length >= MIN_TEXT_CHARS ? fallback.slice(0, 6000) : "";
+    return fallback ? fallback.slice(0, 6000) : "";
   }
 
   function postAuthor(el) {
     for (const selector of AUTHOR_SELECTORS) {
-      let node = null;
-      try {
-        node = el.querySelector(selector);
-      } catch {
-        continue;
+      for (const node of queryAll(el, selector)) {
+        if (isInsideNestedUpdate(node, el)) continue;
+        if (node.closest(".comments-comment-item, .comments-comments-list")) continue;
+        const text = cleanText(node?.innerText || node?.textContent || "");
+        if (text && text.length < 80) return text.split("\n")[0];
       }
-      const text = cleanText(node?.innerText || node?.textContent || "");
-      if (text && text.length < 80) return text.split("\n")[0];
     }
     const aria = el.querySelector("[aria-label*='post by'], [aria-label*='posta']")?.getAttribute("aria-label");
     if (aria) {
@@ -478,7 +679,7 @@
     return { label: String(label).trim() || "AI slop", percent, meta, title };
   }
 
-  function fillBanner(banner, el, revealed) {
+  function fillBanner(banner, el, revealed, placement) {
     const doc = banner.ownerDocument || document;
     const copy = bannerCopy(el);
     banner.className = revealed ? "lais-banner lais-banner--open" : "lais-banner";
@@ -513,16 +714,18 @@
       banner.appendChild(tip);
     }
     if (copy.title) banner.title = copy.title;
+    const inFlow = placement === "flow";
+    const floating = revealed && !inFlow;
     pinBox(banner, {
-      position: revealed ? "absolute" : "relative",
+      position: floating ? "absolute" : "relative",
       "z-index": "22",
       display: "flex",
       "align-items": "center",
       "justify-content": "space-between",
       gap: "12px",
       "box-sizing": "border-box",
-      width: revealed ? "auto" : "100%",
-      margin: "0",
+      width: floating ? "auto" : "100%",
+      margin: inFlow ? "8px 0" : "0",
       padding: revealed ? "10px 14px" : "16px 18px",
       "border-radius": "14px",
       background: "#9f1239",
@@ -534,10 +737,68 @@
       "pointer-events": "auto",
       filter: "none",
       "-webkit-filter": "none",
-      top: revealed ? "8px" : "auto",
-      right: revealed ? "8px" : "auto",
-      left: revealed ? "8px" : "auto",
+      top: floating ? "8px" : "auto",
+      right: floating ? "8px" : "auto",
+      left: floating ? "8px" : "auto",
     });
+  }
+
+  function commentaryNode(card) {
+    for (const selector of TEXT_SELECTORS) {
+      for (const node of queryAll(card, selector)) {
+        if (node.closest(".comments-comment-item, .comments-comments-list")) continue;
+        if (isInsideNestedUpdate(node, card)) continue;
+        return node;
+      }
+    }
+    return null;
+  }
+
+  function actorHeader(card) {
+    if (!card) return null;
+    for (const selector of ACTOR_HEADER_SELECTORS) {
+      for (const node of queryAll(card, selector)) {
+        if (isInsideNestedUpdate(node, card)) continue;
+        if (node.closest(".comments-comment-item, .comments-comments-list")) continue;
+        return node;
+      }
+    }
+    const commentary = commentaryNode(card);
+    let avatar = null;
+    for (const node of queryAll(card, "a[href*='/in/'] img, img.update-components-actor__avatar, [data-view-name='feed-actor-image'], a[data-view-name='feed-actor-image']")) {
+      if (isInsideNestedUpdate(node, card)) continue;
+      if (node.closest(".comments-comment-item")) continue;
+      avatar = node;
+      break;
+    }
+    if (!avatar) return null;
+    let node = avatar;
+    while (node.parentElement && node.parentElement !== card) {
+      const parent = node.parentElement;
+      if (commentary && parent.contains(commentary) && !node.contains(commentary)) break;
+      node = parent;
+    }
+    return node === card ? null : node;
+  }
+
+  function offsetBelow(card, actor) {
+    const cardRect = card.getBoundingClientRect?.();
+    const actorRect = actor.getBoundingClientRect?.();
+    if (cardRect && actorRect && (actorRect.height > 0 || actorRect.bottom > cardRect.top)) {
+      return Math.max(0, Math.round(actorRect.bottom - cardRect.top));
+    }
+    let top = 0;
+    let node = actor;
+    const guard = new Set();
+    while (node && node !== card && !guard.has(node)) {
+      guard.add(node);
+      top += node.offsetTop || 0;
+      const next = node.offsetParent;
+      if (!next || next === node) break;
+      if (next !== card && !card.contains(next)) break;
+      node = next;
+    }
+    return Math.max(0, top + (actor.offsetHeight || 0));
   }
 
   function styleCover(cover) {
@@ -591,7 +852,30 @@
       banner.setAttribute("role", "status");
       cover.appendChild(banner);
     }
-    fillBanner(banner, card, false);
+    fillBanner(banner, card, false, "cover");
+  }
+
+  function mountCoverBelowActor(card, actor) {
+    ensurePaintBox(card);
+    const doc = card.ownerDocument || document;
+    const cover = doc.createElement("div");
+    cover.className = "lais-cover lais-cover--below-actor";
+    card.appendChild(cover);
+    styleCover(cover);
+    const top = offsetBelow(card, actor);
+    pinBox(cover, { top: `${top}px` });
+    const banner = doc.createElement("div");
+    banner.setAttribute("role", "status");
+    cover.appendChild(banner);
+    fillBanner(banner, card, false, "cover");
+  }
+
+  function mountFlowBanner(actor, card) {
+    const doc = actor.ownerDocument || document;
+    const banner = doc.createElement("div");
+    banner.setAttribute("role", "status");
+    actor.insertAdjacentElement("afterend", banner);
+    fillBanner(banner, card, true, "flow");
   }
 
   function mountOpenBanner(host, card) {
@@ -609,7 +893,7 @@
       banner.setAttribute("role", "status");
       host.appendChild(banner);
     }
-    fillBanner(banner, card, true);
+    fillBanner(banner, card, true, "overlay");
   }
 
   function mountScrim(host) {
@@ -674,12 +958,27 @@
     const rooted = ensurePaintBox(el);
     const boxes = rooted ? [] : hostBoxes(el);
     clearCoverNodes(el);
+    const actor = actorHeader(el);
+    if (actor && rooted) {
+      if (revealed) mountFlowBanner(actor, el);
+      else mountCoverBelowActor(el, actor);
+      return;
+    }
     if (rooted) {
       if (revealed) mountOpenBanner(el, el);
       else mountCover(el, el);
       return;
     }
-    const hosts = boxes.filter((box) => canHostVeil(box));
+    const hosts = boxes.filter((box) => {
+      if (!canHostVeil(box)) return false;
+      if (!actor) return true;
+      if (box === actor || actor.contains(box)) return false;
+      return true;
+    });
+    if (actor && revealed) {
+      mountFlowBanner(actor, el);
+      return;
+    }
     const target = hosts[0] || el;
     if (revealed) {
       mountOpenBanner(target, el);
@@ -696,6 +995,17 @@
     const revealed = el.dataset.laisRevealed === "1";
     const hasCover = Boolean(el.querySelector(".lais-cover, .lais-scrim"));
     const hasBanner = Boolean(el.querySelector(".lais-banner"));
+    const actor = actorHeader(el);
+    if (actor && !isContentsDisplay(el)) {
+      if (!allow) return hasCover || hasBanner || el.classList.contains("li-ai-slop-covered");
+      if (revealed) {
+        const banner = actor.nextElementSibling;
+        return hasCover || !banner?.classList?.contains("lais-banner") || !el.classList.contains("li-ai-slop-revealed");
+      }
+      const cover = el.querySelector(":scope > .lais-cover.lais-cover--below-actor");
+      if (!el.classList.contains("li-ai-slop-covered") || !cover?.querySelector(".lais-banner")) return true;
+      return false;
+    }
     if (!allow) return hasCover || hasBanner || el.classList.contains("li-ai-slop-covered");
     if (revealed) return hasCover || !hasBanner || !el.classList.contains("li-ai-slop-revealed");
     if (!el.classList.contains("li-ai-slop-covered") || !hasBanner) return true;
@@ -756,6 +1066,7 @@
       mode: "demo",
       proToken: "",
       blurSlop: stored.blurSlop !== false,
+      minTextChars: clampMinTextChars(stored.minTextChars),
     };
     return settings;
   }
@@ -828,9 +1139,26 @@
     }
   }
 
+  function clearCardChrome(el) {
+    if (!el) return;
+    el.querySelectorAll("[data-lais-dimmed]").forEach((node) => {
+      node.classList.remove("lais-dimmed");
+      node.style.removeProperty("opacity");
+      delete node.dataset.laisDimmed;
+    });
+    el.querySelectorAll(".lais-badge, .lais-cover, .lais-banner, .lais-scrim").forEach((node) => node.remove());
+    el.classList.remove("li-ai-slop-covered", "li-ai-slop-blurred", "li-ai-slop-revealed");
+    delete el.dataset.laisVerdict;
+    delete el.dataset.laisRevealed;
+  }
+
   function enqueue(el) {
     if (!settings.enabled) return;
     if (demoLimitActive()) return;
+    if (isOwnPost(el)) {
+      clearCardChrome(el);
+      return;
+    }
     const post = extractPost(el);
     if (!post) return;
     const cached = verdicts.get(post.id);
@@ -1046,6 +1374,7 @@
     if (api?.onStorageChanged) {
       api.onStorageChanged((changes) => {
         if (changes.blurSlop) settings.blurSlop = changes.blurSlop.newValue !== false;
+        if (changes.minTextChars) settings.minTextChars = clampMinTextChars(changes.minTextChars.newValue);
         const changedKeys = Object.keys(changes);
         if (changedKeys.length > 0 && changedKeys.every((key) => key === "blurSlop")) {
           applySettings({ blurSlop: settings.blurSlop });
@@ -1089,8 +1418,14 @@
     extractPost,
     postId,
     postText,
+    postAuthor,
+    substantiveText,
+    isOwnPost,
+    selfProfileSlug,
+    actorHeader,
     setBadge,
     applySettings,
     DEFAULTS,
+    DEFAULT_MIN_TEXT_CHARS,
   };
 });

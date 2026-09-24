@@ -135,13 +135,18 @@
 }
 
 .lais-banner--open {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  left: 8px;
-  width: auto;
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: 100%;
+  margin: 8px 0;
   padding: 10px 14px;
   font-size: 18px;
+}
+
+.lais-cover--below-actor {
+  top: auto;
 }
 
 .lais-banner__label {

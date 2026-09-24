@@ -9,7 +9,8 @@
         </div>
         <div class="update-components-text">
           Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%
-          after we stopped retrying 409s.
+          after we stopped retrying 409s. The queue drained overnight and support stopped
+          paging the on-call about duplicate charges from the EU batch window.
         </div>
         <div class="comments-comment-item">
           <div class="update-components-text">komentarz testowy — nie oceniać</div>
@@ -21,7 +22,8 @@
         <a href="/in/jan-nowak/">Jan Nowak</a>
         <div class="feed-shared-inline-show-more-text">
           I'm humbled and thrilled to announce that in a world where leadership matters,
-          consistency is key. Agree? 🚀
+          consistency is key. Agree? 🚀 We rewrote the onboarding checklist, cut the
+          empty slogans, and shipped the first cohort with a real mentor rota last Monday.
         </div>
       </div>
 
@@ -30,6 +32,8 @@
         <span class="update-components-actor__name">Ola</span>
         <div class="feed-shared-update-v2__commentary">
           We moved the cron to 02:15 UTC because EU traffic was colliding with the US batch.
+          The overlap was creating duplicate ledger rows, so the job now waits until both
+          regions are quiet and writes a single reconciliation file.
         </div>
       </div>
 
@@ -38,7 +42,8 @@
         <p componentkey="actor">Marek</p>
         <div data-testid="expandable-text-box">
           Hired two SDEs in Kraków. One from the intern class, one from a failed marketplace
-          startup. Both start Monday.
+          startup. Both start Monday. They will own the billing retry path and the
+          on-call rota for the first quarter, with a written handover from the current pair.
         </div>
       </article>
 
@@ -52,10 +57,54 @@
         <div data-id="urn:li:activity:666">
           <div class="update-components-text">
             Nested wrapper should be de-duplicated. The public API now returns 429 with a
-            Retry-After header instead of a blank 500.
+            Retry-After header instead of a blank 500. Clients that ignored the header
+            kept hammering the edge and we logged the drop in yesterday's incident note.
           </div>
         </div>
       </div>
+      <!-- Udostępnienie: krótki własny komentarz + długi post w środku -->
+      <div class="feed-shared-update-v2" data-urn="urn:li:activity:reshare-outer">
+        <div class="update-components-actor">
+          <a href="/in/ola-reshares/">
+            <img alt="" />
+            Ola Reshare
+          </a>
+        </div>
+        <div class="update-components-text">
+          Bang! #Czympojade jako przykład zastosowania RAG z Bielik AI i klasyfikatorów treści takich jak TypeSafe AI
+        </div>
+        <div class="feed-shared-update-v2__update-content-wrapper">
+          <div class="feed-shared-update-v2 feed-shared-update-v2--nested" data-urn="urn:li:activity:reshare-inner">
+            <div class="update-components-actor">
+              <a href="/in/tomasz-bitner/">Tomasz</a>
+            </div>
+            <div class="update-components-text">
+              Inwestujemy pieniądze tam, gdzie widzimy uzasadnienie biznesowe i możliwość
+              dowiezienia produktu w tym kwartale. Redakcja CRN policzyła trzy wdrożenia
+              RAG u wydawców i każde miało właściciela, budżet oraz datę odcięcia.
+              Ten akapit jest celowo dłuższy niż próg własnego tekstu, żeby karta
+              wewnętrzna mogła dostać osobny werdykt, bez przenoszenia go na udostępniającego.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-shared-update-v2" data-urn="urn:li:activity:own-long">
+        <div class="update-components-actor">
+          <a href="/in/pawel-mamcarz/">Pawel Mamcarz</a>
+        </div>
+        <div class="update-components-text">
+          This is my own long note about a billing retry I wrote by hand on Tuesday.
+          Failure rate dropped from 4.1 percent to 0.6 percent after we stopped retrying
+          conflicts, and the on-call page stayed quiet for the rest of the week.
+        </div>
+      </div>
+
+      <nav class="global-nav">
+        <div class="global-nav__me">
+          <a href="/in/pawel-mamcarz/">Ja</a>
+        </div>
+      </nav>
     </main>
   </body>
 </html>

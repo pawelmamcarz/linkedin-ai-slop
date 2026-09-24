@@ -20,5 +20,6 @@ export const INTENSITY_MIXED_MAX = 1.5;
 
 export const DEFAULT_PROXY_URL = "https://proxy-production-ebcc.up.railway.app";
 export const DEFAULT_CONCURRENCY = 2;
-export const MIN_TEXT_CHARS = 40;
+/** Domyślna długość własnego tekstu w content script, po odcięciu hashtagów, wzmianek, URL i emoji. */
+export const MIN_TEXT_CHARS = 200;
 export const MAX_TEXT_CHARS = 6000;

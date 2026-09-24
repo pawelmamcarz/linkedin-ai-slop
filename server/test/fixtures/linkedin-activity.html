@@ -11,6 +11,8 @@
                 <span dir="ltr">
                   On the activity tab this post sits in a list item, not a home-feed card.
                   Shipped the retry policy on Tuesday and the 409s stopped piling up.
+                  The dashboard now shows a single retry budget per customer instead of
+                  an unbounded loop that woke the on-call twice last month.
                 </span>
               </div>
             </article>
@@ -20,14 +22,18 @@
               <span class="update-components-actor__name">Ola</span>
               <div data-view-name="feed-commentary">
                 Profile activity still carries a commentary block long enough to score
-                after the member scrolls the recent-activity list.
+                after the member scrolls the recent-activity list. The note includes the
+                date, the owner, and the metric we actually moved, so it clears the
+                minimum length after hashtags and links are stripped.
               </div>
             </div>
           </li>
           <li role="listitem" componentkey="profile-activity-urn:li:activity:999">
             <div data-testid="expandable-text-box">
               Third card on the shares tab uses a listitem and componentkey instead of
-              feed-shared-update-v2. The badge should still land on this post.
+              feed-shared-update-v2. The badge should still land on this post once the
+              commentary is long enough to classify. We kept the original incident date
+              and the name of the service that failed over.
             </div>
           </li>
           <li class="profile-creator-shared-feed-update__container">

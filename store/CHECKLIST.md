@@ -4,6 +4,12 @@ Paczka: `store/linkedin-ai-slop-extension.zip` (odtworzysz ją przez `npm run pa
 
 W zipie jest tylko zawartość `extension/`. `manifest.json` leży w korzeniu archiwum. Nie ma `server/`, `.env` ani `node_modules`.
 
+## Wersja 0.2.4
+
+v0.2.4 nie ocenia krótkiego komentarza przy udostępnieniu ani tekstu posta w środku jako werdyktu karty zewnętrznej. Próg to 200 znaków własnego tekstu po odcięciu hashtagów, wzmianek, linków i emoji (opcja w ustawieniach). Posty zalogowanej osoby są pomijane. Baner AI slop stoi pod nagłówkiem autora.
+
+v0.2.4 does not score a short reshare comment, and it does not treat the nested post as the outer card's verdict. The floor is 200 characters of the post's own text after hashtags, mentions, links, and emoji are removed (an option in settings). The signed-in member's posts are skipped. The AI slop banner sits below the author header.
+
 ## Wersja 0.2.3
 
 v0.2.3 zastępuje mocne rozmycie banerem na całą szerokość karty: „AI slop” i „Pokaż”. Po odsłonięciu przycisk to „Ukryj”. Scrim jest lekki, bez `filter: blur(20px)`. Wersja w manifeście jest podbita, żeby Chrome pokazał nową paczkę.
@@ -22,11 +28,11 @@ v0.2.1 dodaje na ocenionych odznakach podpowiedź po najechaniu: "AI slop: N%". 
 
 v0.2.1 adds a hover tip on scored badges: "AI slop: N%". The public Demo cap is 60 scores per minute and 200 per day per IP (`EVALUATE_DAILY_IP_CAP=200`).
 
-Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.3).
+Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.4).
 
 ## Przed wysłaniem
 
-- [ ] Wersja w `extension/manifest.json` to 0.2.3
+- [ ] Wersja w `extension/manifest.json` to 0.2.4
 - [ ] `npm run pack:extension` po ostatniej zmianie w `extension/`
 - [ ] W zipie są `icons/icon16.png`, `icons/icon48.png`, `icons/icon128.png`
 - [ ] Domyślny adres proxy to `https://proxy-production-ebcc.up.railway.app`

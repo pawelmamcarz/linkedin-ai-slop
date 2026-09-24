@@ -40,7 +40,7 @@ Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia 
 
 Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund na adres IP**. Rozszerzenie trzyma równoległość 2 i kolejkę 40, więc szybki scroll potrafi zbliżyć się do ~60 ocen na minutę, gdy Jev odpowiada w około 2 s. Limit 30 na minutę ucinałby taką sesję. `EVALUATE_RATE_LIMIT=0` wyłącza limit (własne proxy). `GET /health` nie jest limitowany. Adres IP bierze się z pierwszego wpisu `X-Forwarded-For` (Railway). `TRUST_PROXY=0` ignoruje ten nagłówek.
 
-Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła tekstu krótszego niż 40 znaków. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie).
+Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła własnego tekstu, który po odcięciu hashtagów, @wzmianek, linków i emoji ma mniej niż 200 znaków (opcja w ustawieniach, domyślnie 200). Komentarz przy udostępnieniu nie obejmuje tekstu posta w środku. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie).
 
 Trzy warianty, bez mieszania cen: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
 
@@ -122,7 +122,7 @@ Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`
 
 Wejdź na [https://www.linkedin.com/feed/](https://www.linkedin.com/feed/) i przewiń. Posty, które wejdą w widok (ok. 35% wysokości), dostają odznakę w prawym górnym rogu karty. Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%".
 
-Gdy werdykt to **AI slop**, karta dostaje baner na całą szerokość: „AI slop” i przycisk „Pokaż”. Pod banerem jest lekki scrim, bez `filter: blur`. Treść nie jest czytelna, dopóki nie wybierzesz „Pokaż”. Potem przycisk zmienia się w „Ukryj”, a post da się czytać. Mała odznaka w rogu zostaje dla Ludzki i Mieszany. Przy AI slop baner zastępuje odznakę, żeby nie dublować etykiety. Opcja „Zakrywaj posty AI slop” (Cover AI slop posts, klucz `blurSlop`) jest domyślnie włączona. To samo dotyczy kart recent-activity, które content script już oznacza.
+Gdy werdykt to **AI slop**, karta dostaje baner na całą szerokość: „AI slop” i przycisk „Pokaż”. Baner stoi pod nagłówkiem autora (imię i awatar zostają widoczne), nad tekstem. Pod banerem jest lekki scrim, bez `filter: blur`. Treść nie jest czytelna, dopóki nie wybierzesz „Pokaż”. Potem przycisk zmienia się w „Ukryj”, a post da się czytać. Mała odznaka w rogu zostaje dla Ludzki i Mieszany. Przy AI slop baner zastępuje odznakę, żeby nie dublować etykiety. Opcja „Zakrywaj posty AI slop” (Cover AI slop posts, klucz `blurSlop`) jest domyślnie włączona. To samo dotyczy kart recent-activity, które content script już oznacza. Posty zalogowanej osoby są pomijane, gdy da się odczytać profil z menu Ja.
 
 Żeby zobaczyć samą nakładkę bez LinkedIn: załaduj rozszerzenie, uruchom proxy i otwórz [http://127.0.0.1:8787/demo](http://127.0.0.1:8787/demo). To fixture z tymi samymi selektorami, nie strona LinkedIn.
 
@@ -139,7 +139,7 @@ Jev zwraca prawdopodobieństwa. Decyzja, co pokazać, jest w kodzie: [`jev/thres
 | reszta | — | odznaka **Ludzki** |
 | Noul `has_substance` | **≥ 0.50** | tylko w dymku („Substancja: tak/nie”), nie zmienia koloru |
 
-Content script nie wysyła tekstu krótszego niż 40 znaków. Na proxy limit ciała to 6000 znaków.
+Content script nie wysyła własnego tekstu krótszego niż 200 znaków po odcięciu hashtagów, @wzmianek, linków i emoji. Na proxy limit ciała to 6000 znaków.
 
 ## Pytania Jev
 
