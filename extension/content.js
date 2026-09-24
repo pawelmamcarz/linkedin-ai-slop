@@ -8,7 +8,12 @@
     module.exports = api;
   }
   root.LinkedInAiSlop = api;
-  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
+  const ext = typeof globalThis !== "undefined" ? globalThis.ExtApi : undefined;
+  const hasRuntime =
+    (ext && typeof ext.hasRuntime === "function" && ext.hasRuntime()) ||
+    (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) ||
+    (typeof browser !== "undefined" && browser.runtime && browser.runtime.id);
+  if (hasRuntime) {
     const host = typeof location !== "undefined" ? location.hostname : "";
     const isLinkedIn = host.endsWith("linkedin.com");
     const isDemo =
@@ -246,21 +251,24 @@
       .join("\n");
   }
 
+  function extensionApi() {
+    if (typeof globalThis !== "undefined" && globalThis.ExtApi?.storageGet) return globalThis.ExtApi;
+    return null;
+  }
+
   async function loadSettings() {
-    if (typeof chrome === "undefined" || !chrome.storage?.sync) {
+    const api = extensionApi();
+    if (!api) {
       settings = { ...DEFAULTS };
       return settings;
     }
-    return new Promise((resolve) => {
-      chrome.storage.sync.get(DEFAULTS, (stored) => {
-        settings = {
-          enabled: stored.enabled !== false,
-          threshold: Number(stored.threshold) || DEFAULTS.threshold,
-          proxyUrl: String(stored.proxyUrl || DEFAULTS.proxyUrl).replace(/\/$/, ""),
-        };
-        resolve(settings);
-      });
-    });
+    const stored = await api.storageGet(DEFAULTS);
+    settings = {
+      enabled: stored.enabled !== false,
+      threshold: Number(stored.threshold) || DEFAULTS.threshold,
+      proxyUrl: String(stored.proxyUrl || DEFAULTS.proxyUrl).replace(/\/$/, ""),
+    };
+    return settings;
   }
 
   function scheduleScan() {
@@ -342,22 +350,15 @@
   }
 
   function requestEvaluation(payload) {
-    if (typeof chrome !== "undefined" && chrome.runtime?.id && chrome.runtime.sendMessage) {
-      return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ type: "evaluate", payload }, (response) => {
-          const lastError = chrome.runtime.lastError;
-          if (lastError) {
-            reject(new Error(lastError.message));
-            return;
-          }
-          if (!response?.ok) {
-            const message = response?.body?.message || response?.body?.error || "Proxy nie oceniło posta";
-            noteProxy(message);
-            reject(new Error(message));
-            return;
-          }
-          resolve(response.body);
-        });
+    const api = extensionApi();
+    if (api?.hasRuntime?.() && api.sendMessage) {
+      return api.sendMessage({ type: "evaluate", payload }).then((response) => {
+        if (!response?.ok) {
+          const message = response?.body?.message || response?.body?.error || "Proxy nie oceniło posta";
+          noteProxy(message);
+          throw new Error(message);
+        }
+        return response.body;
       });
     }
     return fetch(`${settings.proxyUrl}/evaluate`, {
@@ -434,9 +435,9 @@
     if (booted) return;
     booted = true;
     await loadSettings();
-    if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area !== "sync") return;
+    const api = extensionApi();
+    if (api?.onStorageChanged) {
+      api.onStorageChanged((changes) => {
         if (changes.enabled) settings.enabled = changes.enabled.newValue !== false;
         if (changes.threshold) settings.threshold = Number(changes.threshold.newValue) || DEFAULTS.threshold;
         if (changes.proxyUrl) {

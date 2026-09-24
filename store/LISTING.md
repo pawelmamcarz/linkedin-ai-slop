@@ -54,11 +54,15 @@ https://pawelmamcarz.github.io/linkedin-ai-slop/en/
 
 ### EN 3
 
-A small Chrome extension that badges LinkedIn posts. It does not publish, read your inbox, or store the API key.
+A small extension that badges LinkedIn posts in Chrome, Brave, and Edge (one package) and in Safari after a Mac build. It does not publish, read your inbox, or store the API key.
 
 The hosted proxy is a limited public demo. Serious use means your own proxy.
 
 https://github.com/pawelmamcarz/linkedin-ai-slop
+
+## Przeglądarki
+
+Chrome, Brave i Edge: jeden zip, load unpacked. Brave: `store/BRAVE.md`. Safari: build Xcode, bez App Store, `store/SAFARI.md`. Sklep Chrome jeszcze nie jest ścieżką instalacji.
 
 ## Chrome Web Store
 

@@ -6,7 +6,10 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.linkedin.com/*",
-    "https://proxy-production-ebcc.up.railway.app/*"
+    "https://*.linkedin.com/*",
+    "https://proxy-production-ebcc.up.railway.app/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
   "optional_host_permissions": [
     "https://*.up.railway.app/*",
@@ -33,13 +36,13 @@
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],
-      "js": ["content.js"],
+      "js": ["ext-api.js", "content.js"],
       "css": ["badge.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["http://127.0.0.1:8787/*", "http://localhost:8787/*"],
-      "js": ["content.js"],
+      "js": ["ext-api.js", "content.js"],
       "css": ["badge.css"],
       "run_at": "document_idle"
     }

@@ -26,7 +26,7 @@
         <label>
           Adres proxy
           <input id="proxy" type="url" required spellcheck="false" />
-          <span class="hint">Domyślnie <code>https://proxy-production-ebcc.up.railway.app</code>. Własny adres (także localhost) wymaga zgody w Chrome.</span>
+          <span class="hint">Domyślnie <code>https://proxy-production-ebcc.up.railway.app</code>. Własny adres spoza manifestu wymaga zgody przeglądarki (Chrome, Brave, Edge). W Safari własny host spoza listy włączasz w Ustawieniach → Rozszerzenia.</span>
         </label>
         <div class="actions">
           <button type="submit">Zapisz</button>
@@ -35,6 +35,7 @@
         <p id="status" role="status"></p>
       </form>
     </main>
+    <script src="ext-api.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

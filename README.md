@@ -1,6 +1,6 @@
 # LinkedIn AI Slop
 
-Rozszerzenie Chrome/Edge (Manifest V3) na feed LinkedIn. Przy scrollowaniu wyciąga tekst posta i pyta model **Jev** (TypeSafe System One), czy to AI-slop. Na karcie pojawia się odznaka: **Ludzki**, **Mieszany** albo **AI slop**.
+Rozszerzenie Manifest V3 na feed LinkedIn: Chrome, Brave i Edge z jednej paczki, Safari z projektu Xcode w `safari/`. Przy scrollowaniu wyciąga tekst posta i pyta model **Jev** (TypeSafe System One), czy to AI-slop. Na karcie pojawia się odznaka: **Ludzki**, **Mieszany** albo **AI slop**.
 
 Klucz API zostaje na proxy. Rozszerzenie go nie zawiera. Domyślnie proxy to publiczne demo:
 
@@ -94,10 +94,14 @@ z `"model": "jev-latest"` przez `@typesafe-ai/sdk`.
 
 ### 2. Rozszerzenie
 
-1. Otwórz `chrome://extensions` (w Edge: `edge://extensions`).
+Chrome, Brave i Edge ładują ten sam katalog `extension/`.
+
+1. Otwórz `chrome://extensions`, w Brave `brave://extensions`, w Edge `edge://extensions`.
 2. Włącz tryb dewelopera.
 3. **Załaduj rozpakowane** i wskaż katalog `extension/`.
-4. Ikona rozszerzenia: włącz ocenę, próg, adres proxy. Domyślny adres to `https://proxy-production-ebcc.up.railway.app`. Przycisk **Sprawdź proxy** powinien pokazać model `jev-latest`. Własny URL (także `http://127.0.0.1:8787`) zapisuje się w opcjach. Chrome pyta wtedy o zgodę na ten host.
+4. Ikona rozszerzenia: włącz ocenę, próg, adres proxy. Domyślny adres to `https://proxy-production-ebcc.up.railway.app`. Przycisk **Sprawdź proxy** powinien pokazać model `jev-latest`. Własny URL spoza manifestu zapisuje się w opcjach. Przeglądarka pyta wtedy o zgodę na ten host. Localhost i publiczne proxy są już na liście hostów.
+
+Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`, potem Develop → Allow Unsigned Extensions. Szczegóły: [`safari/README.md`](safari/README.md). App Store nie jest przygotowany. Notatki: [`store/BRAVE.md`](store/BRAVE.md), [`store/SAFARI.md`](store/SAFARI.md).
 
 ### 3. Feed
 
@@ -136,16 +140,18 @@ Jedno wywołanie na post, cztery pytania. Rubryki: [`jev/questions.ts`](jev/ques
 ## Architektura
 
 ```
-extension/          content script na linkedin.com
+extension/          jedna paczka Chromium (Chrome, Brave, Edge) i źródło Safari
+  ext-api.js        chrome.* albo browser.*, storage.sync z zejściem na local
   content.js        MutationObserver + IntersectionObserver, deduplikacja, debounce, max 2 żądania naraz
   background.js     fetch do proxy (klucz tu nie występuje)
   options.html      włącznik, próg, URL proxy
+safari/             wrapper Xcode; build kopiuje extension/ do bundla
 server/             Node + TypeScript, trzyma TYPESAFE_API_KEY
   POST /evaluate    { postId, text, author? } → mapowanie na odznakę
 jev/                pytania i progi, do review
 ```
 
-CORS proxy puszcza `https://www.linkedin.com`, `https://pawelmamcarz.github.io`, `localhost`, `127.0.0.1` oraz `chrome-extension://`. Rozszerzenie i tak woła proxy z service workera (uprawnienie hosta), więc ocena feedu nie zależy od CORS strony.
+CORS proxy puszcza `https://www.linkedin.com`, `https://pawelmamcarz.github.io`, `localhost`, `127.0.0.1`, `chrome-extension://` oraz `safari-web-extension://`. Rozszerzenie i tak woła proxy z service workera (uprawnienie hosta), więc ocena feedu nie zależy od CORS strony. Publiczne demo na Railway odbije origin Safari dopiero po wdrożeniu tej wersji proxy.
 
 Gdy zmienisz port lokalnego proxy, zaktualizuj adres w opcjach. Content script podglądu `/demo` jest podpięty pod `http://127.0.0.1:8787` i `http://localhost:8787` jako opcjonalne uprawnienie, nie jako domyślny host.
 
@@ -171,7 +177,7 @@ Test proxy podmienia `fetch` do `api.typesafe.ai` i sprawdza, że wychodzi `POST
 npm run pack:extension
 ```
 
-Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md).
+Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Ten zip jest dla Chrome, Brave i Edge. Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md). Safari budujesz osobno na Macu (`bash scripts/build-safari.sh`).
 
 ## Poza zakresem
 
@@ -179,4 +185,4 @@ Aplikacja mobilna, wątki komentarzy. Wysłanie paczki do Chrome Web Store jest 
 
 ## Prywatność
 
-Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w `chrome.storage.sync` tylko włącznik, próg i URL. Polityka: [docs/privacy.html](docs/privacy.html).
+Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w storage przeglądarki tylko włącznik, próg i URL. Polityka: [docs/privacy.html](docs/privacy.html).

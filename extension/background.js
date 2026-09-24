@@ -1,11 +1,15 @@
 /**
  * Service worker: woła proxy, żeby content script na https://www.linkedin.com
  * nie trzymał klucza i nie walczył z CORS / mixed content.
+ * Fetch idzie z rozszerzenia (Chrome, Brave, Edge, Safari), nie ze strony,
+ * więc Shields Brave na linkedin.com tego żądania nie widzą.
  * Domyślny adres trzymaj zgodny z jev/thresholds.ts (DEFAULT_PROXY_URL).
  */
+importScripts("ext-api.js");
+
 const DEFAULT_PROXY = "https://proxy-production-ebcc.up.railway.app";
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+ExtApi.onMessage((message, _sender, sendResponse) => {
   if (!message || (message.type !== "evaluate" && message.type !== "health")) return;
   const task = message.type === "health" ? health(message.proxyUrl) : evaluate(message.payload);
   task
@@ -25,7 +29,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 async function proxyBase(override) {
   if (override) return String(override).replace(/\/$/, "");
-  const stored = await chrome.storage.sync.get({ proxyUrl: DEFAULT_PROXY });
+  const stored = await ExtApi.storageGet({ proxyUrl: DEFAULT_PROXY });
   return String(stored.proxyUrl || DEFAULT_PROXY).replace(/\/$/, "");
 }
 

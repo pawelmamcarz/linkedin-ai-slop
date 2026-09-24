@@ -1,0 +1,148 @@
+import { describe, it, afterEach } from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const root = resolve(import.meta.dirname, "../..");
+
+type ExtApi = {
+  hasRuntime: () => boolean;
+  storageGet: (defaults: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  storageSet: (values: Record<string, unknown>) => Promise<void>;
+  manifestGrants: (origin: string) => boolean;
+  permissionsContains: (origin: string) => Promise<boolean>;
+  permissionsRequest: (origin: string) => Promise<boolean>;
+  sendMessage: (message: unknown) => Promise<unknown>;
+};
+
+function loadApi(): ExtApi {
+  delete (globalThis as { ExtApi?: unknown }).ExtApi;
+  delete require.cache[require.resolve("../../extension/ext-api.js")];
+  return require("../../extension/ext-api.js") as ExtApi;
+}
+
+describe("manifest hostów", () => {
+  const manifest = JSON.parse(readFileSync(resolve(root, "extension/manifest.json"), "utf8")) as {
+    host_permissions: string[];
+    background: { service_worker: string };
+    content_scripts: { js: string[] }[];
+    browser_specific_settings?: unknown;
+  };
+
+  it("obejmuje LinkedIn, publiczne proxy i localhost", () => {
+    for (const host of [
+      "https://www.linkedin.com/*",
+      "https://*.linkedin.com/*",
+      "https://proxy-production-ebcc.up.railway.app/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*",
+    ]) {
+      assert.ok(manifest.host_permissions.includes(host), host);
+    }
+  });
+
+  it("nie ma klucza Safari w manifeście Chromium", () => {
+    assert.equal(manifest.browser_specific_settings, undefined);
+    assert.equal(manifest.background.service_worker, "background.js");
+    assert.deepEqual(manifest.content_scripts[0].js, ["ext-api.js", "content.js"]);
+  });
+});
+
+describe("ExtApi", () => {
+  afterEach(() => {
+    delete (globalThis as { chrome?: unknown }).chrome;
+    delete (globalThis as { browser?: unknown }).browser;
+    delete (globalThis as { ExtApi?: unknown }).ExtApi;
+  });
+
+  it("czyta storage.sync przez callback chrome", async () => {
+    (globalThis as { chrome?: unknown }).chrome = {
+      runtime: { id: "chromium" },
+      storage: {
+        sync: {
+          get(defaults: Record<string, unknown>, cb: (v: unknown) => void) {
+            cb({ ...defaults, enabled: false });
+          },
+        },
+      },
+    };
+    const api = loadApi();
+    const stored = await api.storageGet({ enabled: true, threshold: 0.65 });
+    assert.equal(stored.enabled, false);
+    assert.equal(api.hasRuntime(), true);
+  });
+
+  it("gdy browser.storage.sync rzuca, schodzi na local", async () => {
+    (globalThis as { browser?: unknown }).browser = {
+      runtime: {
+        id: "safari",
+        sendMessage: () => Promise.resolve({ ok: true }),
+      },
+      storage: {
+        sync: {
+          get() {
+            return Promise.reject(new Error("sync unavailable"));
+          },
+        },
+        local: {
+          get(defaults: Record<string, unknown>) {
+            return Promise.resolve({ ...defaults, proxyUrl: "http://127.0.0.1:8787" });
+          },
+        },
+      },
+    };
+    const api = loadApi();
+    const stored = await api.storageGet({ proxyUrl: "https://proxy-production-ebcc.up.railway.app" });
+    assert.equal(stored.proxyUrl, "http://127.0.0.1:8787");
+    const response = (await api.sendMessage({ type: "health" })) as { ok: boolean };
+    assert.equal(response.ok, true);
+  });
+
+  it("uznaje hosty z manifestu i pyta o obcy origin", async () => {
+    let requested: string[] = [];
+    (globalThis as { chrome?: unknown }).chrome = {
+      runtime: { id: "chromium" },
+      permissions: {
+        contains() {
+          return Promise.resolve(false);
+        },
+        request(opts: { origins: string[] }) {
+          requested = opts.origins;
+          return Promise.resolve(true);
+        },
+      },
+    };
+    const api = loadApi();
+    assert.equal(api.manifestGrants("https://proxy-production-ebcc.up.railway.app/"), true);
+    assert.equal(api.manifestGrants("http://localhost:8787/"), true);
+    assert.equal(api.manifestGrants("https://www.linkedin.com/"), true);
+    assert.equal(api.manifestGrants("https://evil.example/"), false);
+    assert.equal(await api.permissionsContains("https://proxy-production-ebcc.up.railway.app/"), true);
+    assert.equal(await api.permissionsRequest("https://evil.example/"), true);
+    assert.deepEqual(requested, ["https://evil.example/"]);
+  });
+});
+
+describe("patch manifestu Safari", () => {
+  it("dopisuje browser_specific_settings i nie kasuje hostów", () => {
+    const dir = mkdtempSync(join(tmpdir(), "safari-manifest-"));
+    const path = join(dir, "manifest.json");
+    writeFileSync(path, readFileSync(resolve(root, "extension/manifest.json")));
+    execFileSync("python3", [resolve(root, "scripts/patch-safari-manifest.py"), path], { stdio: "pipe" });
+    const patched = JSON.parse(readFileSync(path, "utf8")) as {
+      browser_specific_settings: { safari: { strict_min_version: string } };
+      host_permissions: string[];
+    };
+    assert.equal(patched.browser_specific_settings.safari.strict_min_version, "16.4");
+    assert.ok(patched.host_permissions.includes("https://proxy-production-ebcc.up.railway.app/*"));
+    const source = JSON.parse(readFileSync(resolve(root, "extension/manifest.json"), "utf8")) as {
+      browser_specific_settings?: unknown;
+    };
+    assert.equal(source.browser_specific_settings, undefined);
+    rmSync(dir, { recursive: true, force: true });
+  });
+});

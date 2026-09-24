@@ -46,7 +46,7 @@
         <div class="hero-brand">
           <img class="mark" src="brand/mark.png" width="88" height="88" alt="" />
           <div>
-            <p class="kicker">Tylko LinkedIn · Chrome i Edge</p>
+            <p class="kicker">Tylko LinkedIn · Chrome, Brave, Edge i Safari</p>
             <h1>LinkedIn AI Slop</h1>
           </div>
         </div>
@@ -66,7 +66,8 @@
         </p>
         <p class="fine">
           Hostowane proxy to publiczne demo z limitem. Do codziennej pracy postaw własne proxy i własny klucz (BYOK).
-          Sklep Chrome jeszcze nie jest źródłem instalacji. Paczka zip jest w repozytorium.
+          Sklep Chrome jeszcze nie jest źródłem instalacji. Ta sama paczka zip działa w Chrome, Brave i Edge.
+          Safari to osobny build na Macu (niepodpisane rozszerzenie deweloperskie), bez App Store.
           Produkt działa tylko na LinkedIn.
         </p>
       </section>
@@ -88,22 +89,34 @@
       </div>
 
       <h2 class="section-title">Instalacja</h2>
-      <div class="grid-2">
+      <div class="grid-3">
         <article class="card">
-          <h2>Rozpakowane</h2>
+          <h2>Chrome i Edge</h2>
           <ol class="steps">
-            <li>Pobierz <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repozytorium</a>.</li>
+            <li>Pobierz <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repozytorium</a> albo rozpakuj <code>store/linkedin-ai-slop-extension.zip</code>.</li>
             <li>Otwórz <code>chrome://extensions</code> albo <code>edge://extensions</code> i włącz tryb dewelopera.</li>
-            <li>Wybierz <strong>Załaduj rozpakowane</strong> i wskaż katalog <code>extension/</code>.</li>
+            <li><strong>Załaduj rozpakowane</strong> i wskaż katalog <code>extension/</code>.</li>
           </ol>
+          <p>Sklep Chrome jeszcze nie publikuje tej pozycji. Zip odtwarzasz przez <code>npm run pack:extension</code>.</p>
         </article>
         <article class="card">
-          <h2>Paczka zip</h2>
-          <p>
-            <code>npm run pack:extension</code> składa <code>store/linkedin-ai-slop-extension.zip</code>.
-            Rozpakuj zip i wskaż ten katalog w trybie dewelopera. W archiwum jest tylko rozszerzenie, bez serwera i bez klucza.
-          </p>
-          <p>W opcjach włącz ocenę. Przycisk <strong>Sprawdź proxy</strong> powinien pokazać model <code>jev-latest</code>.</p>
+          <h2>Brave</h2>
+          <p>Ta sama paczka Chromium. Osobnego pliku Brave nie ma.</p>
+          <ol class="steps">
+            <li>Otwórz <code>brave://extensions</code> i włącz tryb dewelopera.</li>
+            <li><strong>Załaduj rozpakowane</strong> i wskaż <code>extension/</code>.</li>
+            <li>Gdy sklep Chrome ruszy, Brave umie wziąć stamtąd ten sam wpis. Dziś go nie ma.</li>
+          </ol>
+          <p>Notatka: <code>store/BRAVE.md</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Safari</h2>
+          <p>Projekt Xcode w <code>safari/</code>. Na Macu: <code>bash scripts/build-safari.sh</code>. To nie jest App Store ani TestFlight.</p>
+          <ol class="steps">
+            <li>Safari → Develop → <strong>Allow Unsigned Extensions</strong>.</li>
+            <li>Uruchom aplikację z Xcode, włącz rozszerzenie i zezwól na <code>www.linkedin.com</code>.</li>
+          </ol>
+          <p>Notatka: <code>store/SAFARI.md</code>.</p>
         </article>
       </div>
 
@@ -127,7 +140,7 @@
         <p>
           Na proxy idzie identyfikator posta, tekst (do 6000 znaków) i opcjonalnie imię z karty.
           Proxy nie zapisuje treści postów na dysk. W pamięci trzyma skrót znormalizowanego tekstu i werdykt, z czasem życia, oraz licznik żądań na IP.
-          Rozszerzenie w <code>chrome.storage.sync</code> trzyma tylko włącznik, próg i adres proxy.
+          Rozszerzenie w storage przeglądarki (<code>storage.sync</code>, a gdy sync nie działa, <code>storage.local</code>) trzyma tylko włącznik, próg i adres proxy.
           Szczegóły: <a href="privacy.html">polityka prywatności</a> i <a href="terms.html">regulamin</a>.
         </p>
       </aside>
