@@ -6,6 +6,8 @@
     "start": "npm --prefix server start",
     "test": "npm --prefix server test",
     "typecheck": "npm --prefix server run typecheck",
-    "pack:extension": "node scripts/pack-extension.mjs"
+    "pack:extension": "node scripts/pack-extension.mjs",
+    "brand": "node scripts/render-brand.mjs",
+    "shots": "node scripts/shots.mjs"
   }
 }

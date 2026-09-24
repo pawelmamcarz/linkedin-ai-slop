@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Human, Mixed, and AI slop badges on the LinkedIn feed. Scored by TypeSafe Jev (jev-latest). The API key stays on the proxy."
+    />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/en/" />
+    <link rel="icon" href="../favicon.png" type="image/png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="pl_PL" />
+    <meta property="og:url" content="https://pawelmamcarz.github.io/linkedin-ai-slop/en/" />
+    <meta property="og:title" content="LinkedIn AI Slop" />
+    <meta
+      property="og:description"
+      content="Human, Mixed, and AI slop badges on the LinkedIn feed. The API key stays on the proxy."
+    />
+    <meta property="og:image" content="https://pawelmamcarz.github.io/linkedin-ai-slop/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="LinkedIn AI Slop badges: Human, Mixed, AI slop" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LinkedIn AI Slop" />
+    <meta name="twitter:description" content="Human, Mixed, and AI slop badges on the LinkedIn feed. The API key stays on the proxy." />
+    <meta name="twitter:image" content="https://pawelmamcarz.github.io/linkedin-ai-slop/og.png" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="top top-wide">
+      <a class="brand" href="index.html"><img class="brand-mark" src="../brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
+      <nav>
+        <a href="../demo.html">Demo</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a class="lang-link" href="../index.html" hreflang="pl">PL</a>
+      </nav>
+    </header>
+
+    <main class="wrap wrap-wide">
+      <section class="hero">
+        <div class="hero-brand">
+          <img class="mark" src="../brand/mark.png" width="88" height="88" alt="" />
+          <div>
+            <p class="kicker">LinkedIn only · Chrome and Edge</p>
+            <h1>LinkedIn AI Slop</h1>
+          </div>
+        </div>
+        <p class="lede">
+          A badge on the post card while you scroll the feed: Human, Mixed, or AI slop.
+          Scoring goes through TypeSafe Jev. The API key never enters the extension.
+        </p>
+        <ul class="pills hero-badges" aria-label="Badges">
+          <li class="lais-badge lais-badge--human lais-badge--inline">Ludzki</li>
+          <li class="lais-badge lais-badge--mixed lais-badge--inline">Mieszany</li>
+          <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
+        </ul>
+        <p class="actions">
+          <a class="button" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Install from GitHub</a>
+          <a class="button button-quiet" href="../demo.html">Open the demo</a>
+          <a class="button button-quiet" href="https://mamcarz.com">Author: mamcarz.com</a>
+        </p>
+        <p class="fine">
+          The hosted proxy is a public demo with limits. For daily use, run your own proxy and your own key (BYOK).
+          The Chrome Web Store is not the install path yet. The zip lives in the repository.
+          The product works on LinkedIn only.
+        </p>
+      </section>
+
+      <h2 class="section-title">How it works</h2>
+      <div class="grid-3">
+        <article class="card">
+          <h2>1. Visible post</h2>
+          <p>When a card is about 35% in view, the extension reads that post. Comments are skipped. Text shorter than 40 characters never leaves the browser.</p>
+        </article>
+        <article class="card">
+          <h2>2. Jev on the proxy</h2>
+          <p>One call per post: model <code>jev-latest</code>, questions <code>is_ai_slop</code>, <code>slop_intensity</code>, <code>has_substance</code>, <code>voice</code>. The default threshold is 0.65.</p>
+        </article>
+        <article class="card">
+          <h2>3. Badge</h2>
+          <p>The color is decided in the repository, not on this page. Hover the badge to see the probabilities. Labels stay Polish: Ludzki, Mieszany, AI slop.</p>
+        </article>
+      </div>
+
+      <h2 class="section-title">Install</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Unpacked</h2>
+          <ol class="steps">
+            <li>Clone the <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repository</a>.</li>
+            <li>Open <code>chrome://extensions</code> or <code>edge://extensions</code> and turn on developer mode.</li>
+            <li>Choose <strong>Load unpacked</strong> and select the <code>extension/</code> folder.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <h2>Store zip</h2>
+          <p>
+            <code>npm run pack:extension</code> builds <code>store/linkedin-ai-slop-extension.zip</code>.
+            Unzip it and load that folder in developer mode. The archive is the extension only, with no server and no key.
+          </p>
+          <p>Turn scoring on in the options. <strong>Check proxy</strong> should report the model <code>jev-latest</code>.</p>
+        </article>
+      </div>
+
+      <h2 class="section-title">Demo proxy and your own key</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Public demo</h2>
+          <p><code>https://proxy-production-ebcc.up.railway.app</code></p>
+          <p>The <code>TYPESAFE_API_KEY</code> stays on the server. This page does not have it and does not call TypeSafe. GitHub Pages serves only <code>docs/</code>.</p>
+          <p>Limit: 60 requests per minute per IP. Repeated text does not call Jev again (verdict cache). This is a best-effort demo, not an unlimited service.</p>
+        </article>
+        <article class="card">
+          <h2>BYOK</h2>
+          <p>Your own proxy: <code>cd server</code>, <code>npm install</code>, <code>npm start</code>. In options set <code>http://127.0.0.1:8787</code>. Put the key only in <code>server/.env</code>.</p>
+          <p>Text sent to Jev is cut at 6000 characters. An optional per-IP daily cap is <code>EVALUATE_DAILY_IP_CAP</code>.</p>
+        </article>
+      </div>
+
+      <aside class="callout">
+        <h2>Privacy, short version</h2>
+        <p>
+          The proxy receives the post id, the text (up to 6000 characters), and optionally the name on the card.
+          It does not write post text to disk. Memory holds a hash of the normalized text and the verdict, with a TTL, plus the per-IP request counter.
+          The extension stores only the toggle, the threshold, and the proxy URL in <code>chrome.storage.sync</code>.
+          Details: <a href="privacy.html">privacy policy</a> and <a href="terms.html">terms</a>.
+        </p>
+      </aside>
+
+      <h2 class="section-title">From the author</h2>
+      <p class="fine">Paweł Mamcarz. Other projects, the same URLs as on mamcarz.com.</p>
+      <div class="project-grid" style="margin-top: 12px">
+        <a class="project" href="https://mamcarz.com"><strong>Paweł Mamcarz</strong><span>Procurement, operational apps, and aviation.</span></a>
+        <a class="project" href="https://mamcarz.com/case-studies/"><strong>Case studies</strong><span>Selected deliveries and products.</span></a>
+        <a class="project" href="https://mamcarz.com/aplikacje-operacyjne/"><strong>Operational apps</strong><span>Tools for day-to-day work.</span></a>
+        <a class="project" href="https://silence-tax.com"><strong>Silence Tax</strong><span>Calculator for the cost of silence in an organization.</span></a>
+        <a class="project" href="https://procuracost.com"><strong>ProcuraCost</strong><span>Calculator for procurement process cost.</span></a>
+        <a class="project" href="https://przypominamy.com"><strong>Przypominamy</strong><span>Notification platform for organizations.</span></a>
+        <a class="project" href="https://czympojade.pl"><strong>czympojade.pl</strong><span>Fleet TCO calculator, Bielik model.</span></a>
+        <a class="project" href="https://akrobacja.com"><strong>akrobacja.com</strong><span>Vouchers for aerobatic flights.</span></a>
+        <a class="project" href="https://filmolot.pl"><strong>FilmoLot</strong><span>Aviation photography and video.</span></a>
+        <a class="project" href="https://resortkomedii.pl"><strong>Resort Komedii</strong><span>Improv stage in Warsaw.</span></a>
+        <a class="project" href="https://www.linkedin.com/in/pawelmamcarz/"><strong>LinkedIn</strong><span>Paweł Mamcarz, professional profile.</span></a>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="../demo.html">Demo</a>
+        <a href="../index.html" hreflang="pl">Polski</a>
+      </nav>
+    </footer>
+  </body>
+</html>

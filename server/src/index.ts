@@ -5,8 +5,16 @@ import { pathToFileURL } from "node:url";
 import { config as loadEnv } from "dotenv";
 import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
 import { JEV_ENDPOINT, JEV_MODEL } from "../../jev/questions.ts";
-import { evaluatePost, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
-import { clientIp, consumeEvaluateSlot } from "./rate-limit.ts";
+import { evaluateWithMeta, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
+import { clientIp, consumeDailySlot, consumeEvaluateSlot, dailyIpCap } from "./rate-limit.ts";
+import {
+  logTokenUsage,
+  normalizePostText,
+  readVerdict,
+  storeVerdict,
+  verdictCacheStats,
+  verdictFromCache,
+} from "./verdict-cache.ts";
 
 const envPath = resolve(import.meta.dirname, "../.env");
 if (existsSync(envPath)) {
@@ -37,6 +45,8 @@ export function createProxyServer(): Server {
           endpoint: JEV_ENDPOINT,
           hasApiKey: Boolean(process.env.TYPESAFE_API_KEY?.trim()),
           defaultProxy: DEFAULT_PROXY_URL,
+          cache: verdictCacheStats(),
+          dailyIpCap: dailyIpCap(),
         });
         return;
       }
@@ -52,13 +62,24 @@ export function createProxyServer(): Server {
       }
 
       if (req.method === "POST" && url.pathname === "/evaluate") {
-        const limit = consumeEvaluateSlot(clientIp(req));
+        const ip = clientIp(req);
+        const limit = consumeEvaluateSlot(ip);
         if (!limit.allowed) {
           const windowSec = Math.round(limit.windowMs / 1000);
           res.setHeader("Retry-After", String(limit.retryAfterSec));
           json(res, 429, {
             error: "rate_limited",
             message: `Limit publicznego demo: ${limit.limit} ocen na ${windowSec}s z jednego adresu IP. Spróbuj za ${limit.retryAfterSec}s albo uruchom własne proxy.`,
+          });
+          return;
+        }
+
+        const daily = consumeDailySlot(ip);
+        if (!daily.allowed) {
+          res.setHeader("Retry-After", String(daily.retryAfterSec));
+          json(res, 429, {
+            error: "daily_limited",
+            message: `Dzienny limit publicznego demo: ${daily.cap} ocen z jednego adresu IP. Uruchom własne proxy albo spróbuj jutro.`,
           });
           return;
         }
@@ -77,8 +98,35 @@ export function createProxyServer(): Server {
           return;
         }
 
-        const result = await evaluatePost({ postId, text, author, threshold });
-        json(res, 200, result);
+        const textChars = normalizePostText(text).length;
+        const cached = readVerdict(text);
+        if (cached) {
+          logTokenUsage({
+            cache: "HIT",
+            inputTokens: cached.inputTokens,
+            outputTokens: cached.outputTokens,
+            model: cached.model,
+            textChars,
+          });
+          json(res, 200, verdictFromCache(postId, cached, threshold), { "X-Cache": "HIT" });
+          return;
+        }
+
+        const evaluated = await evaluateWithMeta({ postId, text, author, threshold });
+        storeVerdict(text, {
+          model: evaluated.model,
+          answers: evaluated.answers,
+          inputTokens: evaluated.inputTokens,
+          outputTokens: evaluated.outputTokens,
+        });
+        logTokenUsage({
+          cache: "MISS",
+          inputTokens: evaluated.inputTokens,
+          outputTokens: evaluated.outputTokens,
+          model: evaluated.model,
+          textChars,
+        });
+        json(res, 200, evaluated.result, { "X-Cache": "MISS" });
         return;
       }
 
@@ -161,11 +209,17 @@ function isAllowedOrigin(origin: string): boolean {
   }
 }
 
-function json(res: ServerResponse, status: number, body: unknown): void {
+function json(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+  extra?: Record<string, string>,
+): void {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(payload),
+    ...extra,
   });
   res.end(payload);
 }

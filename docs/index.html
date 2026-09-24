@@ -6,107 +6,158 @@
     <title>LinkedIn AI Slop</title>
     <meta
       name="description"
-      content="Rozszerzenie Chrome, które oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena przez TypeSafe Jev (model jev-latest). Klucz TYPESAFE_API_KEY zostaje na proxy."
+      content="Odznaki Ludzki, Mieszany i AI slop na feedzie LinkedIn. Ocena TypeSafe Jev (jev-latest). Klucz API zostaje na proxy."
     />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pl_PL" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://pawelmamcarz.github.io/linkedin-ai-slop/" />
+    <meta property="og:title" content="LinkedIn AI Slop" />
+    <meta
+      property="og:description"
+      content="Odznaki Ludzki, Mieszany i AI slop na feedzie LinkedIn. Klucz API zostaje na proxy."
+    />
+    <meta property="og:image" content="https://pawelmamcarz.github.io/linkedin-ai-slop/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="LinkedIn AI Slop: odznaki Ludzki, Mieszany i AI slop" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LinkedIn AI Slop" />
+    <meta name="twitter:description" content="Odznaki Ludzki, Mieszany i AI slop na feedzie LinkedIn. Klucz API zostaje na proxy." />
+    <meta name="twitter:image" content="https://pawelmamcarz.github.io/linkedin-ai-slop/og.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="top">
-      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+    <header class="top top-wide">
+      <a class="brand" href="index.html"><img class="brand-mark" src="brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
       <nav>
-        <a href="demo.html">Podgląd</a>
+        <a href="demo.html">Demo</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a class="lang-link" href="en/index.html" hreflang="en">EN</a>
       </nav>
     </header>
-    <main class="wrap">
-      <h1>LinkedIn AI Slop</h1>
-      <p class="lede">
-        Rozszerzenie do Chrome i Edge. Przy scrollowaniu feedu LinkedIn na karcie
-        pojawia się odznaka. Kod jest publiczny:
-        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
-      </p>
-      <ul class="pills" aria-label="Rodzaje odznak">
-        <li class="lais-badge lais-badge--human lais-badge--inline">Ludzki</li>
-        <li class="lais-badge lais-badge--mixed lais-badge--inline">Mieszany</li>
-        <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
-      </ul>
 
-      <section>
-        <h2>Co to jest</h2>
-        <p>
-          Gdy post wejdzie w widok (około 35% wysokości kadru), rozszerzenie
-          wyciąga jego tekst i prosi o ocenę. Odznaka ląduje w prawym górnym
-          rogu karty. Komentarze pod postem są pomijane, a tekst krótszy niż
-          40 znaków w ogóle nie wychodzi z przeglądarki.
+    <main class="wrap wrap-wide">
+      <section class="hero">
+        <div class="hero-brand">
+          <img class="mark" src="brand/mark.png" width="88" height="88" alt="" />
+          <div>
+            <p class="kicker">Tylko LinkedIn · Chrome i Edge</p>
+            <h1>LinkedIn AI Slop</h1>
+          </div>
+        </div>
+        <p class="lede">
+          Odznaka na karcie posta, gdy scrollujesz feed: Ludzki, Mieszany albo AI slop.
+          Ocena idzie przez TypeSafe Jev. Klucz API nie trafia do rozszerzenia.
+        </p>
+        <ul class="pills hero-badges" aria-label="Odznaki">
+          <li class="lais-badge lais-badge--human lais-badge--inline">Ludzki</li>
+          <li class="lais-badge lais-badge--mixed lais-badge--inline">Mieszany</li>
+          <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
+        </ul>
+        <p class="actions">
+          <a class="button" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Zainstaluj z GitHub</a>
+          <a class="button button-quiet" href="demo.html">Zobacz demo</a>
+          <a class="button button-quiet" href="https://mamcarz.com">Autor: mamcarz.com</a>
+        </p>
+        <p class="fine">
+          Hostowane proxy to publiczne demo z limitem. Do codziennej pracy postaw własne proxy i własny klucz (BYOK).
+          Sklep Chrome jeszcze nie jest źródłem instalacji. Paczka zip jest w repozytorium.
+          Produkt działa tylko na LinkedIn.
         </p>
       </section>
 
-      <section>
-        <h2>TypeSafe Jev</h2>
-        <p>
-          Ocena idzie przez TypeSafe Jev API:
-          <code>POST https://api.typesafe.ai/v1/systemone</code>, model
-          <code>jev-latest</code>. Jedno wywołanie na post, cztery pytania:
-          <code>is_ai_slop</code>, <code>slop_intensity</code>,
-          <code>has_substance</code>, <code>voice</code>.
-        </p>
-        <p>
-          Kolor odznaki liczy kod w repozytorium
-          (<code>jev/thresholds.ts</code>), nie ta strona. Domyślny próg
-          <code>is_ai_slop</code> to 0.65.
-        </p>
-      </section>
+      <h2 class="section-title">Jak to działa</h2>
+      <div class="grid-3">
+        <article class="card">
+          <h2>1. Widoczny post</h2>
+          <p>Gdy karta wejdzie w widok (około 35% wysokości), rozszerzenie bierze tekst posta. Komentarze pomija. Tekst krótszy niż 40 znaków zostaje w przeglądarce.</p>
+        </article>
+        <article class="card">
+          <h2>2. Jev na proxy</h2>
+          <p>Jedno wywołanie na post: model <code>jev-latest</code>, pytania <code>is_ai_slop</code>, <code>slop_intensity</code>, <code>has_substance</code>, <code>voice</code>. Próg domyślny to 0.65.</p>
+        </article>
+        <article class="card">
+          <h2>3. Odznaka</h2>
+          <p>Kolor liczy kod w repozytorium, nie ta strona. Najedź na odznakę, żeby zobaczyć prawdopodobieństwa.</p>
+        </article>
+      </div>
 
-      <section>
-        <h2>Instalacja z repozytorium</h2>
-        <p>
-          Możesz załadować katalog <code>extension/</code> z publicznego repozytorium
-          albo paczkę <code>store/linkedin-ai-slop-extension.zip</code>
-          (<code>npm run pack:extension</code>).
-        </p>
-        <ol class="steps">
-          <li>
-            Pobierz
-            <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
-          </li>
-          <li>
-            Otwórz <code>chrome://extensions</code> (w Edge:
-            <code>edge://extensions</code>) i włącz tryb dewelopera.
-          </li>
-          <li>
-            Wybierz <strong>Załaduj rozpakowane</strong> i wskaż katalog
-            <code>extension/</code> (albo rozpakowany zip).
-          </li>
-          <li>
-            W opcjach włącz ocenę. Domyślny adres proxy to
-            <code>https://proxy-production-ebcc.up.railway.app</code>.
-            Przycisk <strong>Sprawdź proxy</strong> powinien pokazać model
-            <code>jev-latest</code>.
-          </li>
-        </ol>
-      </section>
+      <h2 class="section-title">Instalacja</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Rozpakowane</h2>
+          <ol class="steps">
+            <li>Pobierz <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repozytorium</a>.</li>
+            <li>Otwórz <code>chrome://extensions</code> albo <code>edge://extensions</code> i włącz tryb dewelopera.</li>
+            <li>Wybierz <strong>Załaduj rozpakowane</strong> i wskaż katalog <code>extension/</code>.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <h2>Paczka zip</h2>
+          <p>
+            <code>npm run pack:extension</code> składa <code>store/linkedin-ai-slop-extension.zip</code>.
+            Rozpakuj zip i wskaż ten katalog w trybie dewelopera. W archiwum jest tylko rozszerzenie, bez serwera i bez klucza.
+          </p>
+          <p>W opcjach włącz ocenę. Przycisk <strong>Sprawdź proxy</strong> powinien pokazać model <code>jev-latest</code>.</p>
+        </article>
+      </div>
+
+      <h2 class="section-title">Proxy demo i własny klucz</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Publiczne demo</h2>
+          <p><code>https://proxy-production-ebcc.up.railway.app</code></p>
+          <p>Klucz <code>TYPESAFE_API_KEY</code> zostaje na serwerze. Ta strona go nie ma i sama nie woła TypeSafe. GitHub Pages serwuje tylko <code>docs/</code>.</p>
+          <p>Limit: 60 żądań na minutę z jednego adresu IP. Powtórzony tekst nie woła Jev drugi raz (pamięć podręczna werdyktu). To demo w dobrej wierze, nie usługa bez limitu.</p>
+        </article>
+        <article class="card">
+          <h2>BYOK</h2>
+          <p>Własne proxy: <code>cd server</code>, <code>npm install</code>, <code>npm start</code>. W opcjach wpisz <code>http://127.0.0.1:8787</code>. Klucz wstawiasz tylko w <code>server/.env</code>.</p>
+          <p>Tekst wysyłany do Jev jest obcięty do 6000 znaków. Opcjonalny dobowy limit IP włączysz zmienną <code>EVALUATE_DAILY_IP_CAP</code>.</p>
+        </article>
+      </div>
 
       <aside class="callout">
-        <h2>Hostowane proxy i własny klucz</h2>
+        <h2>Prywatność w skrócie</h2>
         <p>
-          Domyślne proxy jest na Railway. Klucz <code>TYPESAFE_API_KEY</code> zostaje
-          po stronie serwera. Ta strona go nie ma i sama nie woła TypeSafe.
-          Własne proxy jest opcjonalne: <code>cd server</code>, potem
-          <code>npm install</code> i <code>npm start</code>, a w opcjach rozszerzenia
-          adres <code>http://127.0.0.1:8787</code>. GitHub Pages serwuje tylko pliki
-          z <code>docs/</code>.
-        </p>
-        <p>
-          Publiczne <code>POST /evaluate</code> przyjmuje do 60 żądań na minutę
-          z jednego adresu IP, żeby demo nie wypaliło klucza.
+          Na proxy idzie identyfikator posta, tekst (do 6000 znaków) i opcjonalnie imię z karty.
+          Proxy nie zapisuje treści postów na dysk. W pamięci trzyma skrót znormalizowanego tekstu i werdykt, z czasem życia, oraz licznik żądań na IP.
+          Rozszerzenie w <code>chrome.storage.sync</code> trzyma tylko włącznik, próg i adres proxy.
+          Szczegóły: <a href="privacy.html">polityka prywatności</a> i <a href="terms.html">regulamin</a>.
         </p>
       </aside>
 
-      <p class="actions">
-        <a class="button" href="demo.html">Zobacz odznaki</a>
-        <a class="button button-quiet" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Repozytorium</a>
-      </p>
+      <h2 class="section-title">Od autora</h2>
+      <p class="fine">Paweł Mamcarz. Inne projekty, te same adresy co na mamcarz.com.</p>
+      <div class="project-grid" style="margin-top: 12px">
+        <a class="project" href="https://mamcarz.com"><strong>Paweł Mamcarz</strong><span>Zakupy, aplikacje operacyjne i lotnictwo.</span></a>
+        <a class="project" href="https://mamcarz.com/case-studies/"><strong>Case studies</strong><span>Wybrane wdrożenia i produkty.</span></a>
+        <a class="project" href="https://mamcarz.com/aplikacje-operacyjne/"><strong>Aplikacje operacyjne</strong><span>Narzędzia pod codzienną pracę.</span></a>
+        <a class="project" href="https://silence-tax.com"><strong>Silence Tax</strong><span>Kalkulator kosztów milczenia w organizacji.</span></a>
+        <a class="project" href="https://procuracost.com"><strong>ProcuraCost</strong><span>Kalkulator kosztów procedur zakupowych.</span></a>
+        <a class="project" href="https://przypominamy.com"><strong>Przypominamy</strong><span>Platforma powiadomień dla organizacji.</span></a>
+        <a class="project" href="https://czympojade.pl"><strong>czympojade.pl</strong><span>Kalkulator TCO floty, model Bielik.</span></a>
+        <a class="project" href="https://akrobacja.com"><strong>akrobacja.com</strong><span>Vouchery na loty akrobacyjne.</span></a>
+        <a class="project" href="https://filmolot.pl"><strong>FilmoLot</strong><span>Lotnictwo: fotografia i wideo.</span></a>
+        <a class="project" href="https://resortkomedii.pl"><strong>Resort Komedii</strong><span>Scena improwizacji w Warszawie.</span></a>
+        <a class="project" href="https://www.linkedin.com/in/pawelmamcarz/"><strong>LinkedIn</strong><span>Profil zawodowy Pawła Mamcarza.</span></a>
+      </div>
     </main>
+
+    <footer class="site-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a href="demo.html">Demo</a>
+        <a href="en/index.html" hreflang="en">English</a>
+      </nav>
+    </footer>
   </body>
 </html>

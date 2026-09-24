@@ -5,6 +5,15 @@ export const DEFAULT_EVALUATE_RATE_LIMIT = 60;
 export const DEFAULT_EVALUATE_RATE_WINDOW_MS = 60_000;
 
 const buckets = new Map<string, number[]>();
+const dailyBuckets = new Map<string, { day: string; count: number }>();
+
+/** 0 = brak dobowego limitu. Publiczny hamulec to 60/min oraz cache werdyktów. */
+export function dailyIpCap(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = env.EVALUATE_DAILY_IP_CAP?.trim();
+  if (!raw) return 0;
+  const cap = Number(raw);
+  return Number.isFinite(cap) && cap > 0 ? Math.floor(cap) : 0;
+}
 
 export function evaluateRateConfig(env: NodeJS.ProcessEnv = process.env): {
   limit: number;
@@ -38,6 +47,32 @@ export function clientIp(req: IncomingMessage, env: NodeJS.ProcessEnv = process.
 
 export function resetRateLimit(): void {
   buckets.clear();
+  dailyBuckets.clear();
+}
+
+export function consumeDailySlot(
+  ip: string,
+  now = Date.now(),
+  env: NodeJS.ProcessEnv = process.env,
+): { allowed: boolean; cap: number; retryAfterSec: number } {
+  const cap = dailyIpCap(env);
+  if (cap <= 0) return { allowed: true, cap, retryAfterSec: 0 };
+
+  const day = new Date(now).toISOString().slice(0, 10);
+  const row = dailyBuckets.get(ip);
+  const count = row && row.day === day ? row.count : 0;
+  if (count >= cap) {
+    const end = Date.parse(`${day}T00:00:00.000Z`) + 86_400_000;
+    const retryAfterSec = Math.max(1, Math.ceil((end - now) / 1000));
+    return { allowed: false, cap, retryAfterSec };
+  }
+  dailyBuckets.set(ip, { day, count: count + 1 });
+  if (dailyBuckets.size > 10_000) {
+    for (const [key, value] of dailyBuckets) {
+      if (value.day !== day) dailyBuckets.delete(key);
+    }
+  }
+  return { allowed: true, cap, retryAfterSec: 0 };
 }
 
 export function consumeEvaluateSlot(
