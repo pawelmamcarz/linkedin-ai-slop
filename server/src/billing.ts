@@ -1,7 +1,18 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { issueProToken, revokeProToken } from "./pro-tokens.ts";
+import {
+  issueLifetimeToken,
+  issueProToken,
+  issueTeamTokens,
+  lifetimeSoldCount,
+  revokeProToken,
+} from "./pro-tokens.ts";
 
-export type CheckoutPlan = "monthly" | "yearly";
+export type CheckoutPlan = "monthly" | "yearly" | "lifetime" | "team";
+
+const DEFAULT_LIFETIME_PLN = 199;
+const DEFAULT_TEAM_PLN = 990;
+const DEFAULT_LIFETIME_CAP = 50;
+const DEFAULT_TEAM_SEATS = 10;
 
 const GITHUB_ISSUES = "https://github.com/pawelmamcarz/linkedin-ai-slop/issues";
 
@@ -10,8 +21,82 @@ export function stripeSecret(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 export function priceIdForPlan(plan: CheckoutPlan, env: NodeJS.ProcessEnv = process.env): string {
-  const raw = plan === "yearly" ? env.STRIPE_PRICE_YEARLY : env.STRIPE_PRICE_MONTHLY;
+  const raw =
+    plan === "yearly"
+      ? env.STRIPE_PRICE_YEARLY
+      : plan === "lifetime"
+        ? env.STRIPE_PRICE_LIFETIME
+        : plan === "team"
+          ? env.STRIPE_PRICE_TEAM
+          : env.STRIPE_PRICE_MONTHLY;
   return raw?.trim() ?? "";
+}
+
+function positiveInt(raw: string | undefined, fallback: number): number {
+  if (!raw?.trim()) return fallback;
+  const value = Number(raw.trim());
+  if (!Number.isInteger(value) || value < 0) return fallback;
+  return value;
+}
+
+/** Whole PLN. 0 means the env value is unusable and no default applies. */
+export function amountPln(plan: "lifetime" | "team", env: NodeJS.ProcessEnv = process.env): number {
+  const raw = plan === "lifetime" ? env.STRIPE_LIFETIME_AMOUNT_PLN : env.STRIPE_TEAM_AMOUNT_PLN;
+  if (!raw?.trim()) return plan === "lifetime" ? DEFAULT_LIFETIME_PLN : DEFAULT_TEAM_PLN;
+  const value = Number(raw.trim());
+  if (!Number.isInteger(value) || value <= 0) return 0;
+  return value;
+}
+
+export function lifetimeCap(env: NodeJS.ProcessEnv = process.env): number {
+  return positiveInt(env.LIFETIME_PRO_CAP, DEFAULT_LIFETIME_CAP);
+}
+
+export function teamSeats(env: NodeJS.ProcessEnv = process.env): number {
+  const seats = positiveInt(env.TEAM_SEATS, DEFAULT_TEAM_SEATS);
+  return seats > 0 ? seats : DEFAULT_TEAM_SEATS;
+}
+
+export function lifetimeOffer(env: NodeJS.ProcessEnv = process.env): {
+  amountPln: number;
+  currency: "pln";
+  cap: number;
+  sold: number;
+  remaining: number;
+  available: boolean;
+} {
+  const cap = lifetimeCap(env);
+  const sold = lifetimeSoldCount(env);
+  const remaining = Math.max(0, cap - sold);
+  return {
+    amountPln: amountPln("lifetime", env) || DEFAULT_LIFETIME_PLN,
+    currency: "pln",
+    cap,
+    sold,
+    remaining,
+    available: remaining > 0 && Boolean(stripeSecret(env)) && checkoutPlanReady("lifetime", env),
+  };
+}
+
+export function offersPayload(env: NodeJS.ProcessEnv = process.env): Record<string, unknown> {
+  const lifetime = lifetimeOffer(env);
+  return {
+    lifetime,
+    team: {
+      amountPln: amountPln("team", env) || DEFAULT_TEAM_PLN,
+      currency: "pln",
+      interval: "year",
+      seats: teamSeats(env),
+      available: Boolean(stripeSecret(env)) && checkoutPlanReady("team", env),
+    },
+  };
+}
+
+export function checkoutPlanReady(plan: CheckoutPlan, env: NodeJS.ProcessEnv = process.env): boolean {
+  if (!stripeSecret(env)) return false;
+  if (priceIdForPlan(plan, env)) return true;
+  if (plan === "lifetime" || plan === "team") return amountPln(plan, env) > 0;
+  return false;
 }
 
 export function stripeCheckoutConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -31,7 +116,13 @@ export function parseCheckoutPlan(value: unknown): CheckoutPlan | null {
   const plan = String(value ?? "").trim().toLowerCase();
   if (plan === "monthly" || plan === "month") return "monthly";
   if (plan === "yearly" || plan === "year" || plan === "annual") return "yearly";
+  if (plan === "lifetime" || plan === "life") return "lifetime";
+  if (plan === "team") return "team";
   return null;
+}
+
+export function lifetimeSoldOut(env: NodeJS.ProcessEnv = process.env): boolean {
+  return lifetimeSoldCount(env) >= lifetimeCap(env);
 }
 
 export function checkoutUnavailableHtml(env: NodeJS.ProcessEnv = process.env): string {
@@ -55,6 +146,13 @@ export function checkoutUnavailableHtml(env: NodeJS.ProcessEnv = process.env): s
 </html>`;
 }
 
+function productName(plan: CheckoutPlan, seats: number): string {
+  if (plan === "lifetime") return "LinkedIn AI Slop Lifetime Pro";
+  if (plan === "team") return `LinkedIn AI Slop Team (${seats} stanowisk)`;
+  if (plan === "yearly") return "LinkedIn AI Slop Pro (rok)";
+  return "LinkedIn AI Slop Pro (miesiąc)";
+}
+
 export async function createCheckoutSession(
   plan: CheckoutPlan,
   env: NodeJS.ProcessEnv = process.env,
@@ -62,18 +160,45 @@ export async function createCheckoutSession(
 ): Promise<{ url: string }> {
   const secret = stripeSecret(env);
   const price = priceIdForPlan(plan, env);
-  if (!secret || !price) {
+  const inline = plan === "lifetime" || plan === "team" ? amountPln(plan, env) : 0;
+  if (!secret || (!price && inline <= 0)) {
     throw Object.assign(new Error("checkout_unconfigured"), { status: 503 });
   }
+  if (plan === "lifetime" && lifetimeSoldOut(env)) {
+    throw Object.assign(new Error("lifetime_sold_out"), { status: 409 });
+  }
   const base = publicBaseUrl(env);
+  const seats = teamSeats(env);
   const params = new URLSearchParams();
-  params.set("mode", "subscription");
-  params.set("line_items[0][price]", price);
+  const subscription = plan !== "lifetime";
+  params.set("mode", subscription ? "subscription" : "payment");
   params.set("line_items[0][quantity]", "1");
+  if (price) {
+    params.set("line_items[0][price]", price);
+  } else {
+    params.set("line_items[0][price_data][currency]", "pln");
+    params.set("line_items[0][price_data][unit_amount]", String(inline * 100));
+    params.set("line_items[0][price_data][product_data][name]", productName(plan, seats));
+    if (plan === "team") params.set("line_items[0][price_data][recurring][interval]", "year");
+  }
   params.set("success_url", `${base}/billing/success?session_id={CHECKOUT_SESSION_ID}`);
   params.set("cancel_url", `${base}/billing/cancel`);
   params.set("client_reference_id", plan);
   params.set("allow_promotion_codes", "true");
+  params.set("metadata[plan]", plan);
+  if (plan === "team") params.set("metadata[seats]", String(seats));
+  if (plan === "lifetime") {
+    params.set("customer_creation", "always");
+    params.set("invoice_creation[enabled]", "true");
+  }
+  if (subscription) {
+    params.set("subscription_data[metadata][plan]", plan);
+    if (plan === "team") params.set("subscription_data[metadata][seats]", String(seats));
+  }
+  if (plan === "team") {
+    params.set("billing_address_collection", "required");
+    params.set("tax_id_collection[enabled]", "true");
+  }
   const response = await fetchImpl("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
     headers: {
@@ -90,12 +215,14 @@ export async function createCheckoutSession(
   return { url: data.url };
 }
 
-type StripeSession = {
+export type StripeSession = {
   id?: string;
   customer?: string | { id?: string } | null;
   mode?: string;
   payment_status?: string;
   status?: string;
+  metadata?: { plan?: string; seats?: string } | null;
+  subscription?: string | { id?: string } | null;
 };
 
 function customerIdOf(customer: StripeSession["customer"]): string {
@@ -159,15 +286,43 @@ export function verifyStripeSignature(
 
 type StripeEvent = {
   type?: string;
-  data?: {
-    object?: {
-      customer?: string | { id?: string } | null;
-      mode?: string;
-      payment_status?: string;
-      status?: string;
-    };
-  };
+  data?: { object?: StripeSession };
 };
+
+function planOf(object: StripeSession | undefined): string {
+  return object?.metadata?.plan?.trim().toLowerCase() ?? "";
+}
+
+function seatsOf(object: StripeSession | undefined, env: NodeJS.ProcessEnv): number {
+  const raw = Number(object?.metadata?.seats);
+  if (Number.isInteger(raw) && raw > 0) return raw;
+  return teamSeats(env);
+}
+
+function subscriptionIdOf(object: StripeSession | undefined): string {
+  const subscription = object?.subscription;
+  if (typeof subscription === "string") return subscription;
+  return subscription?.id?.trim() ?? "";
+}
+
+export function grantFromCheckout(
+  object: StripeSession,
+  env: NodeJS.ProcessEnv = process.env,
+): { tokens: string[]; plan: CheckoutPlan | "pro" } | null {
+  const customerId = customerIdOf(object.customer);
+  if (!customerId || !sessionIsPaid(object)) return null;
+  const plan = planOf(object);
+  if (plan === "lifetime") {
+    return { tokens: [issueLifetimeToken(customerId, env).token], plan: "lifetime" };
+  }
+  if (plan === "team") {
+    return {
+      tokens: issueTeamTokens(customerId, seatsOf(object, env), env, subscriptionIdOf(object)).tokens,
+      plan: "team",
+    };
+  }
+  return { tokens: [issueProToken(customerId, env).token], plan: plan === "yearly" || plan === "monthly" ? plan : "pro" };
+}
 
 const ACTIVE_SUBSCRIPTION = new Set(["active", "trialing"]);
 const DEAD_SUBSCRIPTION = new Set(["canceled", "unpaid", "incomplete_expired"]);
@@ -178,7 +333,7 @@ export function applyStripeEvent(event: StripeEvent, env: NodeJS.ProcessEnv = pr
   const customerId = customerIdOf(object?.customer);
   if (!customerId) return { ok: true };
   if (type === "checkout.session.completed") {
-    if (sessionIsPaid(object ?? {})) issueProToken(customerId, env);
+    grantFromCheckout(object ?? {}, env);
     return { ok: true };
   }
   if (type === "customer.subscription.deleted") {
@@ -188,7 +343,10 @@ export function applyStripeEvent(event: StripeEvent, env: NodeJS.ProcessEnv = pr
   if (type === "customer.subscription.updated") {
     const status = object?.status ?? "";
     if (DEAD_SUBSCRIPTION.has(status)) revokeProToken(customerId, env);
-    else if (ACTIVE_SUBSCRIPTION.has(status)) issueProToken(customerId, env);
+    else if (ACTIVE_SUBSCRIPTION.has(status)) {
+      if (planOf(object) === "team") issueTeamTokens(customerId, seatsOf(object, env), env, object?.id);
+      else if (planOf(object) !== "lifetime") issueProToken(customerId, env);
+    }
   }
   return { ok: true };
 }
@@ -215,21 +373,49 @@ export function handleWebhook(
   return { status: 200, body: { received: true } };
 }
 
-export function successHtml(token: string): string {
+export function successHtml(token: string | string[], plan: CheckoutPlan | "pro" = "pro"): string {
+  const tokens = (Array.isArray(token) ? token : [token]).filter(Boolean);
+  const lifetime = plan === "lifetime";
+  const team = plan === "team";
+  const heading = team ? "Tokeny Team" : lifetime ? "Token Lifetime Pro" : "Token Pro";
+  const note = lifetime
+    ? "Token Lifetime Pro nie wygasa. Anulowanie innych subskrypcji go nie cofa."
+    : team
+      ? "Każde stanowisko wkleja własny token w opcjach rozszerzenia (tryb Pro). Subskrypcja roczna. Anulowanie cofa wszystkie tokeny z tej listy."
+      : "Zapisz token teraz. Ta strona pokazuje go ponownie po odświeżeniu, dopóki subskrypcja jest aktywna, ale nie wysyłamy go mailem.";
   return `<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Token Pro</title>
+    <title>${heading}</title>
   </head>
   <body>
     <main>
-      <h1>Token Pro</h1>
-      <p>Wklej ten token w opcjach rozszerzenia (tryb Pro). To nie jest klucz TypeSafe.</p>
-      <p>Paste this token in the extension options (Pro mode). This is not the TypeSafe key.</p>
-      <pre>${escapeHtml(token)}</pre>
-      <p>Zapisz token teraz. Ta strona pokazuje go ponownie po odświeżeniu, dopóki subskrypcja jest aktywna, ale nie wysyłamy go mailem.</p>
+      <h1>${heading}</h1>
+      <p>Wklej token w opcjach rozszerzenia (tryb Pro). To nie jest klucz TypeSafe.</p>
+      <p>Paste the token in the extension options (Pro mode). This is not the TypeSafe key.</p>
+      <pre>${escapeHtml(tokens.join("\n"))}</pre>
+      <p>${note}</p>
+    </main>
+  </body>
+</html>`;
+}
+
+export function lifetimeSoldOutHtml(): string {
+  return `<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lifetime Pro: limit</title>
+  </head>
+  <body>
+    <main>
+      <h1>Lifetime Pro: limit oferty</h1>
+      <p>Limit sprzedaży Lifetime Pro został osiągnięty. Checkout jest zamknięty.</p>
+      <p>The Lifetime Pro launch cap is reached. Checkout is closed.</p>
+      <p><a href="https://pawelmamcarz.github.io/linkedin-ai-slop/pro.html">Wróć do planów</a></p>
     </main>
   </body>
 </html>`;

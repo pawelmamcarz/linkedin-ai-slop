@@ -4,7 +4,7 @@ import type { Server } from "node:http";
 import { createHmac } from "node:crypto";
 import { resetClient } from "../src/evaluate.ts";
 import { resolveListenHost, startServer } from "../src/index.ts";
-import { issuedTokenForCustomer, resetProTokens, tokenDigest } from "../src/pro-tokens.ts";
+import { activeTokensForCustomer, issuedTokenForCustomer, isValidProToken, resetProTokens, tokenDigest } from "../src/pro-tokens.ts";
 import { DEFAULT_DEMO_DAILY_IP_CAP, resetRateLimit } from "../src/rate-limit.ts";
 import { resetVerdictCache } from "../src/verdict-cache.ts";
 import { JEV_MODEL } from "../../jev/questions.ts";
@@ -613,6 +613,211 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(denied.status, 401);
     delete process.env.STRIPE_WEBHOOK_SECRET;
     resetProTokens();
+  });
+
+  it("lifetime i team: price_data, cap, webhook i cofnięcie tylko subskrypcji", async () => {
+    const previousFetch = globalThis.fetch;
+    const previousSecret = process.env.STRIPE_SECRET_KEY;
+    const previousWebhook = process.env.STRIPE_WEBHOOK_SECRET;
+    const previousCap = process.env.LIFETIME_PRO_CAP;
+    const previousSeats = process.env.TEAM_SEATS;
+    const previousLifeAmount = process.env.STRIPE_LIFETIME_AMOUNT_PLN;
+    const previousTeamAmount = process.env.STRIPE_TEAM_AMOUNT_PLN;
+    const previousLifePrice = process.env.STRIPE_PRICE_LIFETIME;
+    const previousTeamPrice = process.env.STRIPE_PRICE_TEAM;
+    const stripeBodies: string[] = [];
+    process.env.STRIPE_SECRET_KEY = "sk_test_offers";
+    process.env.STRIPE_WEBHOOK_SECRET = "whsec_offers";
+    delete process.env.STRIPE_PRICE_LIFETIME;
+    delete process.env.STRIPE_PRICE_TEAM;
+    delete process.env.STRIPE_LIFETIME_AMOUNT_PLN;
+    delete process.env.STRIPE_TEAM_AMOUNT_PLN;
+    process.env.LIFETIME_PRO_CAP = "50";
+    process.env.TEAM_SEATS = "10";
+    resetProTokens();
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url.startsWith("https://api.stripe.com/v1/checkout/sessions") && init?.method === "POST") {
+        stripeBodies.push(String(init.body ?? ""));
+        return new Response(JSON.stringify({ url: "https://checkout.stripe.com/c/pay/cs_test_offers" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return previousFetch(input, init);
+    }) as typeof fetch;
+
+    const restore = () => {
+      globalThis.fetch = previousFetch;
+      if (previousSecret === undefined) delete process.env.STRIPE_SECRET_KEY;
+      else process.env.STRIPE_SECRET_KEY = previousSecret;
+      if (previousWebhook === undefined) delete process.env.STRIPE_WEBHOOK_SECRET;
+      else process.env.STRIPE_WEBHOOK_SECRET = previousWebhook;
+      if (previousCap === undefined) delete process.env.LIFETIME_PRO_CAP;
+      else process.env.LIFETIME_PRO_CAP = previousCap;
+      if (previousSeats === undefined) delete process.env.TEAM_SEATS;
+      else process.env.TEAM_SEATS = previousSeats;
+      if (previousLifeAmount === undefined) delete process.env.STRIPE_LIFETIME_AMOUNT_PLN;
+      else process.env.STRIPE_LIFETIME_AMOUNT_PLN = previousLifeAmount;
+      if (previousTeamAmount === undefined) delete process.env.STRIPE_TEAM_AMOUNT_PLN;
+      else process.env.STRIPE_TEAM_AMOUNT_PLN = previousTeamAmount;
+      if (previousLifePrice === undefined) delete process.env.STRIPE_PRICE_LIFETIME;
+      else process.env.STRIPE_PRICE_LIFETIME = previousLifePrice;
+      if (previousTeamPrice === undefined) delete process.env.STRIPE_PRICE_TEAM;
+      else process.env.STRIPE_PRICE_TEAM = previousTeamPrice;
+      resetProTokens();
+    };
+
+    try {
+      process.env.STRIPE_LIFETIME_AMOUNT_PLN = "nope";
+      const badAmount = await fetch(`${base}/checkout/lifetime`, { redirect: "manual" });
+      assert.equal(badAmount.status, 503);
+      delete process.env.STRIPE_LIFETIME_AMOUNT_PLN;
+
+      const offers = await fetch(`${base}/billing/offers`);
+      const offersBody = await offers.json();
+      assert.equal(offers.status, 200);
+      assert.equal(offersBody.lifetime.amountPln, 199);
+      assert.equal(offersBody.lifetime.cap, 50);
+      assert.equal(offersBody.lifetime.remaining, 50);
+      assert.equal(offersBody.team.amountPln, 990);
+      assert.equal(offersBody.team.seats, 10);
+      assert.equal(offersBody.team.interval, "year");
+
+      const lifetime = await fetch(`${base}/checkout/lifetime`, { redirect: "manual" });
+      assert.equal(lifetime.status, 302);
+      assert.equal(lifetime.headers.get("location"), "https://checkout.stripe.com/c/pay/cs_test_offers");
+      const lifeParams = new URLSearchParams(stripeBodies.at(-1));
+      assert.equal(lifeParams.get("mode"), "payment");
+      assert.equal(lifeParams.get("line_items[0][price_data][currency]"), "pln");
+      assert.equal(lifeParams.get("line_items[0][price_data][unit_amount]"), "19900");
+      assert.equal(lifeParams.get("customer_creation"), "always");
+      assert.equal(lifeParams.get("invoice_creation[enabled]"), "true");
+      assert.equal(lifeParams.get("metadata[plan]"), "lifetime");
+      assert.equal(lifeParams.get("line_items[0][price]"), null);
+
+      async function postEvent(payload: unknown) {
+        const raw = JSON.stringify(payload);
+        const stamp = Math.floor(Date.now() / 1000);
+        const signature = createHmac("sha256", "whsec_offers").update(`${stamp}.${raw}`).digest("hex");
+        return fetch(`${base}/billing/webhook`, {
+          method: "POST",
+          headers: { "Stripe-Signature": `t=${stamp},v1=${signature}` },
+          body: raw,
+        });
+      }
+
+      const lifeIssued = await postEvent({
+        type: "checkout.session.completed",
+        data: {
+          object: {
+            customer: "cus_life",
+            payment_status: "paid",
+            status: "complete",
+            mode: "payment",
+            metadata: { plan: "lifetime" },
+          },
+        },
+      });
+      assert.equal(lifeIssued.status, 200);
+      const lifeTokens = activeTokensForCustomer("cus_life");
+      assert.equal(lifeTokens.length, 1);
+      assert.ok(lifeTokens[0]?.startsWith("pro_"));
+      const lifeAgain = await postEvent({
+        type: "checkout.session.completed",
+        data: {
+          object: {
+            customer: "cus_life",
+            payment_status: "paid",
+            status: "complete",
+            metadata: { plan: "lifetime" },
+          },
+        },
+      });
+      assert.equal(lifeAgain.status, 200);
+      assert.deepEqual(activeTokensForCustomer("cus_life"), lifeTokens);
+
+      process.env.LIFETIME_PRO_CAP = "1";
+      const soldOut = await fetch(`${base}/checkout/lifetime`, { redirect: "manual" });
+      const soldOutPage = await soldOut.text();
+      assert.equal(soldOut.status, 409);
+      assert.match(soldOutPage, /limit/i);
+      const offersAfter = await (await fetch(`${base}/billing/offers`)).json();
+      assert.equal(offersAfter.lifetime.remaining, 0);
+      assert.equal(offersAfter.lifetime.sold, 1);
+
+      const ignored = await postEvent({
+        type: "customer.subscription.deleted",
+        data: { object: { customer: "cus_life", status: "canceled" } },
+      });
+      assert.equal(ignored.status, 200);
+      assert.equal(isValidProToken(lifeTokens[0] ?? ""), true);
+
+      process.env.STRIPE_PRICE_TEAM = "price_team_test";
+      const teamPriced = await fetch(`${base}/checkout/team`, { redirect: "manual" });
+      assert.equal(teamPriced.status, 302);
+      const priced = new URLSearchParams(stripeBodies.at(-1));
+      assert.equal(priced.get("mode"), "subscription");
+      assert.equal(priced.get("line_items[0][price]"), "price_team_test");
+      assert.equal(priced.get("line_items[0][price_data][currency]"), null);
+      assert.equal(priced.get("allow_promotion_codes"), "true");
+      assert.equal(priced.get("tax_id_collection[enabled]"), "true");
+      assert.equal(priced.get("billing_address_collection"), "required");
+      assert.equal(priced.get("metadata[plan]"), "team");
+      assert.equal(priced.get("metadata[seats]"), "10");
+
+      delete process.env.STRIPE_PRICE_TEAM;
+      const teamInline = await fetch(`${base}/billing/checkout?plan=team`, { redirect: "manual" });
+      assert.equal(teamInline.status, 302);
+      const inline = new URLSearchParams(stripeBodies.at(-1));
+      assert.equal(inline.get("line_items[0][price_data][unit_amount]"), "99000");
+      assert.equal(inline.get("line_items[0][price_data][currency]"), "pln");
+      assert.equal(inline.get("line_items[0][price_data][recurring][interval]"), "year");
+      assert.equal(inline.get("subscription_data[metadata][plan]"), "team");
+
+      const teamIssued = await postEvent({
+        type: "checkout.session.completed",
+        data: {
+          object: {
+            customer: "cus_team",
+            payment_status: "paid",
+            status: "complete",
+            mode: "subscription",
+            subscription: "sub_team",
+            metadata: { plan: "team", seats: "10" },
+          },
+        },
+      });
+      assert.equal(teamIssued.status, 200);
+      const teamTokens = activeTokensForCustomer("cus_team");
+      assert.equal(teamTokens.length, 10);
+      assert.equal(new Set(teamTokens).size, 10);
+      const renewed = await postEvent({
+        type: "customer.subscription.updated",
+        data: { object: { id: "sub_team", customer: "cus_team", status: "active", metadata: { plan: "team", seats: "10" } } },
+      });
+      assert.equal(renewed.status, 200);
+      assert.deepEqual(activeTokensForCustomer("cus_team"), teamTokens);
+
+      const revoked = await postEvent({
+        type: "customer.subscription.deleted",
+        data: { object: { id: "sub_team", customer: "cus_team", status: "canceled", metadata: { plan: "team" } } },
+      });
+      assert.equal(revoked.status, 200);
+      assert.deepEqual(activeTokensForCustomer("cus_team"), []);
+      const denied = await fetch(`${base}/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Pro-Token": teamTokens[0] ?? "" },
+        body: JSON.stringify({
+          postId: "urn:li:activity:team-revoked",
+          text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+        }),
+      });
+      assert.equal(denied.status, 401);
+      assert.equal(isValidProToken(lifeTokens[0] ?? ""), true);
+    } finally {
+      restore();
+    }
   });
 
   after(() => {

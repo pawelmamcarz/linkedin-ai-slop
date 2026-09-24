@@ -39,6 +39,18 @@ document.querySelectorAll('input[name="mode"]').forEach((input) => {
   input.addEventListener("change", syncMode);
 });
 
+const lifetimeLeft = document.querySelector("#lifetime-left");
+fetch(`${DEFAULTS.proxyUrl}/billing/offers`)
+  .then((response) => (response.ok ? response.json() : null))
+  .then((data) => {
+    const lifetime = data && data.lifetime;
+    if (!lifetimeLeft || !lifetime || typeof lifetime.remaining !== "number") return;
+    lifetimeLeft.textContent = lifetime.remaining > 0
+      ? `Lifetime Pro: zostało ${lifetime.remaining} z ${lifetime.cap}.`
+      : "Lifetime Pro: limit oferty został osiągnięty.";
+  })
+  .catch(() => {});
+
 ExtApi.storageGet(DEFAULTS).then((stored) => {
   const settings = ExtApi.resolveSettings(stored);
   enabledEl.checked = settings.enabled !== false;

@@ -53,6 +53,15 @@
           <input id="pro-token" type="password" spellcheck="false" autocomplete="off" />
           <span class="hint">To nie jest <code>TYPESAFE_API_KEY</code>. Klucz TypeSafe zostaje na proxy. Token trzymamy w storage rozszerzenia (sync, a gdy sync nie działa, local).</span>
         </label>
+        <section class="plans">
+          <h2>Plany hostowane</h2>
+          <p class="hint">Demo i BYOK zostają bez zmian. Token wklejasz w polu powyżej, tryb Pro. Lifetime to jeden token bez daty końca. Team to 10 tokenów, po jednym na instalację.</p>
+          <p><a href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=monthly">Pro, około 5 USD / miesiąc</a></p>
+          <p><a href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=yearly">Pro, około 40 USD / rok</a></p>
+          <p><a href="https://proxy-production-ebcc.up.railway.app/checkout/lifetime">Lifetime Pro, 199 PLN, jednorazowo</a></p>
+          <p id="lifetime-left" class="hint"></p>
+          <p><a href="https://proxy-production-ebcc.up.railway.app/checkout/team">Team, 990 PLN / rok, 10 tokenów</a></p>
+        </section>
         <div class="actions">
           <button type="submit">Zapisz</button>
           <button type="button" id="check" class="secondary">Sprawdź proxy</button>

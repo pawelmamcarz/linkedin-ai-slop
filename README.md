@@ -42,7 +42,7 @@ Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund n
 
 Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła tekstu krótszego niż 40 znaków. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie).
 
-Trzy warianty, bez mieszania cen: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
+Warianty: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok), **Lifetime Pro** (199 PLN jednorazowo, token bez daty końca, limit sprzedaży) i **Team** (990 PLN rocznie, 10 tokenów Pro). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
 
 `DEMO_MODE=1` włącza dobowy limit demo **200** na IP, gdy `EVALUATE_DAILY_IP_CAP` jest puste. Jawna wartość tej zmiennej wygrywa (`0` albo brak i brak `DEMO_MODE` wyłącza dobowy cap, tak jest lokalne BYOK). Na publicznym Railway ustaw `DEMO_MODE=1` albo jawne `EVALUATE_DAILY_IP_CAP=200`. Po wyczerpaniu limitu Demo proxy zwraca `429` z `error: demo_limit` i `upgrade: true` (bez wołania TypeSafe). Pro zostaje przy `rate_limited` / `daily_limited`, bez `upgrade`.
 
@@ -64,6 +64,12 @@ Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego t
 | `STRIPE_SECRET_KEY` | puste | Checkout Session; puste = „wkrótce” |
 | `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY` | puste | price id ~5 USD/mies. i ~40 USD/rok |
 | `STRIPE_WEBHOOK_SECRET` | puste | podpis webhooka, wydanie i cofnięcie tokenu |
+| `STRIPE_LIFETIME_AMOUNT_PLN` | 199 | kwota Lifetime Pro w PLN, gdy brak `STRIPE_PRICE_LIFETIME` |
+| `STRIPE_TEAM_AMOUNT_PLN` | 990 | kwota Team w PLN za rok, gdy brak `STRIPE_PRICE_TEAM` |
+| `STRIPE_PRICE_LIFETIME` / `STRIPE_PRICE_TEAM` | puste | opcjonalny price id; gdy ustawiony, wygrywa z kwotą inline |
+| `LIFETIME_PRO_CAP` | 50 | ile sztuk Lifetime Pro wolno sprzedać |
+| `TEAM_SEATS` | 10 | ile tokenów Pro dostaje zakup Team |
+| `PUBLIC_BASE_URL` | lokalny host | adres w success/cancel, na Railway `https://proxy-production-ebcc.up.railway.app` |
 
 Log na stdout jest jednym obiektem JSON: `event`, `tier` (`demo` albo `pro`), `cache`, `input_tokens`, `output_tokens`, `model`, `text_chars`. Bez treści posta, bez klucza i bez tokenu Pro. `GET /health` dopisuje `cache`, `tier`, `dailyIpCap` i `stripeCheckout`. Samej wartości klucza nie zwraca. Zły token Pro na `/health` i `/evaluate` daje 401.
 
