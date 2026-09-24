@@ -5,9 +5,11 @@ const DEFAULTS = {
   mode: "demo",
   proToken: "",
   byokProxyUrl: "",
+  blurSlop: true,
 };
 
 const enabledEl = document.querySelector("#enabled");
+const blurSlopEl = document.querySelector("#blur-slop");
 const thresholdEl = document.querySelector("#threshold");
 const thresholdValue = document.querySelector("#threshold-value");
 const proxyEl = document.querySelector("#proxy");
@@ -40,6 +42,7 @@ document.querySelectorAll('input[name="mode"]').forEach((input) => {
 ExtApi.storageGet(DEFAULTS).then((stored) => {
   const settings = ExtApi.resolveSettings(stored);
   enabledEl.checked = settings.enabled !== false;
+  blurSlopEl.checked = settings.blurSlop !== false;
   thresholdEl.value = String(settings.threshold ?? DEFAULTS.threshold);
   thresholdValue.textContent = Number(thresholdEl.value).toFixed(2);
   const modeInput = document.querySelector(`input[name="mode"][value="${settings.mode}"]`);
@@ -62,6 +65,7 @@ form.addEventListener("submit", async (event) => {
   const byokProxyUrl = mode === "byok" ? proxyUrl : previous.byokProxyUrl;
   await ExtApi.storageSet({
     enabled: enabledEl.checked,
+    blurSlop: blurSlopEl.checked,
     threshold: Number(thresholdEl.value),
     mode,
     proxyUrl: mode === "byok" ? proxyUrl : DEFAULTS.proxyUrl,

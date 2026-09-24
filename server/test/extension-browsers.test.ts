@@ -23,6 +23,7 @@ type ExtApi = {
     proxyUrl: string;
     proToken: string;
     byokProxyUrl: string;
+    blurSlop: boolean;
   };
 };
 
@@ -185,6 +186,8 @@ describe("tryby proxy", () => {
     assert.equal(pro.proxyUrl, "https://proxy-production-ebcc.up.railway.app");
     assert.equal(pro.proToken, "pro_secret");
     assert.equal(JSON.stringify(pro).includes("TYPESAFE"), false);
+    assert.equal(api.resolveSettings({}).blurSlop, true);
+    assert.equal(api.resolveSettings({ blurSlop: false }).blurSlop, false);
   });
 });
 

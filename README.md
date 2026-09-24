@@ -122,6 +122,8 @@ Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`
 
 Wejdź na [https://www.linkedin.com/feed/](https://www.linkedin.com/feed/) i przewiń. Posty, które wejdą w widok (ok. 35% wysokości), dostają odznakę w prawym górnym rogu karty. Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%".
 
+Gdy werdykt to **AI slop**, cała karta dostaje klasę `li-ai-slop-blurred` i treść jest rozmyta. Odznaka zostaje ostra. Ludzki i Mieszany nie są rozmywane. Opcja „Rozmywaj posty AI slop” (Blur AI Slop posts) jest domyślnie włączona. „Pokaż” na odznace odsłania jedną kartę. To samo dotyczy kart recent-activity, które content script już oznacza.
+
 Żeby zobaczyć samą nakładkę bez LinkedIn: załaduj rozszerzenie, uruchom proxy i otwórz [http://127.0.0.1:8787/demo](http://127.0.0.1:8787/demo). To fixture z tymi samymi selektorami, nie strona LinkedIn.
 
 ## Progi

@@ -30,6 +30,7 @@
     mode: "demo",
     proToken: "",
     byokProxyUrl: "",
+    blurSlop: true,
   };
 
   const MIN_TEXT_CHARS = 40;
@@ -318,33 +319,99 @@
     const badge = ensureBadge(el);
     badge.className = `lais-badge lais-badge--${state}`;
     const scored = state === "human" || state === "mixed" || state === "slop" || state === "heavy";
-    if (!scored) {
-      clearTip(badge);
+    try {
+      if (!scored) {
+        clearTip(badge);
+      }
+      if (state === "pending") {
+        badge.textContent = "Ocena…";
+        badge.title = "Czekam na Jev (proxy lokalne)";
+        return;
+      }
+      if (state === "info") {
+        badge.textContent = result?.labelPl || "Potrzebujesz Pro";
+        badge.title =
+          result?.message ||
+          "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.";
+        return;
+      }
+      if (state === "error") {
+        badge.textContent = "Błąd";
+        badge.title = result?.message || "Nie udało się ocenić posta";
+        return;
+      }
+      if (!scored) {
+        if (result?.labelPl) badge.textContent = result.labelPl;
+        if (result?.message) badge.title = result.message;
+        return;
+      }
+      if (!result) return;
+      paintScoredBadge(badge, result);
+    } finally {
+      syncCardFromState(el, state);
     }
-    if (state === "pending") {
-      badge.textContent = "Ocena…";
-      badge.title = "Czekam na Jev (proxy lokalne)";
+  }
+
+  function syncCardFromState(el, state) {
+    if (state === "slop") {
+      el.dataset.laisVerdict = "slop";
+    } else {
+      delete el.dataset.laisVerdict;
+      delete el.dataset.laisRevealed;
+      el.classList.remove("li-ai-slop-revealed");
+    }
+    syncCardBlur(el);
+  }
+
+  function syncCardBlur(el) {
+    const slop = el.dataset.laisVerdict === "slop";
+    const revealed = el.dataset.laisRevealed === "1";
+    const allow = slop && settings.blurSlop !== false;
+    el.classList.toggle("li-ai-slop-blurred", allow && !revealed);
+    el.classList.toggle("li-ai-slop-revealed", allow && revealed);
+    const badge = el.querySelector(":scope > .lais-badge");
+    if (badge) syncRevealControl(badge, allow);
+  }
+
+  function syncRevealControl(badge, show) {
+    let button = badge.querySelector(":scope > .lais-reveal");
+    if (!show) {
+      button?.remove();
       return;
     }
-    if (state === "info") {
-      badge.textContent = result?.labelPl || "Potrzebujesz Pro";
-      badge.title =
-        result?.message ||
-        "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.";
-      return;
+    if (!button) {
+      const doc = badge.ownerDocument || document;
+      button = doc.createElement("button");
+      button.type = "button";
+      button.className = "lais-reveal";
+      button.addEventListener("click", onRevealClick);
+      badge.appendChild(button);
     }
-    if (state === "error") {
-      badge.textContent = "Błąd";
-      badge.title = result?.message || "Nie udało się ocenić posta";
-      return;
+    const revealed = badge.parentElement?.dataset.laisRevealed === "1";
+    button.textContent = revealed ? "Ukryj" : "Pokaż";
+    button.title = revealed
+      ? "Ukryj treść tego posta"
+      : "Treść rozmyta, bo post sklasyfikowano jako AI slop. Pokaż ten post.";
+    button.setAttribute("aria-pressed", revealed ? "true" : "false");
+  }
+
+  function onRevealClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const button = event.currentTarget;
+    const card = button?.closest?.("[data-lais-verdict='slop']");
+    if (!card) return;
+    if (card.dataset.laisRevealed === "1") delete card.dataset.laisRevealed;
+    else card.dataset.laisRevealed = "1";
+    syncCardBlur(card);
+  }
+
+  function applySettings(partial) {
+    if (partial && typeof partial === "object") settings = { ...settings, ...partial };
+    if (typeof document !== "undefined") {
+      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => syncCardBlur(el));
     }
-    if (!scored) {
-      if (result?.labelPl) badge.textContent = result.labelPl;
-      if (result?.message) badge.title = result.message;
-      return;
-    }
-    if (!result) return;
-    paintScoredBadge(badge, result);
+    return settings;
   }
 
   function extensionApi() {
@@ -365,6 +432,7 @@
       proxyUrl: String(stored.proxyUrl || DEFAULTS.proxyUrl).replace(/\/$/, ""),
       mode: "demo",
       proToken: "",
+      blurSlop: stored.blurSlop !== false,
     };
     return settings;
   }
@@ -629,6 +697,11 @@
 
   function clearBadges() {
     document.querySelectorAll(".lais-badge").forEach((n) => n.remove());
+    document.querySelectorAll(".li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
+      el.classList.remove("li-ai-slop-blurred", "li-ai-slop-revealed");
+      delete el.dataset.laisVerdict;
+      delete el.dataset.laisRevealed;
+    });
   }
 
   async function boot() {
@@ -638,6 +711,12 @@
     const api = extensionApi();
     if (api?.onStorageChanged) {
       api.onStorageChanged((changes) => {
+        if (changes.blurSlop) settings.blurSlop = changes.blurSlop.newValue !== false;
+        const changedKeys = Object.keys(changes);
+        if (changedKeys.length > 0 && changedKeys.every((key) => key === "blurSlop")) {
+          applySettings({ blurSlop: settings.blurSlop });
+          return;
+        }
         if (changes.enabled) settings.enabled = changes.enabled.newValue !== false;
         if (changes.threshold) settings.threshold = Number(changes.threshold.newValue) || DEFAULTS.threshold;
         if (changes.proxyUrl || changes.mode || changes.proToken || changes.byokProxyUrl) {
@@ -677,6 +756,7 @@
     postId,
     postText,
     setBadge,
+    applySettings,
     DEFAULTS,
   };
 });
