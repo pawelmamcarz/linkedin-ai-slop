@@ -363,7 +363,11 @@
     syncCardBlur(el);
   }
 
-  const CONTENT_BLUR = "blur(8px)";
+  const CONTENT_BLUR = "blur(20px)";
+  const VEIL_FILTER = "blur(24px) saturate(0.65)";
+  const VEIL_WASH = "rgba(255, 252, 248, 0.55)";
+  const REPLACED_TAGS = new Set(["IMG", "VIDEO", "CANVAS", "SVG", "PICTURE", "INPUT"]);
+  let repairingBlur = false;
 
   function syncCardBlur(el) {
     const slop = el.dataset.laisVerdict === "slop";
@@ -378,11 +382,29 @@
   }
 
   function isExtensionChrome(node) {
-    return (
-      node.classList?.contains("lais-badge") ||
-      node.classList?.contains("lais-blur") ||
-      node.classList?.contains("lais-reveal")
-    );
+    if (!node?.classList) return false;
+    if (
+      node.classList.contains("lais-badge") ||
+      node.classList.contains("lais-blur") ||
+      node.classList.contains("lais-reveal") ||
+      node.classList.contains("lais-tip")
+    ) {
+      return true;
+    }
+    return Boolean(node.closest?.(".lais-badge, .lais-blur"));
+  }
+
+  function isContentsDisplay(node) {
+    let display = node?.style?.display || "";
+    if (display === "contents") return true;
+    try {
+      if (typeof getComputedStyle === "function") {
+        display = getComputedStyle(node).display || display;
+      }
+    } catch {
+      /* zostaw inline */
+    }
+    return display === "contents";
   }
 
   function childElements(node) {
@@ -391,22 +413,26 @@
     return kids;
   }
 
-  function ensureBlurLayer(el, on) {
-    const badge = el.querySelector(":scope > .lais-badge");
-    if (!on) {
-      el.querySelector(":scope > .lais-blur")?.remove();
-      if (badge) badge.style.removeProperty("z-index");
-      clearPaintedFilters(el);
-      return;
+  function canHostVeil(node) {
+    return node?.nodeType === 1 && !REPLACED_TAGS.has(node.tagName);
+  }
+
+  function ensurePaintBox(node) {
+    if (!canHostVeil(node) || isContentsDisplay(node)) return false;
+    try {
+      if (typeof getComputedStyle === "function") {
+        const pos = getComputedStyle(node).position;
+        if (!pos || pos === "static") node.style.setProperty("position", "relative", "important");
+      } else if (!node.style.position) {
+        node.style.setProperty("position", "relative", "important");
+      }
+    } catch {
+      node.style.setProperty("position", "relative", "important");
     }
-    let veil = el.querySelector(":scope > .lais-blur");
-    if (!veil) {
-      const doc = el.ownerDocument || document;
-      veil = doc.createElement("div");
-      veil.className = "lais-blur";
-      veil.setAttribute("aria-hidden", "true");
-      el.appendChild(veil);
-    }
+    return true;
+  }
+
+  function styleVeil(veil) {
     veil.style.setProperty("position", "absolute", "important");
     veil.style.setProperty("top", "0", "important");
     veil.style.setProperty("right", "0", "important");
@@ -416,36 +442,73 @@
     veil.style.setProperty("display", "block", "important");
     veil.style.setProperty("box-sizing", "border-box", "important");
     veil.style.setProperty("pointer-events", "none", "important");
-    veil.style.setProperty("background", "rgba(255, 252, 248, 0.4)", "important");
-    veil.style.setProperty("backdrop-filter", "blur(14px) saturate(0.85)", "important");
-    veil.style.setProperty("-webkit-backdrop-filter", "blur(14px) saturate(0.85)", "important");
-    veil.dataset.laisVeil = "blur-14";
-    if (badge) {
-      badge.style.setProperty("z-index", "21", "important");
-      el.appendChild(badge);
-    }
-    paintContentFilters(el);
+    veil.style.setProperty("background", VEIL_WASH, "important");
+    veil.style.setProperty("backdrop-filter", VEIL_FILTER, "important");
+    veil.style.setProperty("-webkit-backdrop-filter", VEIL_FILTER, "important");
+    veil.dataset.laisVeil = "blur-24";
   }
 
-  function paintContentFilters(el) {
+  function ensureVeil(host) {
+    let veil = null;
+    for (const child of childElements(host)) {
+      if (child.classList?.contains("lais-blur")) {
+        veil = child;
+        break;
+      }
+    }
+    if (!veil) {
+      const doc = host.ownerDocument || document;
+      veil = doc.createElement("div");
+      veil.className = "lais-blur";
+      veil.setAttribute("aria-hidden", "true");
+      host.appendChild(veil);
+    }
+    styleVeil(veil);
+    return veil;
+  }
+
+  function markPaintBlur(node) {
+    node.classList.add("lais-paint-blur");
+    node.style.setProperty("filter", CONTENT_BLUR, "important");
+    node.style.setProperty("-webkit-filter", CONTENT_BLUR, "important");
+    node.dataset.laisFiltered = "20";
+  }
+
+  function ensureBlurLayer(el, on) {
+    const badge = el.querySelector(":scope > .lais-badge");
+    if (!on) {
+      el.querySelectorAll(".lais-blur").forEach((node) => node.remove());
+      if (badge) {
+        badge.style.removeProperty("z-index");
+        badge.style.removeProperty("filter");
+        badge.style.removeProperty("-webkit-filter");
+      }
+      clearPaintedFilters(el);
+      return;
+    }
+    const hostBox = ensurePaintBox(el);
+    if (hostBox) ensureVeil(el);
+    paintContentFilters(el, !hostBox);
+    if (badge) {
+      badge.classList.remove("lais-paint-blur");
+      badge.style.setProperty("z-index", "21", "important");
+      badge.style.setProperty("filter", "none", "important");
+      badge.style.setProperty("-webkit-filter", "none", "important");
+      delete badge.dataset.laisFiltered;
+      if (badge.parentElement === el) el.appendChild(badge);
+    }
+  }
+
+  function paintContentFilters(el, veilEachBox) {
     function visit(node) {
       for (const child of childElements(node)) {
         if (isExtensionChrome(child)) continue;
-        let display = child.style?.display || "";
-        try {
-          if (display !== "contents" && typeof getComputedStyle === "function") {
-            display = getComputedStyle(child).display || display;
-          }
-        } catch {
-          /* zostaw inline */
-        }
-        if (display === "contents") {
+        if (isContentsDisplay(child)) {
           visit(child);
           continue;
         }
-        child.style.setProperty("filter", CONTENT_BLUR, "important");
-        child.style.setProperty("-webkit-filter", CONTENT_BLUR, "important");
-        child.dataset.laisFiltered = "1";
+        markPaintBlur(child);
+        if (veilEachBox && ensurePaintBox(child)) ensureVeil(child);
       }
     }
     visit(el);
@@ -455,20 +518,56 @@
     const drop = [];
     function visit(node) {
       for (const child of childElements(node)) {
-        if (child.dataset?.laisFiltered === "1") drop.push(child);
+        if (child.dataset?.laisFiltered || child.classList?.contains("lais-paint-blur")) drop.push(child);
         visit(child);
       }
     }
     visit(el);
     try {
-      el.querySelectorAll("[data-lais-filtered='1']").forEach((node) => drop.push(node));
+      el.querySelectorAll("[data-lais-filtered], .lais-paint-blur").forEach((node) => drop.push(node));
     } catch {
       /* ignore */
     }
     for (const node of drop) {
+      node.classList.remove("lais-paint-blur");
       node.style.removeProperty("filter");
       node.style.removeProperty("-webkit-filter");
       delete node.dataset.laisFiltered;
+    }
+  }
+
+  function blurNeedsRepair(el) {
+    if (el.dataset.laisVerdict !== "slop" || el.dataset.laisRevealed === "1" || settings.blurSlop === false) {
+      return false;
+    }
+    if (!el.classList.contains("li-ai-slop-blurred")) return true;
+    const hostContents = isContentsDisplay(el);
+    if (!hostContents && !el.querySelector(":scope > .lais-blur")) return true;
+    let broken = false;
+    function visit(node) {
+      for (const child of childElements(node)) {
+        if (isExtensionChrome(child)) continue;
+        if (isContentsDisplay(child)) {
+          visit(child);
+          continue;
+        }
+        if (!child.classList.contains("lais-paint-blur") || child.dataset.laisFiltered !== "20") broken = true;
+        if (hostContents && canHostVeil(child) && !child.querySelector(":scope > .lais-blur")) broken = true;
+      }
+    }
+    visit(el);
+    return broken;
+  }
+
+  function repairSlopBlurs() {
+    if (repairingBlur || typeof document === "undefined") return;
+    repairingBlur = true;
+    try {
+      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => {
+        if (blurNeedsRepair(el)) syncCardBlur(el);
+      });
+    } finally {
+      repairingBlur = false;
     }
   }
 
@@ -774,7 +873,10 @@
 
   function watch() {
     if (observer) observer.disconnect();
-    observer = new MutationObserver(scheduleScan);
+    observer = new MutationObserver(() => {
+      repairSlopBlurs();
+      scheduleScan();
+    });
     observer.observe(document.documentElement, { childList: true, subtree: true });
     window.addEventListener("scroll", scheduleScan, { passive: true });
     document.addEventListener("scroll", scheduleScan, { passive: true, capture: true });
@@ -798,7 +900,8 @@
   }
 
   function clearBadges() {
-    document.querySelectorAll("[data-lais-filtered]").forEach((node) => {
+    document.querySelectorAll("[data-lais-filtered], .lais-paint-blur").forEach((node) => {
+      node.classList.remove("lais-paint-blur");
       node.style.removeProperty("filter");
       node.style.removeProperty("-webkit-filter");
       delete node.dataset.laisFiltered;

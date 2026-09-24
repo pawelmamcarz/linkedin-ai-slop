@@ -84,8 +84,9 @@
   max-width: 168px;
 }
 
-/* Nakładka na cały boks karty. Filter na bezpośrednich dzieciach nie sięga treści LinkedIn. */
-.li-ai-slop-blurred > .lais-blur {
+/* Welon na prawdziwym boksie. Sam backdrop-filter na feedzie znika, gdy przodek
+   ma transform/contain albo karta jest display:contents (wtedy inset:0 nie ma pudełka). */
+.lais-blur {
   position: absolute;
   inset: 0;
   z-index: 20;
@@ -95,13 +96,20 @@
   border: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: rgba(255, 252, 248, 0.4);
-  backdrop-filter: blur(14px) saturate(0.85);
-  -webkit-backdrop-filter: blur(14px) saturate(0.85);
+  background: rgba(255, 252, 248, 0.55);
+  backdrop-filter: blur(24px) saturate(0.65);
+  -webkit-backdrop-filter: blur(24px) saturate(0.65);
+}
+
+.lais-paint-blur {
+  filter: blur(20px) !important;
+  -webkit-filter: blur(20px) !important;
 }
 
 .li-ai-slop-blurred > .lais-badge {
   z-index: 21;
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 .lais-reveal {
