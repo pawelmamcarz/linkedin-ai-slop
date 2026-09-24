@@ -311,7 +311,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mamcarz.linkedinaislop;
 				PRODUCT_NAME = "LinkedIn AI Slop";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -331,7 +331,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mamcarz.linkedinaislop;
 				PRODUCT_NAME = "LinkedIn AI Slop";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -359,7 +359,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mamcarz.linkedinaislop.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -384,7 +384,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.pawelmamcarz.linkedin-ai-slop.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mamcarz.linkedinaislop.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;

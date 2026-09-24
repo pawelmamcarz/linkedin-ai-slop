@@ -30,14 +30,31 @@ Hosty w manifeście: LinkedIn, `https://proxy-production-ebcc.up.railway.app`, `
 
 To nie jest upload. Debug (`npm run safari:build`) zostaje ad-hoc: `CODE_SIGN_IDENTITY = -`, `CODE_SIGNING_REQUIRED = NO`, puste `DEVELOPMENT_TEAM`. Do sklepu idzie archiwum Release, nie ten build.
 
-Bundle id aplikacji: `com.pawelmamcarz.linkedin-ai-slop`. Rozszerzenie: `com.pawelmamcarz.linkedin-ai-slop.extension`. Wersja: `0.2.1` (`extension/manifest.json` i `safari/Config/Shared.xcconfig`).
+Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Rozszerzenie: `com.mamcarz.linkedinaislop.extension`. Wersja: `0.2.1` (`extension/manifest.json` i `safari/Config/Shared.xcconfig`).
+
+`com.pawelmamcarz.linkedin-ai-slop` nie wchodzi na listę Bundle ID w App Store Connect (New App). Register tego App ID na developer.apple.com zwraca "not available". Używaj pary powyżej.
+
+### Register, potem New App
+
+1. Otwórz https://developer.apple.com/account/resources/identifiers/list (Identifiers).
+2. Register App ID aplikacji macOS: `com.mamcarz.linkedinaislop`. Platforma: macOS.
+3. Register App ID rozszerzenia Safari: `com.mamcarz.linkedinaislop.extension`. Platforma: macOS.
+4. Dopiero potem App Store Connect → Apps → New App. Platforma: macOS. Bundle ID: `com.mamcarz.linkedinaislop`. Rekord jest jeden. Rozszerzenie jest osadzone w tej aplikacji. To nie jest osobna appka iOS ani drugi rekord w Connect.
+
+### Register, then New App
+
+1. Open https://developer.apple.com/account/resources/identifiers/list (Identifiers).
+2. Register the macOS app App ID: `com.mamcarz.linkedinaislop`. Platform: macOS.
+3. Register the Safari Web Extension App ID: `com.mamcarz.linkedinaislop.extension`. Platform: macOS.
+4. Then App Store Connect → Apps → New App. Platform: macOS. Bundle ID: `com.mamcarz.linkedinaislop`. One record. The extension is embedded in that app. It is not a separate iOS app and not a second Connect record.
 
 ### Checklist (PL)
 
 - [ ] Konto Apple Developer Program i Team ID (10 znaków). Nie commituj Team ID.
+- [ ] Na developer.apple.com zrób Register obu App ID: `com.mamcarz.linkedinaislop` i `com.mamcarz.linkedinaislop.extension`.
+- [ ] App Store Connect → New App, platforma macOS, Bundle ID `com.mamcarz.linkedinaislop`.
 - [ ] W Xcode ustaw Team na targetach LinkedInAISlop i LinkedInAISlop Extension (Signing & Capabilities). Albo lokalny plik `safari/Config/Local.xcconfig` (jest w `.gitignore`) z linią `DEVELOPMENT_TEAM = TWOJE_TEAM_ID`. W repo to pole zostaje puste.
 - [ ] Archiwum Release, nie Debug: Xcode → Product → Archive, albo `DEVELOPMENT_TEAM=TWOJE_TEAM_ID npm run safari:archive`.
-- [ ] App Store Connect: nowy rekord macOS dla Safari Web Extension. To aplikacja macOS z osadzonym rozszerzeniem, nie appka iOS.
 - [ ] Zrzuty: `store/screenshots/` (1280×800). Connect może poprosić o inny rozmiar macOS.
 - [ ] Privacy Policy URL: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 - [ ] Hardened Runtime jest włączony w Release (`ENABLE_HARDENED_RUNTIME` w `safari/Config/Release.xcconfig`). App Sandbox jest już w entitlements.
@@ -48,9 +65,10 @@ Bundle id aplikacji: `com.pawelmamcarz.linkedin-ai-slop`. Rozszerzenie: `com.paw
 ### Checklist (EN)
 
 - [ ] Apple Developer Program account and a Team ID (10 characters). Do not commit the Team ID.
+- [ ] On developer.apple.com, Register both App IDs: `com.mamcarz.linkedinaislop` and `com.mamcarz.linkedinaislop.extension`.
+- [ ] App Store Connect → New App, macOS platform, Bundle ID `com.mamcarz.linkedinaislop`.
 - [ ] In Xcode, set Team on LinkedInAISlop and LinkedInAISlop Extension (Signing & Capabilities). Or a local `safari/Config/Local.xcconfig` (gitignored) with `DEVELOPMENT_TEAM = YOUR_TEAM_ID`. The committed value stays empty.
 - [ ] Release archive, not the Debug ad-hoc build: Xcode → Product → Archive, or `DEVELOPMENT_TEAM=YOUR_TEAM_ID npm run safari:archive`.
-- [ ] App Store Connect: a new macOS app record for this Safari Web Extension. It is a macOS app with an embedded extension, not an iOS app.
 - [ ] Screenshots: `store/screenshots/` (1280×800). Connect may ask for another macOS size.
 - [ ] Privacy Policy URL: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 - [ ] Hardened Runtime is on for Release (`ENABLE_HARDENED_RUNTIME` in `safari/Config/Release.xcconfig`). App Sandbox is already in the entitlements.
