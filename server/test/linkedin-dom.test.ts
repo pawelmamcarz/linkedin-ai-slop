@@ -90,3 +90,38 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.match(badge!.getAttribute("title") || "", /limit Demo/);
   });
 });
+
+const activityFixture = readFileSync(
+  resolve(import.meta.dirname, "fixtures/linkedin-activity.html"),
+  "utf8",
+);
+
+describe("selektory recent-activity (fixture)", () => {
+  let dom: JSDOM;
+  let document: Document;
+
+  before(() => {
+    dom = new JSDOM(activityFixture, {
+      url: "https://www.linkedin.com/in/example/recent-activity/all/",
+    });
+    document = dom.window.document;
+    (globalThis as { document?: Document }).document = document;
+  });
+
+  after(() => {
+    delete (globalThis as { document?: Document }).document;
+    dom.window.close();
+  });
+
+  it("znajduje karty z listy aktywności profilu", () => {
+    const posts = slop.findPostElements(document);
+    const extracted = posts.map((el) => slop.extractPost(el)).filter(Boolean);
+    const ids = extracted.map((post) => post!.id);
+    assert.ok(ids.some((id) => String(id).includes("activity:777")));
+    assert.ok(ids.some((id) => String(id).includes("ugcPost:888")));
+    assert.ok(ids.some((id) => String(id).includes("activity:999")));
+    assert.ok(extracted.some((post) => post!.text.includes("retry policy")));
+    assert.ok(extracted.some((post) => post!.text.includes("commentary block")));
+    assert.ok(!extracted.some((post) => post!.id.includes("activity:000")));
+  });
+});

@@ -25,7 +25,7 @@
     <main class="wrap">
       <h1>Plany</h1>
       <p class="lede">
-        Tylko LinkedIn. Rozszerzenie jest darmowe. Hosted Pro to jedyny płatny wariant i startuje dopiero, gdy na proxy są klucze Stripe.
+        Tylko LinkedIn. Rozszerzenie jest darmowe. Hosted Pro to jedyny płatny wariant, a Checkout jest włączony.
         Suwak progu (około 0.15 do 0.95, domyślnie 0.65) ustawiasz w opcjach. Niżej oznacza więcej odznak „AI slop”.
         <a href="index.html#prog">Jak działa suwak</a>.
       </p>
@@ -48,21 +48,16 @@
         <h2>Hosted Pro</h2>
         <p>
           Cena: od około <strong>5 USD miesięcznie</strong> albo około <strong>40 USD rocznie</strong>.
-          Jednorazowo uczciwy przedział to około 9–19 USD, ale Checkout wystawia subskrypcję miesięczną albo roczną, nie płatność jednorazową.
+          Subskrypcja miesięczna albo roczna przez Stripe Checkout.
         </p>
         <p>
-          Po opłaceniu proxy pokazuje token Pro. Wklejasz go w opcjach (tryb Pro). Rozszerzenie wysyła <code>X-Pro-Token</code>. To nie jest klucz TypeSafe.
-          Pro ma wyższe limity (domyślnie 300 na minutę i 2000 na dobę z IP).
-        </p>
-        <p>
-          Bramka tokenu jest w kodzie. Checkout na żywym proxy jest włączony dopiero, gdy Railway ma <code>STRIPE_SECRET_KEY</code> oraz <code>STRIPE_PRICE_MONTHLY</code> albo <code>STRIPE_PRICE_YEARLY</code>.
-          Bez tego poniższy link zwraca stronę „wkrótce” i odsyła na GitHub.
+          Publiczne proxy z wyższymi limitami. Po opłaceniu dostajesz token Pro i wklejasz go w opcjach rozszerzenia.
+          Demo ma niższe limity dobowe. Pro jest do cięższej pracy.
         </p>
         <p class="actions">
           <a class="button" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=monthly">Checkout: około 5 USD / miesiąc</a>
           <a class="button button-quiet" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=yearly">Checkout: około 40 USD / rok</a>
         </p>
-        <p class="note">Gdy Checkout nie jest skonfigurowany, napisz na <a href="https://github.com/pawelmamcarz/linkedin-ai-slop/issues">GitHub Issues</a>.</p>
       </section>
 
       <p class="actions">

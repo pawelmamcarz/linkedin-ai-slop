@@ -40,28 +40,52 @@
 
   const POST_SELECTORS = [
     "div.feed-shared-update-v2",
+    "article.feed-shared-update-v2",
     'div[data-id^="urn:li:activity"]',
     'div[data-id^="urn:li:ugcPost"]',
     'div[data-id^="urn:li:share"]',
+    '[data-id^="urn:li:activity"]',
+    '[data-id^="urn:li:ugcPost"]',
+    '[data-id^="urn:li:share"]',
     'div[data-urn^="urn:li:activity"]',
     'div[data-urn^="urn:li:ugcPost"]',
     'div[data-urn^="urn:li:share"]',
     'div[data-urn^="urn:li:aggregatedShare"]',
+    '[data-urn^="urn:li:activity"]',
+    '[data-urn^="urn:li:ugcPost"]',
+    '[data-urn^="urn:li:share"]',
+    '[data-urn^="urn:li:aggregatedShare"]',
+    '[role="article"][data-urn]',
     'article[data-id="main-feed-card"]',
     'article[componentkey*="urn:li:activity"]',
+    '[componentkey*="urn:li:activity"]',
     "div.occludable-update",
+    "li.occludable-update",
+    ".profile-creator-shared-feed-update__container",
     'div[data-view-name="feed-full-update"]',
+    '[data-view-name="feed-full-update"]',
     "li.feed-item",
     '[data-testid="mainFeed"] [role="listitem"]',
     "div[componentkey][role='listitem']",
+    ".scaffold-finite-scroll__content [role='listitem']",
+    ".scaffold-finite-scroll__content [data-urn*='urn:li:activity']",
+    ".scaffold-finite-scroll__content [data-urn*='urn:li:ugcPost']",
+    ".scaffold-finite-scroll__content [data-urn*='urn:li:share']",
   ];
 
   const TEXT_SELECTORS = [
     ".update-components-text",
     ".feed-shared-update-v2__commentary",
+    ".feed-shared-update-v2__description-wrapper",
+    ".feed-shared-update-v2__description",
     ".feed-shared-inline-show-more-text",
     '[data-testid="expandable-text-box"]',
+    '[data-view-name="feed-commentary"]',
+    '[componentkey^="feed-commentary"]',
+    ".update-components-text span[dir='ltr']",
+    ".feed-shared-update-v2__description .break-words",
     ".break-words span[dir='ltr']",
+    "span.break-words",
     ".feed-shared-text",
   ];
 
@@ -81,6 +105,7 @@
   ];
 
   const seen = new Set();
+  const verdicts = new Map();
   const inFlight = new Set();
   const failedAt = new Map();
   const queue = [];
@@ -95,6 +120,8 @@
   let selectorMissLogged = false;
   let booted = false;
   let generation = 0;
+  let lastHref = "";
+  const MIN_VISIBLE_PX = 120;
 
   function findPostElements(root) {
     const doc = root || document;
@@ -358,6 +385,13 @@
     if (demoLimitActive()) return;
     const post = extractPost(el);
     if (!post) return;
+    const cached = verdicts.get(post.id);
+    if (cached) {
+      if (!el.querySelector(":scope > .lais-badge")) {
+        setBadge(el, cached.badge || "human", cached);
+      }
+      return;
+    }
     if (seen.has(post.id) || inFlight.has(post.id)) return;
     const failed = failedAt.get(post.id);
     if (failed && Date.now() - failed < 15000) return;
@@ -420,6 +454,7 @@
     const result = await requestEvaluation(payload);
     if (item.gen !== generation) return;
     seen.add(item.id);
+    verdicts.set(item.id, result);
     setBadge(item.el, result.badge || "human", result);
   }
 
@@ -485,17 +520,46 @@
     }
   }
 
+  function watchNavigation() {
+    if (watchNavigation.hooked) return;
+    watchNavigation.hooked = true;
+    lastHref = typeof location !== "undefined" ? location.href : "";
+    const onChange = () => {
+      const href = typeof location !== "undefined" ? location.href : "";
+      if (href === lastHref) return;
+      lastHref = href;
+      selectorMissLogged = false;
+      scheduleScan();
+    };
+    const wrap = (name) => {
+      const orig = history[name];
+      if (typeof orig !== "function") return;
+      history[name] = function patchedHistory() {
+        const result = orig.apply(this, arguments);
+        onChange();
+        return result;
+      };
+    };
+    wrap("pushState");
+    wrap("replaceState");
+    window.addEventListener("popstate", onChange);
+  }
+
   function watch() {
     if (observer) observer.disconnect();
     observer = new MutationObserver(scheduleScan);
     observer.observe(document.documentElement, { childList: true, subtree: true });
     window.addEventListener("scroll", scheduleScan, { passive: true });
+    document.addEventListener("scroll", scheduleScan, { passive: true, capture: true });
+    watchNavigation();
 
     if (typeof IntersectionObserver === "function") {
       intersect = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
-            if (entry.isIntersecting && entry.intersectionRatio >= INTERSECT_RATIO) {
+            if (!entry.isIntersecting) continue;
+            const visiblePx = entry.intersectionRect ? entry.intersectionRect.height : 0;
+            if (entry.intersectionRatio >= INTERSECT_RATIO || visiblePx >= MIN_VISIBLE_PX) {
               enqueue(entry.target);
             }
           }
@@ -540,6 +604,7 @@
           return;
         }
         seen.clear();
+        verdicts.clear();
         clearBadges();
         scheduleScan();
       });
