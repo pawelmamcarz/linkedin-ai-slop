@@ -6,7 +6,7 @@
     <title>Plans: LinkedIn AI Slop</title>
     <meta
       name="description"
-      content="Free BYOK, Hosted Demo, and Hosted Pro for LinkedIn AI Slop. Pro from about 5 USD per month or 40 USD per year."
+        content="Free BYOK, Hosted Demo, Hosted Pro, Lifetime Pro (199 PLN) and Team (990 PLN per year, 10 seats) for LinkedIn AI Slop."
     />
     <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/en/pro.html" />
     <link rel="icon" href="../favicon.png" type="image/png" />
@@ -25,7 +25,7 @@
     <main class="wrap">
       <h1>Plans</h1>
       <p class="lede">
-        LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and Checkout is on.
+        LinkedIn only. The extension is free. The paid plans are Hosted Pro, Lifetime Pro, and Team. Checkout is on.
         The threshold slider (about 0.15 to 0.95, default 0.65) lives in the extension options. Lower means more „AI slop” badges.
         <a href="index.html#threshold">How the slider works</a>.
       </p>
@@ -59,6 +59,44 @@
           <a class="button button-quiet" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=yearly">Checkout: about 40 USD / year</a>
         </p>
       </section>
+
+      <section>
+        <h2>Lifetime Pro</h2>
+        <p>
+          Price: <strong>199 PLN</strong>, one time. Launch offer. The sales cap is <code>LIFETIME_PRO_CAP</code> (default 50).
+          After payment you get one Pro token that does not expire. Cancelling Hosted Pro or Team does not revoke it.
+        </p>
+        <p id="lifetime-remaining" hidden></p>
+        <p class="actions">
+          <a class="button" id="lifetime-checkout" href="https://proxy-production-ebcc.up.railway.app/checkout/lifetime">Checkout: Lifetime Pro, 199 PLN</a>
+        </p>
+      </section>
+
+      <section>
+        <h2>Team</h2>
+        <p>
+          Price: <strong>990 PLN per year</strong> for 10 seats. Yearly Stripe Checkout subscription.
+          After payment you get 10 Pro tokens, one per install. Paste each token the same way as Hosted Pro.
+          Cancelling the subscription revokes all 10. Checkout collects a tax ID and billing address for the invoice.
+        </p>
+        <p class="actions">
+          <a class="button" href="https://proxy-production-ebcc.up.railway.app/checkout/team">Checkout: Team, 990 PLN / year</a>
+        </p>
+      </section>
+      <script>
+        fetch("https://proxy-production-ebcc.up.railway.app/billing/offers")
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => {
+            const lifetime = data && data.lifetime;
+            const slot = document.querySelector("#lifetime-remaining");
+            if (!slot || !lifetime || typeof lifetime.remaining !== "number") return;
+            slot.hidden = false;
+            slot.textContent = lifetime.remaining > 0
+              ? lifetime.remaining + " of " + lifetime.cap + " left."
+              : "The Lifetime Pro launch cap is reached.";
+          })
+          .catch(() => {});
+      </script>
 
       <p class="actions">
         <a class="button button-quiet" href="index.html">Back</a>

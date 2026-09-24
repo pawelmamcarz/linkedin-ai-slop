@@ -10,6 +10,10 @@ type IssuedToken = {
   token: string;
   digest: string;
   status: "active" | "revoked";
+  kind?: "subscription" | "lifetime";
+  plan?: string;
+  seat?: number;
+  subscriptionId?: string;
 };
 
 const issuedByCustomer = new Map<string, IssuedToken>();
@@ -90,29 +94,112 @@ export function issuedTokenForCustomer(customerId: string, env: NodeJS.ProcessEn
   return row.token;
 }
 
-export function issueProToken(customerId: string, env: NodeJS.ProcessEnv = process.env): { token: string; created: boolean } {
-  loadIssued(env);
-  const existing = issuedByCustomer.get(customerId);
-  if (existing?.status === "active") return { token: existing.token, created: false };
+function mintToken(customerId: string, extra: Partial<IssuedToken> = {}): IssuedToken {
   const token = `pro_${randomBytes(24).toString("hex")}`;
-  issuedByCustomer.set(customerId, {
+  return {
     customerId,
     token,
     digest: tokenDigest(token),
     status: "active",
-  });
+    ...extra,
+  };
+}
+
+export function issueProToken(customerId: string, env: NodeJS.ProcessEnv = process.env): { token: string; created: boolean } {
+  loadIssued(env);
+  const existing = issuedByCustomer.get(customerId);
+  if (existing?.status === "active") return { token: existing.token, created: false };
+  const row = mintToken(customerId, { kind: "subscription", plan: existing?.plan ?? "pro" });
+  issuedByCustomer.set(customerId, row);
   persistIssued(env);
-  return { token, created: true };
+  return { token: row.token, created: true };
+}
+
+/** One-time Lifetime Pro. Not revoked by subscription events. */
+export function issueLifetimeToken(customerId: string, env: NodeJS.ProcessEnv = process.env): { token: string; created: boolean } {
+  loadIssued(env);
+  const key = `${customerId}#lifetime`;
+  const existing = issuedByCustomer.get(key);
+  if (existing?.status === "active") return { token: existing.token, created: false };
+  const row = mintToken(customerId, { kind: "lifetime", plan: "lifetime" });
+  issuedByCustomer.set(key, row);
+  persistIssued(env);
+  return { token: row.token, created: true };
+}
+
+export function lifetimeSoldCount(env: NodeJS.ProcessEnv = process.env): number {
+  loadIssued(env);
+  let sold = 0;
+  for (const row of issuedByCustomer.values()) {
+    if (row.kind === "lifetime" || row.plan === "lifetime") sold += 1;
+  }
+  return sold;
+}
+
+/** Ten (or TEAM_SEATS) distinct Pro tokens for one Stripe customer. Idempotent. */
+export function issueTeamTokens(
+  customerId: string,
+  seats: number,
+  env: NodeJS.ProcessEnv = process.env,
+  subscriptionId?: string,
+): { tokens: string[]; created: boolean } {
+  loadIssued(env);
+  const count = Math.max(1, Math.floor(seats));
+  const existing = [...issuedByCustomer.entries()].filter(([, row]) => row.customerId === customerId && row.plan === "team");
+  const active = existing.filter(([, row]) => row.status === "active");
+  if (active.length >= count) {
+    return { tokens: active.slice(0, count).map(([, row]) => row.token), created: false };
+  }
+  let created = false;
+  const chosen: IssuedToken[] = active.map(([, row]) => row);
+  for (const [key, row] of existing) {
+    if (chosen.length >= count) break;
+    if (row.status !== "revoked") continue;
+    row.status = "active";
+    if (subscriptionId) row.subscriptionId = subscriptionId;
+    issuedByCustomer.set(key, row);
+    chosen.push(row);
+    created = true;
+  }
+  let seat = existing.reduce((max, [, row]) => Math.max(max, row.seat ?? 0), 0);
+  while (chosen.length < count) {
+    seat += 1;
+    const row = mintToken(customerId, {
+      kind: "subscription",
+      plan: "team",
+      seat,
+      subscriptionId,
+    });
+    issuedByCustomer.set(`${customerId}#team:${seat}`, row);
+    chosen.push(row);
+    created = true;
+  }
+  if (created) persistIssued(env);
+  return { tokens: chosen.map((row) => row.token), created };
+}
+
+export function activeTokensForCustomer(customerId: string, env: NodeJS.ProcessEnv = process.env): string[] {
+  loadIssued(env);
+  const tokens: string[] = [];
+  for (const row of issuedByCustomer.values()) {
+    if (row.customerId === customerId && row.status === "active") tokens.push(row.token);
+  }
+  return tokens;
 }
 
 export function revokeProToken(customerId: string, env: NodeJS.ProcessEnv = process.env): boolean {
   loadIssued(env);
-  const existing = issuedByCustomer.get(customerId);
-  if (!existing || existing.status === "revoked") return false;
-  existing.status = "revoked";
-  issuedByCustomer.set(customerId, existing);
-  persistIssued(env);
-  return true;
+  let changed = false;
+  for (const [key, row] of issuedByCustomer) {
+    if (row.customerId !== customerId) continue;
+    if (row.kind === "lifetime" || row.plan === "lifetime") continue;
+    if (row.status === "revoked") continue;
+    row.status = "revoked";
+    issuedByCustomer.set(key, row);
+    changed = true;
+  }
+  if (changed) persistIssued(env);
+  return changed;
 }
 
 export function isValidProToken(token: string, env: NodeJS.ProcessEnv = process.env): boolean {

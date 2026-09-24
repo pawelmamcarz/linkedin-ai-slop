@@ -7,17 +7,23 @@ import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
 import { JEV_ENDPOINT, JEV_MODEL } from "../../jev/questions.ts";
 import {
   cancelHtml,
+  checkoutPlanReady,
   checkoutUnavailableHtml,
   createCheckoutSession,
+  grantFromCheckout,
   handleWebhook,
+  lifetimeSoldOut,
+  lifetimeSoldOutHtml,
+  offersPayload,
   parseCheckoutPlan,
   retrieveCheckoutSession,
-  sessionIsPaid,
   stripeCheckoutConfigured,
   successHtml,
+  type CheckoutPlan,
+  type StripeSession,
 } from "./billing.ts";
 import { evaluateWithMeta, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
-import { issueProToken, readPresentedToken, resolveTier } from "./pro-tokens.ts";
+import { readPresentedToken, resolveTier } from "./pro-tokens.ts";
 import { clientIp, consumeDailySlot, consumeEvaluateSlot, dailyIpCap, demoMode, evaluateRateConfig } from "./rate-limit.ts";
 import {
   logTokenUsage,
@@ -74,6 +80,17 @@ export function createProxyServer(): Server {
           rateLimit: limits.limit,
           stripeCheckout: stripeCheckoutConfigured(),
         });
+        return;
+      }
+
+      if (req.method === "GET" && (url.pathname === "/checkout/lifetime" || url.pathname === "/checkout/team")) {
+        const plan: CheckoutPlan = url.pathname.endsWith("/lifetime") ? "lifetime" : "team";
+        await handleCheckout(req, res, url, plan);
+        return;
+      }
+
+      if (req.method === "GET" && url.pathname === "/billing/offers") {
+        json(res, 200, offersPayload());
         return;
       }
 
@@ -275,6 +292,7 @@ function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
   if (origin === "https://www.linkedin.com" || origin === "https://linkedin.com") return true;
   if (origin === "https://pawelmamcarz.github.io") return true;
+  if (origin === "https://sciema.app" || origin === "https://www.sciema.app") return true;
   if (
     origin.startsWith("chrome-extension://") ||
     origin.startsWith("moz-extension://") ||
@@ -290,14 +308,30 @@ function isAllowedOrigin(origin: string): boolean {
   }
 }
 
-async function handleCheckout(req: IncomingMessage, res: ServerResponse, url: URL): Promise<void> {
+async function handleCheckout(
+  req: IncomingMessage,
+  res: ServerResponse,
+  url: URL,
+  forcedPlan?: CheckoutPlan,
+): Promise<void> {
   const body = req.method === "POST" ? await readJson(req) : {};
-  const plan = parseCheckoutPlan(url.searchParams.get("plan") ?? body.plan);
+  const plan = forcedPlan ?? parseCheckoutPlan(url.searchParams.get("plan") ?? body.plan);
   if (!plan) {
-    json(res, 400, { error: "invalid_plan", message: "Plan: monthly albo yearly." });
+    json(res, 400, { error: "invalid_plan", message: "Plan: monthly, yearly, lifetime albo team." });
     return;
   }
-  if (!stripeCheckoutConfigured() || !priceIdFor(plan)) {
+  if (plan === "lifetime" && lifetimeSoldOut()) {
+    if (req.method === "GET") {
+      html(res, 409, lifetimeSoldOutHtml());
+      return;
+    }
+    json(res, 409, {
+      error: "lifetime_sold_out",
+      message: "Limit sprzedaży Lifetime Pro został osiągnięty.",
+    });
+    return;
+  }
+  if (!checkoutPlanReady(plan)) {
     if (req.method === "GET") {
       html(res, 503, checkoutUnavailableHtml());
       return;
@@ -317,25 +351,19 @@ async function handleCheckout(req: IncomingMessage, res: ServerResponse, url: UR
   json(res, 200, { url: session.url });
 }
 
-function priceIdFor(plan: "monthly" | "yearly"): string {
-  const raw = plan === "yearly" ? process.env.STRIPE_PRICE_YEARLY : process.env.STRIPE_PRICE_MONTHLY;
-  return raw?.trim() ?? "";
-}
-
 async function handleCheckoutSuccess(url: URL, res: ServerResponse): Promise<void> {
   const sessionId = url.searchParams.get("session_id")?.trim() ?? "";
   if (!sessionId || sessionId.includes("{")) {
     html(res, 400, checkoutUnavailableHtml());
     return;
   }
-  const session = await retrieveCheckoutSession(sessionId);
-  const customer = typeof session.customer === "string" ? session.customer : session.customer?.id ?? "";
-  if (!customer || !sessionIsPaid(session)) {
+  const session: StripeSession = await retrieveCheckoutSession(sessionId);
+  const granted = grantFromCheckout(session);
+  if (!granted) {
     html(res, 402, checkoutUnavailableHtml());
     return;
   }
-  const issued = issueProToken(customer);
-  html(res, 200, successHtml(issued.token));
+  html(res, 200, successHtml(granted.tokens, granted.plan));
 }
 
 function html(res: ServerResponse, status: number, body: string): void {
