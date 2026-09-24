@@ -433,6 +433,62 @@ code {
   color: #e7e5e4;
 }
 
+.lais-badge--folded {
+  display: none !important;
+}
+
+.lais-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: inherit;
+  background: rgba(255, 252, 248, 0.92);
+}
+
+.lais-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--slop);
+  color: #fffdf8;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.lais-banner--open {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: 8px;
+  z-index: 4;
+  width: auto;
+  padding: 10px 14px;
+  font-size: 18px;
+}
+
+.lais-reveal {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: #fffdf8;
+  color: var(--slop);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
 .lais-badge--inline {
   position: static;
   cursor: default;

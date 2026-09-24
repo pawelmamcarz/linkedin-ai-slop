@@ -358,40 +358,43 @@
     } else {
       delete el.dataset.laisVerdict;
       delete el.dataset.laisRevealed;
-      el.classList.remove("li-ai-slop-revealed");
+      el.classList.remove("li-ai-slop-revealed", "li-ai-slop-covered", "li-ai-slop-blurred");
     }
-    syncCardBlur(el);
+    syncCardCover(el);
   }
 
-  const CONTENT_BLUR = "blur(20px)";
-  const VEIL_FILTER = "blur(24px) saturate(0.65)";
-  const VEIL_WASH = "rgba(255, 252, 248, 0.55)";
+  const SCRIM = "rgba(255, 252, 248, 0.92)";
   const REPLACED_TAGS = new Set(["IMG", "VIDEO", "CANVAS", "SVG", "PICTURE", "INPUT"]);
-  let repairingBlur = false;
+  let repairingCover = false;
 
-  function syncCardBlur(el) {
+  function syncCardCover(el) {
     const slop = el.dataset.laisVerdict === "slop";
     const revealed = el.dataset.laisRevealed === "1";
     const allow = slop && settings.blurSlop !== false;
-    const blur = allow && !revealed;
-    el.classList.toggle("li-ai-slop-blurred", blur);
+    el.classList.toggle("li-ai-slop-covered", allow && !revealed);
     el.classList.toggle("li-ai-slop-revealed", allow && revealed);
-    ensureBlurLayer(el, blur);
+    el.classList.remove("li-ai-slop-blurred");
+    ensureCover(el, allow, revealed);
     const badge = el.querySelector(":scope > .lais-badge");
-    if (badge) syncRevealControl(badge, allow);
+    if (badge) {
+      badge.classList.toggle("lais-badge--folded", allow);
+      badge.querySelector(":scope > .lais-reveal")?.remove();
+    }
   }
 
   function isExtensionChrome(node) {
     if (!node?.classList) return false;
     if (
       node.classList.contains("lais-badge") ||
-      node.classList.contains("lais-blur") ||
+      node.classList.contains("lais-cover") ||
+      node.classList.contains("lais-banner") ||
+      node.classList.contains("lais-scrim") ||
       node.classList.contains("lais-reveal") ||
       node.classList.contains("lais-tip")
     ) {
       return true;
     }
-    return Boolean(node.closest?.(".lais-badge, .lais-blur"));
+    return Boolean(node.closest?.(".lais-badge, .lais-cover, .lais-banner"));
   }
 
   function isContentsDisplay(node) {
@@ -432,118 +435,223 @@
     return true;
   }
 
-  function styleVeil(veil) {
-    veil.style.setProperty("position", "absolute", "important");
-    veil.style.setProperty("top", "0", "important");
-    veil.style.setProperty("right", "0", "important");
-    veil.style.setProperty("bottom", "0", "important");
-    veil.style.setProperty("left", "0", "important");
-    veil.style.setProperty("z-index", "20", "important");
-    veil.style.setProperty("display", "block", "important");
-    veil.style.setProperty("box-sizing", "border-box", "important");
-    veil.style.setProperty("pointer-events", "none", "important");
-    veil.style.setProperty("background", VEIL_WASH, "important");
-    veil.style.setProperty("backdrop-filter", VEIL_FILTER, "important");
-    veil.style.setProperty("-webkit-backdrop-filter", VEIL_FILTER, "important");
-    veil.dataset.laisVeil = "blur-24";
-  }
-
-  function ensureVeil(host) {
-    let veil = null;
-    for (const child of childElements(host)) {
-      if (child.classList?.contains("lais-blur")) {
-        veil = child;
-        break;
-      }
-    }
-    if (!veil) {
-      const doc = host.ownerDocument || document;
-      veil = doc.createElement("div");
-      veil.className = "lais-blur";
-      veil.setAttribute("aria-hidden", "true");
-      host.appendChild(veil);
-    }
-    styleVeil(veil);
-    return veil;
-  }
-
-  function markPaintBlur(node) {
-    node.classList.add("lais-paint-blur");
-    node.style.setProperty("filter", CONTENT_BLUR, "important");
-    node.style.setProperty("-webkit-filter", CONTENT_BLUR, "important");
-    node.dataset.laisFiltered = "20";
-  }
-
-  function ensureBlurLayer(el, on) {
-    const badge = el.querySelector(":scope > .lais-badge");
-    if (!on) {
-      el.querySelectorAll(".lais-blur").forEach((node) => node.remove());
-      if (badge) {
-        badge.style.removeProperty("z-index");
-        badge.style.removeProperty("filter");
-        badge.style.removeProperty("-webkit-filter");
-      }
-      clearPaintedFilters(el);
-      return;
-    }
-    const hostBox = ensurePaintBox(el);
-    if (hostBox) ensureVeil(el);
-    paintContentFilters(el, !hostBox);
-    if (badge) {
-      badge.classList.remove("lais-paint-blur");
-      badge.style.setProperty("z-index", "21", "important");
-      badge.style.setProperty("filter", "none", "important");
-      badge.style.setProperty("-webkit-filter", "none", "important");
-      delete badge.dataset.laisFiltered;
-      if (badge.parentElement === el) el.appendChild(badge);
+  function pinBox(node, styles) {
+    for (const [key, value] of Object.entries(styles)) {
+      node.style.setProperty(key, value, "important");
     }
   }
 
-  function paintContentFilters(el, veilEachBox) {
-    function visit(node) {
-      for (const child of childElements(node)) {
-        if (isExtensionChrome(child)) continue;
-        if (isContentsDisplay(child)) {
-          visit(child);
-          continue;
-        }
-        markPaintBlur(child);
-        if (veilEachBox && ensurePaintBox(child)) ensureVeil(child);
-      }
-    }
-    visit(el);
-  }
-
-  function clearPaintedFilters(el) {
+  function clearCoverNodes(el) {
     const drop = [];
     function visit(node) {
       for (const child of childElements(node)) {
-        if (child.dataset?.laisFiltered || child.classList?.contains("lais-paint-blur")) drop.push(child);
+        if (
+          child.classList?.contains("lais-cover") ||
+          child.classList?.contains("lais-banner") ||
+          child.classList?.contains("lais-scrim")
+        ) {
+          drop.push(child);
+          continue;
+        }
+        if (child.dataset?.laisDimmed) drop.push(child);
         visit(child);
       }
     }
     visit(el);
-    try {
-      el.querySelectorAll("[data-lais-filtered], .lais-paint-blur").forEach((node) => drop.push(node));
-    } catch {
-      /* ignore */
-    }
     for (const node of drop) {
-      node.classList.remove("lais-paint-blur");
-      node.style.removeProperty("filter");
-      node.style.removeProperty("-webkit-filter");
-      delete node.dataset.laisFiltered;
+      if (node.dataset?.laisDimmed && !node.classList.contains("lais-cover")) {
+        node.classList.remove("lais-dimmed");
+        node.style.removeProperty("opacity");
+        delete node.dataset.laisDimmed;
+        continue;
+      }
+      node.remove();
     }
   }
 
-  function blurNeedsRepair(el) {
-    if (el.dataset.laisVerdict !== "slop" || el.dataset.laisRevealed === "1" || settings.blurSlop === false) {
-      return false;
+  function bannerCopy(el) {
+    const badge = el.querySelector(".lais-badge");
+    const label = badge?.querySelector(".lais-badge__label")?.textContent || "AI slop";
+    const percent = badge?.querySelector(".lais-tip__pct")?.textContent || "";
+    const meta = badge?.querySelector(".lais-tip__meta")?.textContent || "";
+    const title = badge?.getAttribute("title") || percent;
+    return { label: String(label).trim() || "AI slop", percent, meta, title };
+  }
+
+  function fillBanner(banner, el, revealed) {
+    const doc = banner.ownerDocument || document;
+    const copy = bannerCopy(el);
+    banner.className = revealed ? "lais-banner lais-banner--open" : "lais-banner";
+    banner.replaceChildren();
+    const label = doc.createElement("span");
+    label.className = "lais-banner__label";
+    label.textContent = copy.label;
+    const button = doc.createElement("button");
+    button.type = "button";
+    button.className = "lais-reveal";
+    button.textContent = revealed ? "Ukryj" : "Pokaż";
+    button.title = revealed
+      ? "Ukryj treść tego posta"
+      : "Post zakryty, bo sklasyfikowano go jako AI slop. Pokaż ten post.";
+    button.setAttribute("aria-pressed", revealed ? "true" : "false");
+    button.addEventListener("click", onRevealClick);
+    banner.append(label, button);
+    if (copy.percent) {
+      const tip = doc.createElement("span");
+      tip.className = "lais-tip";
+      tip.setAttribute("role", "tooltip");
+      const pctEl = doc.createElement("span");
+      pctEl.className = "lais-tip__pct";
+      pctEl.textContent = copy.percent;
+      tip.appendChild(pctEl);
+      if (copy.meta) {
+        const meta = doc.createElement("span");
+        meta.className = "lais-tip__meta";
+        meta.textContent = copy.meta;
+        tip.appendChild(meta);
+      }
+      banner.appendChild(tip);
     }
-    if (!el.classList.contains("li-ai-slop-blurred")) return true;
-    const hostContents = isContentsDisplay(el);
-    if (!hostContents && !el.querySelector(":scope > .lais-blur")) return true;
-    let broken = false;
+    if (copy.title) banner.title = copy.title;
+    pinBox(banner, {
+      position: revealed ? "absolute" : "relative",
+      "z-index": "22",
+      display: "flex",
+      "align-items": "center",
+      "justify-content": "space-between",
+      gap: "12px",
+      "box-sizing": "border-box",
+      width: revealed ? "auto" : "100%",
+      margin: "0",
+      padding: revealed ? "10px 14px" : "16px 18px",
+      "border-radius": "14px",
+      background: "#9f1239",
+      color: "#fffdf8",
+      "font-family": '"Segoe UI", system-ui, sans-serif',
+      "font-size": revealed ? "18px" : "22px",
+      "font-weight": "750",
+      "line-height": "1.2",
+      "pointer-events": "auto",
+      filter: "none",
+      "-webkit-filter": "none",
+      top: revealed ? "8px" : "auto",
+      right: revealed ? "8px" : "auto",
+      left: revealed ? "8px" : "auto",
+    });
+  }
+
+  function styleCover(cover) {
+    pinBox(cover, {
+      position: "absolute",
+      top: "0",
+      right: "0",
+      bottom: "0",
+      left: "0",
+      "z-index": "20",
+      display: "flex",
+      "align-items": "center",
+      "box-sizing": "border-box",
+      margin: "0",
+      padding: "16px",
+      border: "0",
+      background: SCRIM,
+      "pointer-events": "auto",
+      filter: "none",
+      "-webkit-filter": "none",
+      "backdrop-filter": "none",
+      "-webkit-backdrop-filter": "none",
+    });
+  }
+
+  function mountCover(host, card) {
+    ensurePaintBox(host);
+    const doc = host.ownerDocument || document;
+    let cover = null;
+    for (const child of childElements(host)) {
+      if (child.classList?.contains("lais-cover")) {
+        cover = child;
+        break;
+      }
+    }
+    if (!cover) {
+      cover = doc.createElement("div");
+      cover.className = "lais-cover";
+      host.appendChild(cover);
+    }
+    styleCover(cover);
+    let banner = null;
+    for (const child of childElements(cover)) {
+      if (child.classList?.contains("lais-banner")) {
+        banner = child;
+        break;
+      }
+    }
+    if (!banner) {
+      banner = doc.createElement("div");
+      banner.setAttribute("role", "status");
+      cover.appendChild(banner);
+    }
+    fillBanner(banner, card, false);
+  }
+
+  function mountOpenBanner(host, card) {
+    ensurePaintBox(host);
+    const doc = host.ownerDocument || document;
+    let banner = null;
+    for (const child of childElements(host)) {
+      if (child.classList?.contains("lais-banner")) {
+        banner = child;
+        break;
+      }
+    }
+    if (!banner) {
+      banner = doc.createElement("div");
+      banner.setAttribute("role", "status");
+      host.appendChild(banner);
+    }
+    fillBanner(banner, card, true);
+  }
+
+  function mountScrim(host) {
+    ensurePaintBox(host);
+    let scrim = null;
+    for (const child of childElements(host)) {
+      if (child.classList?.contains("lais-scrim")) {
+        scrim = child;
+        break;
+      }
+    }
+    if (!scrim) {
+      const doc = host.ownerDocument || document;
+      scrim = doc.createElement("div");
+      scrim.className = "lais-scrim";
+      scrim.setAttribute("aria-hidden", "true");
+      host.appendChild(scrim);
+    }
+    pinBox(scrim, {
+      position: "absolute",
+      top: "0",
+      right: "0",
+      bottom: "0",
+      left: "0",
+      "z-index": "20",
+      display: "block",
+      background: SCRIM,
+      "pointer-events": "auto",
+      filter: "none",
+      "backdrop-filter": "none",
+    });
+  }
+
+  function dimReplaced(node) {
+    if (!REPLACED_TAGS.has(node.tagName)) return;
+    node.classList.add("lais-dimmed");
+    node.style.setProperty("opacity", "0.12", "important");
+    node.dataset.laisDimmed = "1";
+  }
+
+  function hostBoxes(el) {
+    const boxes = [];
     function visit(node) {
       for (const child of childElements(node)) {
         if (isExtensionChrome(child)) continue;
@@ -551,46 +659,63 @@
           visit(child);
           continue;
         }
-        if (!child.classList.contains("lais-paint-blur") || child.dataset.laisFiltered !== "20") broken = true;
-        if (hostContents && canHostVeil(child) && !child.querySelector(":scope > .lais-blur")) broken = true;
+        boxes.push(child);
       }
     }
     visit(el);
-    return broken;
+    return boxes;
   }
 
-  function repairSlopBlurs() {
-    if (repairingBlur || typeof document === "undefined") return;
-    repairingBlur = true;
-    try {
-      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => {
-        if (blurNeedsRepair(el)) syncCardBlur(el);
-      });
-    } finally {
-      repairingBlur = false;
-    }
-  }
-
-  function syncRevealControl(badge, show) {
-    let button = badge.querySelector(":scope > .lais-reveal");
-    if (!show) {
-      button?.remove();
+  function ensureCover(el, allow, revealed) {
+    if (!allow) {
+      clearCoverNodes(el);
       return;
     }
-    if (!button) {
-      const doc = badge.ownerDocument || document;
-      button = doc.createElement("button");
-      button.type = "button";
-      button.className = "lais-reveal";
-      button.addEventListener("click", onRevealClick);
-      badge.appendChild(button);
+    const rooted = ensurePaintBox(el);
+    const boxes = rooted ? [] : hostBoxes(el);
+    clearCoverNodes(el);
+    if (rooted) {
+      if (revealed) mountOpenBanner(el, el);
+      else mountCover(el, el);
+      return;
     }
-    const revealed = badge.parentElement?.dataset.laisRevealed === "1";
-    button.textContent = revealed ? "Ukryj" : "Pokaż";
-    button.title = revealed
-      ? "Ukryj treść tego posta"
-      : "Treść rozmyta, bo post sklasyfikowano jako AI slop. Pokaż ten post.";
-    button.setAttribute("aria-pressed", revealed ? "true" : "false");
+    const hosts = boxes.filter((box) => canHostVeil(box));
+    const target = hosts[0] || el;
+    if (revealed) {
+      mountOpenBanner(target, el);
+      return;
+    }
+    if (hosts.length) mountCover(hosts[0], el);
+    else mountOpenBanner(el, el);
+    for (const box of hosts.slice(1)) mountScrim(box);
+    for (const box of boxes) dimReplaced(box);
+  }
+
+  function coverNeedsRepair(el) {
+    const allow = el.dataset.laisVerdict === "slop" && settings.blurSlop !== false;
+    const revealed = el.dataset.laisRevealed === "1";
+    const hasCover = Boolean(el.querySelector(".lais-cover, .lais-scrim"));
+    const hasBanner = Boolean(el.querySelector(".lais-banner"));
+    if (!allow) return hasCover || hasBanner || el.classList.contains("li-ai-slop-covered");
+    if (revealed) return hasCover || !hasBanner || !el.classList.contains("li-ai-slop-revealed");
+    if (!el.classList.contains("li-ai-slop-covered") || !hasBanner) return true;
+    if (!isContentsDisplay(el)) return !el.querySelector(":scope > .lais-cover");
+    const hosts = hostBoxes(el).filter((box) => canHostVeil(box));
+    if (!hosts.length) return !hasBanner;
+    if (!hosts[0].querySelector(":scope > .lais-cover")) return true;
+    return hosts.slice(1).some((box) => !box.querySelector(":scope > .lais-scrim"));
+  }
+
+  function repairSlopCovers() {
+    if (repairingCover || typeof document === "undefined") return;
+    repairingCover = true;
+    try {
+      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => {
+        if (coverNeedsRepair(el)) syncCardCover(el);
+      });
+    } finally {
+      repairingCover = false;
+    }
   }
 
   function onRevealClick(event) {
@@ -601,13 +726,13 @@
     if (!card) return;
     if (card.dataset.laisRevealed === "1") delete card.dataset.laisRevealed;
     else card.dataset.laisRevealed = "1";
-    syncCardBlur(card);
+    syncCardCover(card);
   }
 
   function applySettings(partial) {
     if (partial && typeof partial === "object") settings = { ...settings, ...partial };
     if (typeof document !== "undefined") {
-      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => syncCardBlur(el));
+      document.querySelectorAll("[data-lais-verdict='slop']").forEach((el) => syncCardCover(el));
     }
     return settings;
   }
@@ -714,7 +839,7 @@
         setBadge(el, cached.badge || "human", cached);
       } else if (cached.badge === "slop") {
         el.dataset.laisVerdict = "slop";
-        syncCardBlur(el);
+        syncCardCover(el);
       }
       return;
     }
@@ -874,7 +999,7 @@
   function watch() {
     if (observer) observer.disconnect();
     observer = new MutationObserver(() => {
-      repairSlopBlurs();
+      repairSlopCovers();
       scheduleScan();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
@@ -900,15 +1025,14 @@
   }
 
   function clearBadges() {
-    document.querySelectorAll("[data-lais-filtered], .lais-paint-blur").forEach((node) => {
-      node.classList.remove("lais-paint-blur");
-      node.style.removeProperty("filter");
-      node.style.removeProperty("-webkit-filter");
-      delete node.dataset.laisFiltered;
+    document.querySelectorAll("[data-lais-dimmed]").forEach((node) => {
+      node.classList.remove("lais-dimmed");
+      node.style.removeProperty("opacity");
+      delete node.dataset.laisDimmed;
     });
-    document.querySelectorAll(".lais-badge, .lais-blur").forEach((n) => n.remove());
-    document.querySelectorAll(".li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
-      el.classList.remove("li-ai-slop-blurred", "li-ai-slop-revealed");
+    document.querySelectorAll(".lais-badge, .lais-cover, .lais-banner, .lais-scrim").forEach((n) => n.remove());
+    document.querySelectorAll(".li-ai-slop-covered, .li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
+      el.classList.remove("li-ai-slop-covered", "li-ai-slop-blurred", "li-ai-slop-revealed");
       delete el.dataset.laisVerdict;
       delete el.dataset.laisRevealed;
     });
