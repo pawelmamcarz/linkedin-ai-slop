@@ -39,10 +39,13 @@ Produkt jest tylko na LinkedIn. Nie ma adapterów Facebooka, X ani Instagrama.
 
 | Uprawnienie | Po co |
 | --- | --- |
-| `storage` | Włącznik, próg i adres proxy w `chrome.storage.sync`. |
-| `https://www.linkedin.com/*` | Content script na feedzie. |
+| `storage` | Włącznik, próg i adres proxy. Najpierw `storage.sync`, przy braku sync (część instalacji Safari) `storage.local`. |
+| `https://www.linkedin.com/*` i `https://*.linkedin.com/*` | Content script jest podpięty pod `www.linkedin.com`. Szerszy host jest na liście uprawnień. |
 | `https://proxy-production-ebcc.up.railway.app/*` | Service worker woła `GET /health` i `POST /evaluate`. Klucza API tu nie ma. |
-| `optional_host_permissions` | Własne proxy: inny host Railway (`https://*.up.railway.app/*`), localhost albo dowolny `http`/`https`. Chrome pyta dopiero przy zapisie adresu w opcjach. |
+| `http://127.0.0.1/*` i `http://localhost/*` | Lokalne proxy i podgląd `/demo`. |
+| `optional_host_permissions` | Własne proxy spoza listy: inny host Railway albo dowolny `http`/`https`. Przeglądarka pyta przy zapisie adresu. |
+
+Paczka Chromium (Chrome, Brave, Edge) to ten sam zip. Brave: [`BRAVE.md`](BRAVE.md). Firefox to osobny XPI (`npm run pack:firefox`): [`FIREFOX.md`](FIREFOX.md). AMO nie jest wysłane. Safari to projekt Xcode, nie ten zip: [`SAFARI.md`](SAFARI.md). App Store nie jest przygotowany.
 
 ## Ikona i zrzuty
 

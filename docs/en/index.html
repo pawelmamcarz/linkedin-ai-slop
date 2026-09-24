@@ -46,7 +46,7 @@
         <div class="hero-brand">
           <img class="mark" src="../brand/mark.png" width="88" height="88" alt="" />
           <div>
-            <p class="kicker">LinkedIn only · Chrome and Edge</p>
+            <p class="kicker">LinkedIn only · Chrome, Brave, Edge, Firefox, and Safari</p>
             <h1>LinkedIn AI Slop</h1>
           </div>
         </div>
@@ -66,7 +66,8 @@
         </p>
         <p class="fine">
           The hosted proxy is a public demo with limits. For daily use, run your own proxy and your own key (BYOK).
-          The Chrome Web Store is not the install path yet. The zip lives in the repository.
+          The Chrome Web Store is not the install path yet. The same zip runs in Chrome, Brave, and Edge.
+          Firefox is a separate XPI (temporary add-on, no AMO listing). Safari is a Mac build, with no App Store listing.
           The product works on LinkedIn only.
         </p>
       </section>
@@ -90,20 +91,42 @@
       <h2 class="section-title">Install</h2>
       <div class="grid-2">
         <article class="card">
-          <h2>Unpacked</h2>
+          <h2>Chrome and Edge</h2>
           <ol class="steps">
-            <li>Clone the <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repository</a>.</li>
+            <li>Clone the <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repository</a> or unzip <code>store/linkedin-ai-slop-extension.zip</code>.</li>
             <li>Open <code>chrome://extensions</code> or <code>edge://extensions</code> and turn on developer mode.</li>
-            <li>Choose <strong>Load unpacked</strong> and select the <code>extension/</code> folder.</li>
+            <li><strong>Load unpacked</strong> and select <code>extension/</code>.</li>
           </ol>
+          <p>The Chrome Web Store listing is not published. Rebuild the zip with <code>npm run pack:extension</code>.</p>
         </article>
         <article class="card">
-          <h2>Store zip</h2>
-          <p>
-            <code>npm run pack:extension</code> builds <code>store/linkedin-ai-slop-extension.zip</code>.
-            Unzip it and load that folder in developer mode. The archive is the extension only, with no server and no key.
-          </p>
-          <p>Turn scoring on in the options. <strong>Check proxy</strong> should report the model <code>jev-latest</code>.</p>
+          <h2>Brave</h2>
+          <p>Same Chromium package. There is no separate Brave file.</p>
+          <ol class="steps">
+            <li>Open <code>brave://extensions</code> and turn on developer mode.</li>
+            <li><strong>Load unpacked</strong> and select <code>extension/</code>.</li>
+            <li>When a Chrome Web Store listing exists, Brave can install that same item. It does not exist yet.</li>
+          </ol>
+          <p>Notes: <code>store/BRAVE.md</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Firefox</h2>
+          <p>Separate XPI, same scripts. Firefox 142+. There is no addons.mozilla.org listing.</p>
+          <ol class="steps">
+            <li><code>npm run pack:firefox</code> builds <code>store/linkedin-ai-slop-firefox.xpi</code>.</li>
+            <li>Open <code>about:debugging#/runtime/this-firefox</code>.</li>
+            <li><strong>Load Temporary Add-on</strong> and select that XPI. Load it again after Firefox restarts.</li>
+          </ol>
+          <p>Notes: <code>store/FIREFOX.md</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Safari</h2>
+          <p>Xcode project in <code>safari/</code>. On a Mac: <code>bash scripts/build-safari.sh</code>. This is not an App Store or TestFlight build.</p>
+          <ol class="steps">
+            <li>Safari → Develop → <strong>Allow Unsigned Extensions</strong>.</li>
+            <li>Run the app from Xcode, enable the extension, and allow <code>www.linkedin.com</code>.</li>
+          </ol>
+          <p>Notes: <code>store/SAFARI.md</code>.</p>
         </article>
       </div>
 
@@ -127,7 +150,7 @@
         <p>
           The proxy receives the post id, the text (up to 6000 characters), and optionally the name on the card.
           It does not write post text to disk. Memory holds a hash of the normalized text and the verdict, with a TTL, plus the per-IP request counter.
-          The extension stores only the toggle, the threshold, and the proxy URL in <code>chrome.storage.sync</code>.
+          The extension stores only the toggle, the threshold, and the proxy URL in extension storage (<code>storage.sync</code>, or <code>storage.local</code> when sync is unavailable).
           Details: <a href="privacy.html">privacy policy</a> and <a href="terms.html">terms</a>.
         </p>
       </aside>

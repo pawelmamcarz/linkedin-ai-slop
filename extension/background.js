@@ -1,31 +1,35 @@
 /**
  * Service worker: woła proxy, żeby content script na https://www.linkedin.com
  * nie trzymał klucza i nie walczył z CORS / mixed content.
+ * Fetch idzie z rozszerzenia (Chrome, Brave, Edge, Firefox, Safari), nie ze strony,
+ * więc Shields Brave na linkedin.com tego żądania nie widzą.
  * Domyślny adres trzymaj zgodny z jev/thresholds.ts (DEFAULT_PROXY_URL).
+ *
+ * Chrome ładuje ten plik jako service worker i woła importScripts.
+ * Firefox ładuje ext-api.js wcześniej przez background.scripts, więc importScripts tu nie ma.
  */
+if (typeof importScripts === "function") {
+  importScripts("ext-api.js");
+}
+
 const DEFAULT_PROXY = "https://proxy-production-ebcc.up.railway.app";
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (!message || (message.type !== "evaluate" && message.type !== "health")) return;
+ExtApi.onMessage((message) => {
+  if (!message || (message.type !== "evaluate" && message.type !== "health")) return undefined;
   const task = message.type === "health" ? health(message.proxyUrl) : evaluate(message.payload);
-  task
-    .then(sendResponse)
-    .catch((error) => {
-      sendResponse({
-        ok: false,
-        status: 0,
-        body: {
-          error: "proxy_unreachable",
-          message: error instanceof Error ? error.message : "Brak połączenia z proxy",
-        },
-      });
-    });
-  return true;
+  return task.catch((error) => ({
+    ok: false,
+    status: 0,
+    body: {
+      error: "proxy_unreachable",
+      message: error instanceof Error ? error.message : "Brak połączenia z proxy",
+    },
+  }));
 });
 
 async function proxyBase(override) {
   if (override) return String(override).replace(/\/$/, "");
-  const stored = await chrome.storage.sync.get({ proxyUrl: DEFAULT_PROXY });
+  const stored = await ExtApi.storageGet({ proxyUrl: DEFAULT_PROXY });
   return String(stored.proxyUrl || DEFAULT_PROXY).replace(/\/$/, "");
 }
 

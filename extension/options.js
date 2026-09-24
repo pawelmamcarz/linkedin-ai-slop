@@ -15,7 +15,7 @@ thresholdEl.addEventListener("input", () => {
   thresholdValue.textContent = Number(thresholdEl.value).toFixed(2);
 });
 
-chrome.storage.sync.get(DEFAULTS, (stored) => {
+ExtApi.storageGet(DEFAULTS).then((stored) => {
   enabledEl.checked = stored.enabled !== false;
   thresholdEl.value = String(stored.threshold ?? DEFAULTS.threshold);
   thresholdValue.textContent = Number(thresholdEl.value).toFixed(2);
@@ -27,10 +27,10 @@ form.addEventListener("submit", async (event) => {
   const proxyUrl = proxyEl.value.trim().replace(/\/$/, "");
   const granted = await ensureProxyPermission(proxyUrl);
   if (!granted) {
-    statusEl.textContent = "Chrome nie dostał zgody na ten adres proxy.";
+    statusEl.textContent = "Przeglądarka nie dostała zgody na ten adres proxy.";
     return;
   }
-  await chrome.storage.sync.set({
+  await ExtApi.storageSet({
     enabled: enabledEl.checked,
     threshold: Number(thresholdEl.value),
     proxyUrl,
@@ -43,15 +43,11 @@ document.querySelector("#check").addEventListener("click", async () => {
   statusEl.textContent = "Sprawdzam…";
   const granted = await ensureProxyPermission(proxyUrl);
   if (!granted) {
-    statusEl.textContent = "Chrome nie dostał zgody na ten adres proxy.";
+    statusEl.textContent = "Przeglądarka nie dostała zgody na ten adres proxy.";
     return;
   }
-  chrome.runtime.sendMessage({ type: "health", proxyUrl }, (response) => {
-    const err = chrome.runtime.lastError;
-    if (err) {
-      statusEl.textContent = err.message;
-      return;
-    }
+  try {
+    const response = await ExtApi.sendMessage({ type: "health", proxyUrl });
     if (response?.ok && response.body?.hasApiKey) {
       statusEl.textContent = `Proxy działa. Model: ${response.body.model}.`;
       return;
@@ -63,7 +59,9 @@ document.querySelector("#check").addEventListener("click", async () => {
     statusEl.textContent =
       response?.body?.message ||
       "Brak połączenia z proxy. Domyślny adres to hostowane proxy. Lokalne `npm start` w server/ jest potrzebne tylko przy własnym kluczu.";
-  });
+  } catch (error) {
+    statusEl.textContent = error instanceof Error ? error.message : "Brak połączenia z proxy";
+  }
 });
 
 async function ensureProxyPermission(proxyUrl) {
@@ -73,7 +71,7 @@ async function ensureProxyPermission(proxyUrl) {
   } catch {
     return false;
   }
-  const has = await chrome.permissions.contains({ origins: [origin] });
+  const has = await ExtApi.permissionsContains(origin);
   if (has) return true;
-  return chrome.permissions.request({ origins: [origin] });
+  return ExtApi.permissionsRequest(origin);
 }

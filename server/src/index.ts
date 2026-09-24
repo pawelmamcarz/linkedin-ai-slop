@@ -198,7 +198,11 @@ function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
   if (origin === "https://www.linkedin.com" || origin === "https://linkedin.com") return true;
   if (origin === "https://pawelmamcarz.github.io") return true;
-  if (origin.startsWith("chrome-extension://") || origin.startsWith("moz-extension://")) {
+  if (
+    origin.startsWith("chrome-extension://") ||
+    origin.startsWith("moz-extension://") ||
+    origin.startsWith("safari-web-extension://")
+  ) {
     return true;
   }
   try {

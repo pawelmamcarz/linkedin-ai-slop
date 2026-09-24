@@ -124,13 +124,20 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(response.headers.get("access-control-allow-origin"), "https://www.linkedin.com");
   });
 
-  it("puszcza chrome-extension i GitHub Pages", async () => {
+  it("puszcza chrome-extension, safari-web-extension i GitHub Pages", async () => {
     const extension = await fetch(`${base}/health`, {
       headers: { Origin: "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
     });
     assert.equal(
       extension.headers.get("access-control-allow-origin"),
       "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef",
+    );
+    const safari = await fetch(`${base}/health`, {
+      headers: { Origin: "safari-web-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
+    });
+    assert.equal(
+      safari.headers.get("access-control-allow-origin"),
+      "safari-web-extension://abcdefghijklmnopqrstuvwxyzabcdef",
     );
     const pages = await fetch(`${base}/health`, {
       headers: { Origin: "https://pawelmamcarz.github.io" },
