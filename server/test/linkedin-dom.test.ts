@@ -77,20 +77,25 @@ describe("selektory LinkedIn (fixture)", () => {
     const tip = badge!.querySelector(".lais-tip");
     assert.equal(tip?.querySelector(".lais-tip__pct")?.textContent, "AI slop: 91%");
     assert.match(tip?.querySelector(".lais-tip__meta")?.textContent || "", /Intensywność: heavy/);
-    assert.ok(host.classList.contains("li-ai-slop-blurred"));
+    assert.ok(host.classList.contains("li-ai-slop-covered"));
     assert.equal(host.dataset.laisVerdict, "slop");
-    assert.ok(host.querySelector(":scope > .lais-blur"));
-    const reveal = badge!.querySelector(".lais-reveal");
+    assert.ok(badge!.classList.contains("lais-badge--folded"));
+    const banner = host.querySelector(":scope > .lais-cover > .lais-banner");
+    assert.equal(banner?.querySelector(".lais-banner__label")?.textContent, "AI slop");
+    assert.equal(banner?.querySelector(".lais-tip__pct")?.textContent, "AI slop: 91%");
+    const reveal = banner?.querySelector(".lais-reveal");
     assert.equal(reveal?.textContent, "Pokaż");
     assert.match(reveal?.getAttribute("title") || "", /AI slop/);
+    assert.equal(host.querySelector(".lais-paint-blur"), null);
     reveal?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
-    assert.equal(host.classList.contains("li-ai-slop-blurred"), false);
-    assert.equal(host.querySelector(":scope > .lais-blur"), null);
+    assert.equal(host.classList.contains("li-ai-slop-covered"), false);
+    assert.equal(host.querySelector(".lais-cover"), null);
     assert.ok(host.classList.contains("li-ai-slop-revealed"));
-    assert.equal(host.querySelector(".lais-reveal")?.textContent, "Ukryj");
+    assert.equal(host.querySelector(".lais-banner .lais-reveal")?.textContent, "Ukryj");
+    assert.equal(host.querySelector(".lais-banner")?.classList.contains("lais-banner--open"), true);
   });
 
-  it("rozmywa treść pod display:contents, nie samą odznakę", () => {
+  it("stawia baner na całą szerokość, bez rozmycia treści", () => {
     const card = document.createElement("div");
     card.className = "feed-shared-update-v2";
     const shell = document.createElement("div");
@@ -104,49 +109,53 @@ describe("selektory LinkedIn (fixture)", () => {
     card.appendChild(shell);
     document.body.appendChild(card);
     slop.setBadge(card, "slop", { labelPl: "AI slop", slopProbability: 0.88 });
-    assert.equal(shell.dataset.laisFiltered, undefined);
-    assert.ok(copy.classList.contains("lais-paint-blur"));
-    assert.ok(photo.classList.contains("lais-paint-blur"));
-    assert.match(copy.style.getPropertyValue("filter"), /blur\(20px\)/);
-    assert.match(photo.style.getPropertyValue("filter"), /blur\(20px\)/);
-    assert.equal(card.querySelector(".lais-badge")!.style.getPropertyValue("filter"), "none");
-    assert.equal(card.querySelector(".lais-badge")!.classList.contains("lais-paint-blur"), false);
-    const veil = card.querySelector(":scope > .lais-blur") as HTMLElement;
-    assert.ok(veil);
-    assert.equal(veil.dataset.laisVeil, "blur-24");
-    assert.equal(copy.querySelector(":scope > .lais-blur"), null);
+    assert.equal(copy.classList.contains("lais-paint-blur"), false);
+    assert.equal(photo.classList.contains("lais-paint-blur"), false);
+    assert.equal(copy.style.getPropertyValue("filter"), "");
+    assert.equal(photo.style.getPropertyValue("filter"), "");
+    const cover = card.querySelector(":scope > .lais-cover") as HTMLElement;
+    assert.ok(cover);
+    assert.match(cover.style.getPropertyValue("background"), /0\.92/);
+    assert.doesNotMatch(cover.style.cssText, /blur\(/);
+    const banner = cover.querySelector(".lais-banner") as HTMLElement;
+    assert.equal(banner.style.getPropertyValue("width"), "100%");
+    assert.equal(banner.querySelector(".lais-banner__label")?.textContent, "AI slop");
+    assert.equal(card.querySelector(".lais-badge")!.classList.contains("lais-badge--folded"), true);
     const css = readFileSync(resolve(import.meta.dirname, "../../extension/badge.css"), "utf8");
-    assert.match(css, /backdrop-filter:\s*blur\(24px\)/);
-    assert.match(css, /\.lais-paint-blur[\s\S]*filter:\s*blur\(20px\)/);
-    assert.equal(card.querySelector(".lais-badge")!.style.getPropertyValue("z-index"), "21");
+    assert.match(css, /\.lais-banner/);
+    assert.match(css, /\.lais-cover/);
+    assert.doesNotMatch(css, /blur\(20px\)/);
+    assert.doesNotMatch(css, /blur\(24px\)/);
   });
 
-  it("karta display:contents dostaje welon na prawdziwych boksach", () => {
+  it("karta display:contents dostaje baner na prawdziwym boksie", () => {
     const card = document.createElement("div");
     card.style.display = "contents";
     const copy = document.createElement("div");
     copy.className = "update-components-text";
     copy.textContent = "Treść pod display contents na korzeniu karty, dość długa na werdykt slop.";
+    const extra = document.createElement("div");
+    extra.textContent = "Drugi boks, który też ma zostać zakryty scrimem.";
     const photo = document.createElement("img");
     photo.alt = "obraz";
-    card.append(copy, photo);
+    card.append(copy, extra, photo);
     document.body.appendChild(card);
     slop.setBadge(card, "slop", { labelPl: "AI slop", slopProbability: 0.9 });
-    assert.equal(card.querySelector(":scope > .lais-blur"), null);
-    assert.ok(copy.querySelector(":scope > .lais-blur"));
-    assert.equal(photo.querySelector(".lais-blur"), null);
-    assert.ok(copy.classList.contains("lais-paint-blur"));
-    assert.ok(photo.classList.contains("lais-paint-blur"));
-    assert.match(copy.style.getPropertyValue("filter"), /blur\(20px\)/);
-    assert.equal(card.querySelector(".lais-badge")!.classList.contains("lais-paint-blur"), false);
+    assert.equal(card.querySelector(":scope > .lais-cover"), null);
+    assert.ok(copy.querySelector(":scope > .lais-cover .lais-banner"));
+    assert.equal(copy.querySelector(".lais-reveal")?.textContent, "Pokaż");
+    assert.ok(extra.querySelector(":scope > .lais-scrim"));
+    assert.equal(photo.dataset.laisDimmed, "1");
+    assert.equal(copy.style.getPropertyValue("filter"), "");
     const reveal = card.querySelector(".lais-reveal");
     reveal?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
-    assert.equal(copy.classList.contains("lais-paint-blur"), false);
-    assert.equal(copy.querySelector(".lais-blur"), null);
-    assert.equal(photo.style.getPropertyValue("filter"), "");
+    assert.equal(copy.querySelector(".lais-cover"), null);
+    assert.equal(extra.querySelector(".lais-scrim"), null);
+    assert.equal(photo.dataset.laisDimmed, undefined);
+    assert.equal(copy.querySelector(".lais-reveal")?.textContent, "Ukryj");
   });
 
-  it("rozmywa tylko AI slop i respektuje wyłącznik", () => {
+  it("zakrywa tylko AI slop i respektuje wyłącznik", () => {
     const human = document.createElement("article");
     const mixed = document.createElement("article");
     const heavy = document.createElement("article");
@@ -154,26 +163,30 @@ describe("selektory LinkedIn (fixture)", () => {
     slop.setBadge(human, "human", { labelPl: "Ludzki", slopProbability: 0.1 });
     slop.setBadge(mixed, "mixed", { labelPl: "Mieszany", slopProbability: 0.4 });
     slop.setBadge(heavy, "heavy", { labelPl: "Ciężki", slopProbability: 0.99 });
-    assert.equal(human.classList.contains("li-ai-slop-blurred"), false);
-    assert.equal(mixed.classList.contains("li-ai-slop-blurred"), false);
-    assert.equal(heavy.classList.contains("li-ai-slop-blurred"), false);
-    assert.equal(human.querySelector(".lais-paint-blur"), null);
-    assert.equal(mixed.querySelector(".lais-paint-blur"), null);
+    assert.equal(human.classList.contains("li-ai-slop-covered"), false);
+    assert.equal(mixed.classList.contains("li-ai-slop-covered"), false);
+    assert.equal(heavy.classList.contains("li-ai-slop-covered"), false);
+    assert.equal(human.querySelector(".lais-banner"), null);
+    assert.equal(mixed.querySelector(".lais-banner"), null);
     assert.equal(human.querySelector(".lais-reveal"), null);
     assert.equal(mixed.querySelector(".lais-reveal"), null);
+    assert.equal(human.querySelector(".lais-badge")!.classList.contains("lais-badge--folded"), false);
 
     const slopCard = document.createElement("div");
     slopCard.className = "feed-shared-update-v2";
     document.body.appendChild(slopCard);
     slop.setBadge(slopCard, "slop", { labelPl: "AI slop", slopProbability: 0.8 });
-    assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
-    slop.applySettings({ blurSlop: false });
-    assert.equal(slopCard.classList.contains("li-ai-slop-blurred"), false);
-    assert.equal(slopCard.querySelector(".lais-blur"), null);
-    assert.equal(slopCard.querySelector(".lais-reveal"), null);
-    slop.applySettings({ blurSlop: true });
-    assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
+    assert.ok(slopCard.classList.contains("li-ai-slop-covered"));
     assert.equal(slopCard.querySelector(".lais-reveal")?.textContent, "Pokaż");
+    slop.applySettings({ blurSlop: false });
+    assert.equal(slopCard.classList.contains("li-ai-slop-covered"), false);
+    assert.equal(slopCard.querySelector(".lais-cover"), null);
+    assert.equal(slopCard.querySelector(".lais-banner"), null);
+    assert.equal(slopCard.querySelector(".lais-reveal"), null);
+    assert.equal(slopCard.querySelector(".lais-badge")!.classList.contains("lais-badge--folded"), false);
+    slop.applySettings({ blurSlop: true });
+    assert.ok(slopCard.classList.contains("li-ai-slop-covered"));
+    assert.equal(slopCard.querySelector(".lais-banner .lais-reveal")?.textContent, "Pokaż");
   });
 
   it("pokazuje procent slopu na Ludzki i Mieszany, bez fałszywego 0%", () => {

@@ -29,8 +29,9 @@
           To nie jest LinkedIn. Karty używają tych samych selektorów co content
           script (<code>feed-shared-update-v2</code>, <code>data-id</code>,
           <code>article[data-id="main-feed-card"]</code>). Odznaki poniżej są
-          przykładem. Strona działa bez proxy i bez klucza. Najedź, żeby
-          zobaczyć przykładowe prawdopodobieństwa.
+          przykładem. Karta AI slop ma baner na całą szerokość i „Pokaż”.
+          Strona działa bez proxy i bez klucza. Najedź, żeby zobaczyć
+          przykładowe prawdopodobieństwa.
         </p>
       </header>
 
@@ -90,10 +91,16 @@
 
         <div data-id="urn:li:activity:9002">
           <div
-            class="lais-badge lais-badge--slop"
+            class="lais-badge lais-badge--slop lais-badge--folded"
             role="status"
             title="Przykład statyczny (bez Jev)&#10;Głos: ai_slop&#10;AI slop: 91% (próg 65%)&#10;Intensywność: heavy (1.72)&#10;Substancja: nie (22%)"
           >AI slop</div>
+          <div class="lais-cover">
+            <div class="lais-banner" role="status">
+              <span class="lais-banner__label">AI slop</span>
+              <button type="button" class="lais-reveal" aria-pressed="false">Pokaż</button>
+            </div>
+          </div>
           <div class="menu" aria-hidden="true">⋯</div>
           <div class="actor">
             <div class="avatar" aria-hidden="true">JN</div>
@@ -191,13 +198,67 @@
           status.classList.toggle("is-error", Boolean(isError));
         }
 
+        function syncDemoCover(card, state) {
+          card.querySelectorAll(":scope > .lais-cover, :scope > .lais-banner").forEach((node) => node.remove());
+          const badge = card.querySelector(":scope > .lais-badge");
+          const slop = state === "slop";
+          if (badge) badge.classList.toggle("lais-badge--folded", slop);
+          if (!slop) return;
+          const cover = document.createElement("div");
+          cover.className = "lais-cover";
+          const banner = document.createElement("div");
+          banner.className = "lais-banner";
+          banner.setAttribute("role", "status");
+          const label = document.createElement("span");
+          label.className = "lais-banner__label";
+          label.textContent = "AI slop";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "lais-reveal";
+          button.textContent = "Pokaż";
+          button.setAttribute("aria-pressed", "false");
+          banner.append(label, button);
+          cover.appendChild(banner);
+          card.appendChild(cover);
+        }
+
         function restore() {
           badges.forEach((badge) => {
             badge.className = `lais-badge lais-badge--${badge.dataset.state}`;
             badge.textContent = badge.dataset.label;
             badge.title = badge.dataset.title;
+            syncDemoCover(badge.parentElement, badge.dataset.state);
           });
         }
+
+        document.querySelector("main.feed").addEventListener("click", (event) => {
+          const button = event.target.closest(".lais-reveal");
+          if (!button) return;
+          event.preventDefault();
+          const card = button.closest("main.feed > *");
+          const open = card.querySelector(":scope > .lais-banner--open");
+          card.querySelectorAll(":scope > .lais-cover, :scope > .lais-banner").forEach((node) => node.remove());
+          const banner = document.createElement("div");
+          banner.className = open ? "lais-banner" : "lais-banner lais-banner--open";
+          banner.setAttribute("role", "status");
+          const label = document.createElement("span");
+          label.className = "lais-banner__label";
+          label.textContent = "AI slop";
+          const next = document.createElement("button");
+          next.type = "button";
+          next.className = "lais-reveal";
+          next.textContent = open ? "Pokaż" : "Ukryj";
+          next.setAttribute("aria-pressed", open ? "false" : "true");
+          banner.append(label, next);
+          if (open) {
+            const cover = document.createElement("div");
+            cover.className = "lais-cover";
+            cover.appendChild(banner);
+            card.appendChild(cover);
+          } else {
+            card.appendChild(banner);
+          }
+        });
 
         function clean(value) {
           return String(value || "").replace(/\s+/g, " ").trim();
@@ -255,7 +316,10 @@
           const slop = Number.isFinite(value) ? `AI slop: ${Math.round(value * 100)}%` : "";
           badge.title = slop;
           badge.querySelector(":scope > .lais-tip")?.remove();
-          if (!slop) return;
+          if (!slop) {
+            syncDemoCover(badge.parentElement, state);
+            return;
+          }
           const tip = document.createElement("span");
           tip.className = "lais-tip";
           tip.setAttribute("role", "tooltip");
@@ -271,6 +335,7 @@
             tip.appendChild(meta);
           }
           badge.appendChild(tip);
+          syncDemoCover(badge.parentElement, state);
         }
 
         async function evaluate(el, base) {
@@ -360,6 +425,7 @@
                 badge.className = `lais-badge lais-badge--${badge.dataset.state}`;
                 badge.textContent = badge.dataset.label;
                 badge.title = badge.dataset.title;
+                syncDemoCover(el, badge.dataset.state);
               }
             });
             return;

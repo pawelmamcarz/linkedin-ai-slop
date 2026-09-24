@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn AI Slop",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Oznacza posty na feedzie LinkedIn według oceny AI-slop. Klucz Jev zostaje na proxy, nie w rozszerzeniu.",
   "permissions": ["storage"],
   "host_permissions": [
