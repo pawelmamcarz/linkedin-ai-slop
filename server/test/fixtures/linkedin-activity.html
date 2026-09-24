@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pl">
+  <body>
+    <main>
+      <div class="scaffold-finite-scroll__content">
+        <ul>
+          <li class="profile-creator-shared-feed-update__container">
+            <article role="article" data-urn="urn:li:activity:777">
+              <a href="/in/ada-kowalska/">Ada Kowalska</a>
+              <div class="feed-shared-update-v2__description-wrapper">
+                <span dir="ltr">
+                  On the activity tab this post sits in a list item, not a home-feed card.
+                  Shipped the retry policy on Tuesday and the 409s stopped piling up.
+                </span>
+              </div>
+            </article>
+          </li>
+          <li class="occludable-update ember-view">
+            <div data-urn="urn:li:ugcPost:888" role="article">
+              <span class="update-components-actor__name">Ola</span>
+              <div data-view-name="feed-commentary">
+                Profile activity still carries a commentary block long enough to score
+                after the member scrolls the recent-activity list.
+              </div>
+            </div>
+          </li>
+          <li role="listitem" componentkey="profile-activity-urn:li:activity:999">
+            <div data-testid="expandable-text-box">
+              Third card on the shares tab uses a listitem and componentkey instead of
+              feed-shared-update-v2. The badge should still land on this post.
+            </div>
+          </li>
+          <li class="profile-creator-shared-feed-update__container">
+            <article role="article" data-urn="urn:li:activity:000">
+              <div class="feed-shared-update-v2__description">ok</div>
+            </article>
+          </li>
+        </ul>
+      </div>
+    </main>
+  </body>
+</html>
