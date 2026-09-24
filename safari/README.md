@@ -12,7 +12,9 @@ Dostęp do stron jest w `host_permissions` manifestu:
 
 Entitlement `com.apple.security.network.client` jest w `LinkedInAISlop Extension/LinkedInAISlopExtension.entitlements`. Safari i tak czyta listę hostów z manifestu Web Extension, nie z osobnego entitlementu URL.
 
-To nie jest paczka App Store ani TestFlight. Podpis w projekcie jest ad-hoc (`CODE_SIGN_IDENTITY = -`), żeby dało się załadować rozszerzenie bez konta dewelopera Apple. Notaryzacja i App Store to osobny krok na koncie Apple, którego to repo nie wykonuje.
+Debug jest ad-hoc (`CODE_SIGN_IDENTITY = -`, `CODE_SIGNING_REQUIRED = NO`, puste `DEVELOPMENT_TEAM` na targetach Debug), żeby dało się załadować rozszerzenie bez konta Apple. Release (`safari/Config/Release.xcconfig`) jest pod Mac App Store: Automatic signing, Hardened Runtime, Team ID uzupełniasz sam. Checklist: [`store/SAFARI.md`](../store/SAFARI.md). Wysyłki nie ma.
+
+`MARKETING_VERSION` jest w `safari/Config/Shared.xcconfig` i ma być równy `extension/manifest.json` (teraz 0.2.1). Skrypty build i archive i tak podają wersję z manifestu do `xcodebuild`.
 
 Wymagane: macOS 13+, Safari 16.4+, Xcode. Ta maszyna CI jest Linuxem i nie buduje `.app`.
 
@@ -28,7 +30,21 @@ To woła:
 xcodebuild -project safari/LinkedInAISlop.xcodeproj -scheme LinkedInAISlop -configuration Debug -destination 'platform=macOS' build
 ```
 
-Można też otworzyć `safari/LinkedInAISlop.xcodeproj` w Xcode i nacisnąć Run.
+Można też otworzyć `safari/LinkedInAISlop.xcodeproj` w Xcode i nacisnąć Run (schemat startuje w Debug).
+
+## Archiwum Release (App Store)
+
+Na Macu, z własnym Team ID (nie commituj go):
+
+```bash
+DEVELOPMENT_TEAM=TWOJE_TEAM_ID npm run safari:archive
+```
+
+To woła `xcodebuild -configuration Release -destination 'generic/platform=macOS' -archivePath build/LinkedInAISlop.xcarchive archive`. Katalog `build/` jest w `.gitignore`.
+
+W Xcode to samo robi Product → Archive (akcja Archive schematu używa konfiguracji Release). Potem Organizer → Distribute App → App Store Connect.
+
+Team ID możesz też wpisać w Xcode (Signing & Capabilities) albo w `safari/Config/Local.xcconfig` (`DEVELOPMENT_TEAM = TWOJE_TEAM_ID`). `Release.xcconfig` dołącza ten plik tylko gdy istnieje (`#include?`). Nie wpisuj tam cudzego ani fałszywego identyfikatora.
 
 ## Ładowanie niepodpisane
 

@@ -17,11 +17,16 @@ if ! xcodebuild -version >/dev/null 2>&1; then
   exit 1
 fi
 
+VERSION="$(python3 -c "import json; print(json.load(open('${ROOT}/extension/manifest.json'))['version'])")"
+
 xcodebuild \
   -project "${PROJECT}" \
   -scheme LinkedInAISlop \
   -configuration Debug \
   -destination "platform=macOS" \
+  CODE_SIGN_IDENTITY="-" \
+  CODE_SIGNING_REQUIRED=NO \
+  MARKETING_VERSION="${VERSION}" \
   build
 
 echo "Aplikacja jest w DerivedData (Debug). Uruchom ją z Xcode albo otwórz produkt buildu."

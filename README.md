@@ -116,11 +116,11 @@ Chrome, Brave i Edge ładują ten sam katalog `extension/`.
 
 Firefox nie bierze manifestu Chromium. `npm run pack:firefox` składa `store/linkedin-ai-slop-firefox.xpi` (`background.scripts`, bo Firefox ignoruje sam service worker). Tymczasowo: `about:debugging` → Załaduj dodatek tymczasowy. AMO nie jest wysłane. Notatka: [`store/FIREFOX.md`](store/FIREFOX.md).
 
-Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`, potem Develop → Allow Unsigned Extensions. Szczegóły: [`safari/README.md`](safari/README.md). App Store nie jest przygotowany. Notatki: [`store/BRAVE.md`](store/BRAVE.md), [`store/SAFARI.md`](store/SAFARI.md).
+Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`, potem Develop → Allow Unsigned Extensions. Szczegóły: [`safari/README.md`](safari/README.md). Checklist App Store Connect jest w [`store/SAFARI.md`](store/SAFARI.md). Wysyłki nie ma. Notatki: [`store/BRAVE.md`](store/BRAVE.md).
 
 ### 3. Feed
 
-Wejdź na [https://www.linkedin.com/feed/](https://www.linkedin.com/feed/) i przewiń. Posty, które wejdą w widok (ok. 35% wysokości), dostają odznakę w prawym górnym rogu karty. Najedź, żeby zobaczyć prawdopodobieństwa.
+Wejdź na [https://www.linkedin.com/feed/](https://www.linkedin.com/feed/) i przewiń. Posty, które wejdą w widok (ok. 35% wysokości), dostają odznakę w prawym górnym rogu karty. Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%".
 
 Żeby zobaczyć samą nakładkę bez LinkedIn: załaduj rozszerzenie, uruchom proxy i otwórz [http://127.0.0.1:8787/demo](http://127.0.0.1:8787/demo). To fixture z tymi samymi selektorami, nie strona LinkedIn.
 
