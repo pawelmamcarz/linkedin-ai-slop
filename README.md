@@ -1,6 +1,6 @@
 # LinkedIn AI Slop
 
-Rozszerzenie Manifest V3 na feed LinkedIn: Chrome, Brave i Edge z jednej paczki, Safari z projektu Xcode w `safari/`. Przy scrollowaniu wyciąga tekst posta i pyta model **Jev** (TypeSafe System One), czy to AI-slop. Na karcie pojawia się odznaka: **Ludzki**, **Mieszany** albo **AI slop**.
+Rozszerzenie Manifest V3 na feed LinkedIn: Chrome, Brave i Edge z jednej paczki, Firefox z osobnego XPI, Safari z projektu Xcode w `safari/`. Przy scrollowaniu wyciąga tekst posta i pyta model **Jev** (TypeSafe System One), czy to AI-slop. Na karcie pojawia się odznaka: **Ludzki**, **Mieszany** albo **AI slop**.
 
 Klucz API zostaje na proxy. Rozszerzenie go nie zawiera. Domyślnie proxy to publiczne demo:
 
@@ -101,6 +101,8 @@ Chrome, Brave i Edge ładują ten sam katalog `extension/`.
 3. **Załaduj rozpakowane** i wskaż katalog `extension/`.
 4. Ikona rozszerzenia: włącz ocenę, próg, adres proxy. Domyślny adres to `https://proxy-production-ebcc.up.railway.app`. Przycisk **Sprawdź proxy** powinien pokazać model `jev-latest`. Własny URL spoza manifestu zapisuje się w opcjach. Przeglądarka pyta wtedy o zgodę na ten host. Localhost i publiczne proxy są już na liście hostów.
 
+Firefox nie bierze manifestu Chromium. `npm run pack:firefox` składa `store/linkedin-ai-slop-firefox.xpi` (`background.scripts`, bo Firefox ignoruje sam service worker). Tymczasowo: `about:debugging` → Załaduj dodatek tymczasowy. AMO nie jest wysłane. Notatka: [`store/FIREFOX.md`](store/FIREFOX.md).
+
 Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`, potem Develop → Allow Unsigned Extensions. Szczegóły: [`safari/README.md`](safari/README.md). App Store nie jest przygotowany. Notatki: [`store/BRAVE.md`](store/BRAVE.md), [`store/SAFARI.md`](store/SAFARI.md).
 
 ### 3. Feed
@@ -177,7 +179,7 @@ Test proxy podmienia `fetch` do `api.typesafe.ai` i sprawdza, że wychodzi `POST
 npm run pack:extension
 ```
 
-Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Ten zip jest dla Chrome, Brave i Edge. Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md). Safari budujesz osobno na Macu (`bash scripts/build-safari.sh`).
+Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Ten zip jest dla Chrome, Brave i Edge. `npm run pack:firefox` składa `store/linkedin-ai-slop-firefox.xpi` z manifestem Firefox (te same pliki, inne tło i `browser_specific_settings`). Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md). Safari budujesz osobno na Macu (`bash scripts/build-safari.sh`).
 
 ## Poza zakresem
 

@@ -46,7 +46,7 @@
         <div class="hero-brand">
           <img class="mark" src="brand/mark.png" width="88" height="88" alt="" />
           <div>
-            <p class="kicker">Tylko LinkedIn · Chrome, Brave, Edge i Safari</p>
+            <p class="kicker">Tylko LinkedIn · Chrome, Brave, Edge, Firefox i Safari</p>
             <h1>LinkedIn AI Slop</h1>
           </div>
         </div>
@@ -67,7 +67,7 @@
         <p class="fine">
           Hostowane proxy to publiczne demo z limitem. Do codziennej pracy postaw własne proxy i własny klucz (BYOK).
           Sklep Chrome jeszcze nie jest źródłem instalacji. Ta sama paczka zip działa w Chrome, Brave i Edge.
-          Safari to osobny build na Macu (niepodpisane rozszerzenie deweloperskie), bez App Store.
+          Firefox to osobny XPI (dodatek tymczasowy, bez listy AMO). Safari to build na Macu, bez App Store.
           Produkt działa tylko na LinkedIn.
         </p>
       </section>
@@ -89,7 +89,7 @@
       </div>
 
       <h2 class="section-title">Instalacja</h2>
-      <div class="grid-3">
+      <div class="grid-2">
         <article class="card">
           <h2>Chrome i Edge</h2>
           <ol class="steps">
@@ -108,6 +108,16 @@
             <li>Gdy sklep Chrome ruszy, Brave umie wziąć stamtąd ten sam wpis. Dziś go nie ma.</li>
           </ol>
           <p>Notatka: <code>store/BRAVE.md</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Firefox</h2>
+          <p>Osobny XPI, te same skrypty. Firefox 142+. Listy na addons.mozilla.org nie ma.</p>
+          <ol class="steps">
+            <li><code>npm run pack:firefox</code> składa <code>store/linkedin-ai-slop-firefox.xpi</code>.</li>
+            <li>Otwórz <code>about:debugging#/runtime/this-firefox</code>.</li>
+            <li><strong>Załaduj dodatek tymczasowy</strong> i wskaż ten XPI. Po restarcie Firefoksa zrób to ponownie.</li>
+          </ol>
+          <p>Notatka: <code>store/FIREFOX.md</code>.</p>
         </article>
         <article class="card">
           <h2>Safari</h2>

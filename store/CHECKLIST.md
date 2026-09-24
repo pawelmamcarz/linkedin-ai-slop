@@ -45,7 +45,7 @@ Produkt jest tylko na LinkedIn. Nie ma adapterów Facebooka, X ani Instagrama.
 | `http://127.0.0.1/*` i `http://localhost/*` | Lokalne proxy i podgląd `/demo`. |
 | `optional_host_permissions` | Własne proxy spoza listy: inny host Railway albo dowolny `http`/`https`. Przeglądarka pyta przy zapisie adresu. |
 
-Paczka Chromium (Chrome, Brave, Edge) to ten sam zip. Brave: [`store/BRAVE.md`](BRAVE.md). Safari to projekt Xcode, nie ten zip: [`store/SAFARI.md`](SAFARI.md). App Store nie jest przygotowany.
+Paczka Chromium (Chrome, Brave, Edge) to ten sam zip. Brave: [`BRAVE.md`](BRAVE.md). Firefox to osobny XPI (`npm run pack:firefox`): [`FIREFOX.md`](FIREFOX.md). AMO nie jest wysłane. Safari to projekt Xcode, nie ten zip: [`SAFARI.md`](SAFARI.md). App Store nie jest przygotowany.
 
 ## Ikona i zrzuty
 

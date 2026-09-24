@@ -5,6 +5,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
+import { firefoxManifest } from "../../scripts/pack-firefox.mjs";
 
 const require = createRequire(import.meta.url);
 const root = resolve(import.meta.dirname, "../..");
@@ -124,6 +125,39 @@ describe("ExtApi", () => {
     assert.equal(await api.permissionsContains("https://proxy-production-ebcc.up.railway.app/"), true);
     assert.equal(await api.permissionsRequest("https://evil.example/"), true);
     assert.deepEqual(requested, ["https://evil.example/"]);
+  });
+});
+
+describe("manifest Firefox", () => {
+  const base = JSON.parse(readFileSync(resolve(root, "extension/manifest.json"), "utf8"));
+  const firefox = firefoxManifest(base);
+
+  it("zostawia Chromium przy service workerze i daje Firefoxowi background.scripts", () => {
+    assert.equal(base.background.service_worker, "background.js");
+    assert.equal(base.browser_specific_settings, undefined);
+    assert.deepEqual(firefox.background.scripts, ["ext-api.js", "background.js"]);
+    assert.equal(firefox.background.service_worker, undefined);
+    assert.equal(firefox.browser_specific_settings.gecko.id, "linkedin-ai-slop@pawelmamcarz.github.io");
+    assert.equal(firefox.browser_specific_settings.gecko.strict_min_version, "142.0");
+    assert.deepEqual(firefox.browser_specific_settings.gecko.data_collection_permissions.required, [
+      "websiteContent",
+      "personallyIdentifyingInfo",
+    ]);
+  });
+
+  it("obejmuje LinkedIn, proxy i localhost", () => {
+    for (const host of [
+      "*://*.linkedin.com/*",
+      "https://proxy-production-ebcc.up.railway.app/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*",
+    ]) {
+      assert.ok(firefox.host_permissions.includes(host), host);
+    }
+    const linkedIn = firefox.content_scripts.find((entry: { matches: string[] }) =>
+      entry.matches.some((match) => match.includes("linkedin.com")),
+    );
+    assert.ok(linkedIn.matches.includes("*://*.linkedin.com/*"));
   });
 });
 

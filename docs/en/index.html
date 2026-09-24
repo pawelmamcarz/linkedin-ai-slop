@@ -46,7 +46,7 @@
         <div class="hero-brand">
           <img class="mark" src="../brand/mark.png" width="88" height="88" alt="" />
           <div>
-            <p class="kicker">LinkedIn only · Chrome, Brave, Edge, and Safari</p>
+            <p class="kicker">LinkedIn only · Chrome, Brave, Edge, Firefox, and Safari</p>
             <h1>LinkedIn AI Slop</h1>
           </div>
         </div>
@@ -67,7 +67,7 @@
         <p class="fine">
           The hosted proxy is a public demo with limits. For daily use, run your own proxy and your own key (BYOK).
           The Chrome Web Store is not the install path yet. The same zip runs in Chrome, Brave, and Edge.
-          Safari is a separate Mac build (unsigned developer extension), with no App Store listing.
+          Firefox is a separate XPI (temporary add-on, no AMO listing). Safari is a Mac build, with no App Store listing.
           The product works on LinkedIn only.
         </p>
       </section>
@@ -89,7 +89,7 @@
       </div>
 
       <h2 class="section-title">Install</h2>
-      <div class="grid-3">
+      <div class="grid-2">
         <article class="card">
           <h2>Chrome and Edge</h2>
           <ol class="steps">
@@ -108,6 +108,16 @@
             <li>When a Chrome Web Store listing exists, Brave can install that same item. It does not exist yet.</li>
           </ol>
           <p>Notes: <code>store/BRAVE.md</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Firefox</h2>
+          <p>Separate XPI, same scripts. Firefox 142+. There is no addons.mozilla.org listing.</p>
+          <ol class="steps">
+            <li><code>npm run pack:firefox</code> builds <code>store/linkedin-ai-slop-firefox.xpi</code>.</li>
+            <li>Open <code>about:debugging#/runtime/this-firefox</code>.</li>
+            <li><strong>Load Temporary Add-on</strong> and select that XPI. Load it again after Firefox restarts.</li>
+          </ol>
+          <p>Notes: <code>store/FIREFOX.md</code>.</p>
         </article>
         <article class="card">
           <h2>Safari</h2>
