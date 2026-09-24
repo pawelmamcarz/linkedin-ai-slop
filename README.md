@@ -34,14 +34,14 @@ npm install
 npm start
 ```
 
-Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia `PORT`, a `HOST` jest puste, proces słucha na `0.0.0.0` (Railway). Jawne `HOST=127.0.0.1` w zmiennych Railway utnie ruch z zewnątrz. Zostaw `HOST` puste albo ustaw `0.0.0.0`.
+Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia `PORT`, a `HOST` jest puste, proces słucha na `0.0.0.0`. Na Railway `HOST` jest już `0.0.0.0` i ten wpis wygrywa. Port `8788` nie jest domyślny.
 
 `railway.toml` w katalogu głównym powtarza komendy z dashboardu (`npm --prefix server ci`, `npm --prefix server start`). Root serwisu to całe repozytorium, nie sam `server/`, bo proces importuje `jev/`.
 
 Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund na adres IP**. Rozszerzenie trzyma równoległość 2 i kolejkę 40, więc szybki scroll potrafi zbliżyć się do ~60 ocen na minutę, gdy Jev odpowiada w około 2 s. Limit 30 na minutę ucinałby taką sesję. `EVALUATE_RATE_LIMIT=0` wyłącza limit (własne proxy). `GET /health` nie jest limitowany. Adres IP bierze się z pierwszego wpisu `X-Forwarded-For` (Railway). `TRUST_PROXY=0` ignoruje ten nagłówek.
 
-- `GET /health` — czy proces żyje i czy klucz jest ustawiony (samej wartości nie zwraca)
-- `POST /evaluate` — jedno wywołanie Jev na post
+- `GET /` i `GET /health` — czy proces żyje i czy klucz jest ustawiony (samej wartości nie zwraca). Pole `model` pochodzi z `jev/questions.ts` (`jev-latest`)
+- `POST /evaluate` — jedno wywołanie Jev na post. Ciało: `postId`, `text`, opcjonalnie `author` i `threshold`
 - `GET /demo` — lokalny podgląd selektorów, bez logowania do LinkedIn
 
 Sprawdzenie bez przeglądarki:
