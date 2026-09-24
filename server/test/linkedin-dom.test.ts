@@ -72,6 +72,46 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.ok(badge);
     assert.equal(badge!.textContent, "AI slop");
     assert.ok(badge!.classList.contains("lais-badge--slop"));
-    assert.match(badge!.getAttribute("title") || "", /Intensywność: heavy/);
+    const title = badge!.getAttribute("title") || "";
+    assert.match(title, /^AI slop: 91%/);
+    assert.match(title, /Intensywność: heavy/);
+  });
+
+  it("pokazuje procent slopu na Ludzki i Mieszany, bez fałszywego 0%", () => {
+    const human = document.createElement("div");
+    const mixed = document.createElement("div");
+    document.body.append(human, mixed);
+    slop.setBadge(human, "human", {
+      labelPl: "Ludzki",
+      voice: "human",
+      slopProbability: 0.082,
+      threshold: 0.65,
+      slopIntensityLabel: "human",
+      slopIntensity: 0.18,
+      hasSubstance: true,
+      substanceProbability: 0.86,
+    });
+    slop.setBadge(mixed, "mixed", {
+      labelPl: "Mieszany",
+      voice: "mixed",
+      slopProbability: 0.41,
+      threshold: 0.65,
+      slopIntensityLabel: "mixed",
+      slopIntensity: 1.05,
+      hasSubstance: true,
+      substanceProbability: 0.62,
+    });
+    assert.match(human.querySelector(".lais-badge")!.getAttribute("title") || "", /^AI slop: 8%/);
+    assert.match(mixed.querySelector(".lais-badge")!.getAttribute("title") || "", /^AI slop: 41%/);
+
+    const pending = document.createElement("div");
+    document.body.appendChild(pending);
+    slop.setBadge(pending, "pending");
+    assert.equal(pending.querySelector(".lais-badge")!.getAttribute("title"), "Czekam na Jev (proxy lokalne)");
+
+    const bare = document.createElement("div");
+    document.body.appendChild(bare);
+    slop.setBadge(bare, "human", { labelPl: "Ludzki", voice: "human" });
+    assert.doesNotMatch(bare.querySelector(".lais-badge")!.getAttribute("title") || "", /AI slop:/);
   });
 });

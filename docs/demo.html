@@ -251,13 +251,18 @@
           const state = result.badge || "human";
           badge.className = `lais-badge lais-badge--${state}`;
           badge.textContent = result.labelPl || badge.dataset.label;
-          const pct = (n) => `${Math.round((Number(n) || 0) * 100)}%`;
+          const pct = (n) => {
+            const value = Number(n);
+            return Number.isFinite(value) ? `${Math.round(value * 100)}%` : "";
+          };
+          const slop = pct(result.slopProbability);
+          const threshold = pct(result.threshold);
           badge.title = [
             "Ocena na żywo",
-            `Głos: ${result.voice}`,
-            `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
+            slop ? `AI slop: ${slop}${threshold ? ` (próg ${threshold})` : ""}` : "",
+            result.voice ? `Głos: ${result.voice}` : "",
             `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
-            `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
+            `Substancja: ${result.hasSubstance ? "tak" : "nie"}${pct(result.substanceProbability) ? ` (${pct(result.substanceProbability)})` : ""}`,
             result.model ? `Model: ${result.model}` : "",
           ]
             .filter(Boolean)

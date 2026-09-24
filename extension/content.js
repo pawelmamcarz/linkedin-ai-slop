@@ -227,31 +227,61 @@
     return badge;
   }
 
-  function setBadge(el, state, result) {
-    const badge = ensureBadge(el);
-    badge.className = `lais-badge lais-badge--${state}`;
-    if (state === "pending") {
-      badge.textContent = "Ocena…";
-      badge.title = "Czekam na Jev (proxy lokalne)";
-      return;
-    }
-    if (state === "error") {
-      badge.textContent = "Błąd";
-      badge.title = result?.message || "Nie udało się ocenić posta";
-      return;
-    }
-    if (!result) return;
-    badge.textContent = result.labelPl;
-    const pct = (n) => `${Math.round((n || 0) * 100)}%`;
-    badge.title = [
-      `Głos: ${result.voice}`,
-      `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
-      `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
-      `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
+  function formatPercent(n) {
+    const value = Number(n);
+    if (!Number.isFinite(value)) return "";
+    return `${Math.round(value * 100)}%`;
+  }
+
+  function slopPercentLine(result) {
+    const pct = formatPercent(result?.slopProbability);
+    if (!pct) return "";
+    const threshold = formatPercent(result.threshold);
+    return threshold ? `AI slop: ${pct} (próg ${threshold})` : `AI slop: ${pct}`;
+  }
+
+  function scoredTitle(result) {
+    if (!result) return "";
+    const substance = formatPercent(result.substanceProbability);
+    const intensity = Number(result.slopIntensity);
+    return [
+      slopPercentLine(result),
+      result.voice ? `Głos: ${result.voice}` : "",
+      result.slopIntensityLabel
+        ? `Intensywność: ${result.slopIntensityLabel}${Number.isFinite(intensity) ? ` (${intensity.toFixed(2)})` : ""}`
+        : "",
+      typeof result.hasSubstance === "boolean"
+        ? `Substancja: ${result.hasSubstance ? "tak" : "nie"}${substance ? ` (${substance})` : ""}`
+        : "",
       result.model ? `Model: ${result.model}` : "",
     ]
       .filter(Boolean)
       .join("\n");
+  }
+
+  function setBadge(el, state, result) {
+    const badge = ensureBadge(el);
+    badge.className = `lais-badge lais-badge--${state}`;
+    const scoreLine = slopPercentLine(result);
+    const unscored = state === "pending" || state === "error" || state === "info" || state === "upgrade";
+    if (state === "pending") {
+      badge.textContent = "Ocena…";
+      badge.title = scoreLine || "Czekam na Jev (proxy lokalne)";
+      return;
+    }
+    if (state === "error") {
+      badge.textContent = "Błąd";
+      badge.title = [result?.message || "Nie udało się ocenić posta", scoreLine].filter(Boolean).join("\n");
+      return;
+    }
+    if (unscored) {
+      if (result?.labelPl) badge.textContent = result.labelPl;
+      badge.title = scoreLine || result?.message || "";
+      return;
+    }
+    if (!result) return;
+    badge.textContent = result.labelPl;
+    badge.title = scoredTitle(result);
   }
 
   function extensionApi() {
