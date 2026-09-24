@@ -19,6 +19,48 @@
   pointer-events: auto;
   cursor: default;
   user-select: none;
+  overflow: visible;
+}
+
+.lais-tip {
+  all: initial;
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #1c1917;
+  color: #fffdf8;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(28, 25, 23, 0.22);
+}
+
+.lais-badge:hover > .lais-tip,
+.lais-badge:focus-within > .lais-tip {
+  display: block;
+}
+
+.lais-tip__pct,
+.lais-tip__meta {
+  display: block;
+  font: inherit;
+  color: inherit;
+}
+
+.lais-tip__meta {
+  margin-top: 2px;
+  font-weight: 550;
+  color: #e7e5e4;
 }
 
 .lais-badge--pending {

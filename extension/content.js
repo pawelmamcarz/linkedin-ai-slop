@@ -256,9 +256,71 @@
     return badge;
   }
 
+  function formatPercent(n) {
+    const value = Number(n);
+    if (!Number.isFinite(value)) return "";
+    return `${Math.round(value * 100)}%`;
+  }
+
+  function readSlopProbability(result) {
+    if (!result || typeof result !== "object") return NaN;
+    const raw = result.slopProbability ?? result.slop_probability;
+    return Number(raw);
+  }
+
+  function slopPercentLine(result) {
+    const pct = formatPercent(readSlopProbability(result));
+    return pct ? `AI slop: ${pct}` : "";
+  }
+
+  function intensityLine(result) {
+    if (!result?.slopIntensityLabel) return "";
+    const intensity = Number(result.slopIntensity);
+    const suffix = Number.isFinite(intensity) ? ` (${intensity.toFixed(2)})` : "";
+    return `Intensywność: ${result.slopIntensityLabel}${suffix}`;
+  }
+
+  function clearTip(badge) {
+    badge.querySelector(":scope > .lais-tip")?.remove();
+  }
+
+  function paintScoredBadge(badge, result) {
+    const doc = badge.ownerDocument || document;
+    const percent = slopPercentLine(result);
+    const intensity = intensityLine(result);
+    badge.replaceChildren();
+    const label = doc.createElement("span");
+    label.className = "lais-badge__label";
+    label.textContent = result.labelPl || "";
+    badge.appendChild(label);
+    if (!percent) {
+      badge.removeAttribute("title");
+      return;
+    }
+    const tip = doc.createElement("span");
+    tip.className = "lais-tip";
+    tip.setAttribute("role", "tooltip");
+    const pctEl = doc.createElement("span");
+    pctEl.className = "lais-tip__pct";
+    pctEl.textContent = percent;
+    tip.appendChild(pctEl);
+    if (intensity) {
+      const meta = doc.createElement("span");
+      meta.className = "lais-tip__meta";
+      meta.textContent = intensity;
+      tip.appendChild(meta);
+    }
+    badge.appendChild(tip);
+    badge.title = percent;
+  }
+
   function setBadge(el, state, result) {
     const badge = ensureBadge(el);
     badge.className = `lais-badge lais-badge--${state}`;
+    const scored = state === "human" || state === "mixed" || state === "slop" || state === "heavy";
+    if (!scored) {
+      clearTip(badge);
+    }
     if (state === "pending") {
       badge.textContent = "Ocena…";
       badge.title = "Czekam na Jev (proxy lokalne)";
@@ -276,18 +338,13 @@
       badge.title = result?.message || "Nie udało się ocenić posta";
       return;
     }
+    if (!scored) {
+      if (result?.labelPl) badge.textContent = result.labelPl;
+      if (result?.message) badge.title = result.message;
+      return;
+    }
     if (!result) return;
-    badge.textContent = result.labelPl;
-    const pct = (n) => `${Math.round((n || 0) * 100)}%`;
-    badge.title = [
-      `Głos: ${result.voice}`,
-      `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
-      `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
-      `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
-      result.model ? `Model: ${result.model}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    paintScoredBadge(badge, result);
   }
 
   function extensionApi() {

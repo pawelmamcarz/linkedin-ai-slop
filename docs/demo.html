@@ -251,17 +251,26 @@
           const state = result.badge || "human";
           badge.className = `lais-badge lais-badge--${state}`;
           badge.textContent = result.labelPl || badge.dataset.label;
-          const pct = (n) => `${Math.round((Number(n) || 0) * 100)}%`;
-          badge.title = [
-            "Ocena na żywo",
-            `Głos: ${result.voice}`,
-            `AI slop: ${pct(result.slopProbability)} (próg ${pct(result.threshold)})`,
-            `Intensywność: ${result.slopIntensityLabel} (${Number(result.slopIntensity).toFixed(2)})`,
-            `Substancja: ${result.hasSubstance ? "tak" : "nie"} (${pct(result.substanceProbability)})`,
-            result.model ? `Model: ${result.model}` : "",
-          ]
-            .filter(Boolean)
-            .join("\n");
+          const value = Number(result.slopProbability ?? result.slop_probability);
+          const slop = Number.isFinite(value) ? `AI slop: ${Math.round(value * 100)}%` : "";
+          badge.title = slop;
+          badge.querySelector(":scope > .lais-tip")?.remove();
+          if (!slop) return;
+          const tip = document.createElement("span");
+          tip.className = "lais-tip";
+          tip.setAttribute("role", "tooltip");
+          const pctEl = document.createElement("span");
+          pctEl.className = "lais-tip__pct";
+          pctEl.textContent = slop;
+          tip.appendChild(pctEl);
+          if (result.slopIntensityLabel) {
+            const meta = document.createElement("span");
+            meta.className = "lais-tip__meta";
+            const intensity = Number(result.slopIntensity);
+            meta.textContent = `Intensywność: ${result.slopIntensityLabel}${Number.isFinite(intensity) ? ` (${intensity.toFixed(2)})` : ""}`;
+            tip.appendChild(meta);
+          }
+          badge.appendChild(tip);
         }
 
         async function evaluate(el, base) {
