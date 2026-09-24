@@ -175,6 +175,7 @@
       mode: "demo",
       proToken: "",
       byokProxyUrl: "",
+      blurSlop: true,
     };
     const source = stored && typeof stored === "object" ? stored : {};
     const merged = { ...defaults, ...source };
@@ -194,6 +195,7 @@
       proxyUrl,
       proToken,
       byokProxyUrl,
+      blurSlop: merged.blurSlop !== false,
     };
   }
 

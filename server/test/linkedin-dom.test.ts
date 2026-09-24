@@ -10,6 +10,7 @@ const slop = require("../../extension/content.js") as {
   findPostElements: (root: ParentNode) => HTMLElement[];
   extractPost: (el: HTMLElement) => { id: string; text: string; author: string } | null;
   setBadge: (el: HTMLElement, state: string, result?: Record<string, unknown>) => void;
+  applySettings: (partial: { blurSlop?: boolean }) => { blurSlop: boolean };
 };
 
 const fixture = readFileSync(resolve(import.meta.dirname, "fixtures/linkedin-feed.html"), "utf8");
@@ -76,6 +77,42 @@ describe("selektory LinkedIn (fixture)", () => {
     const tip = badge!.querySelector(".lais-tip");
     assert.equal(tip?.querySelector(".lais-tip__pct")?.textContent, "AI slop: 91%");
     assert.match(tip?.querySelector(".lais-tip__meta")?.textContent || "", /Intensywność: heavy/);
+    assert.ok(host.classList.contains("li-ai-slop-blurred"));
+    assert.equal(host.dataset.laisVerdict, "slop");
+    const reveal = badge!.querySelector(".lais-reveal");
+    assert.equal(reveal?.textContent, "Pokaż");
+    assert.match(reveal?.getAttribute("title") || "", /AI slop/);
+    reveal?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+    assert.equal(host.classList.contains("li-ai-slop-blurred"), false);
+    assert.ok(host.classList.contains("li-ai-slop-revealed"));
+    assert.equal(host.querySelector(".lais-reveal")?.textContent, "Ukryj");
+  });
+
+  it("rozmywa tylko AI slop i respektuje wyłącznik", () => {
+    const human = document.createElement("article");
+    const mixed = document.createElement("article");
+    const heavy = document.createElement("article");
+    document.body.append(human, mixed, heavy);
+    slop.setBadge(human, "human", { labelPl: "Ludzki", slopProbability: 0.1 });
+    slop.setBadge(mixed, "mixed", { labelPl: "Mieszany", slopProbability: 0.4 });
+    slop.setBadge(heavy, "heavy", { labelPl: "Ciężki", slopProbability: 0.99 });
+    assert.equal(human.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(mixed.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(heavy.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(human.querySelector(".lais-reveal"), null);
+    assert.equal(mixed.querySelector(".lais-reveal"), null);
+
+    const slopCard = document.createElement("div");
+    slopCard.className = "feed-shared-update-v2";
+    document.body.appendChild(slopCard);
+    slop.setBadge(slopCard, "slop", { labelPl: "AI slop", slopProbability: 0.8 });
+    assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
+    slop.applySettings({ blurSlop: false });
+    assert.equal(slopCard.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(slopCard.querySelector(".lais-reveal"), null);
+    slop.applySettings({ blurSlop: true });
+    assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
+    assert.equal(slopCard.querySelector(".lais-reveal")?.textContent, "Pokaż");
   });
 
   it("pokazuje procent slopu na Ludzki i Mieszany, bez fałszywego 0%", () => {
