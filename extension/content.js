@@ -27,6 +27,9 @@
     enabled: true,
     threshold: 0.65,
     proxyUrl: "https://proxy-production-ebcc.up.railway.app",
+    mode: "demo",
+    proToken: "",
+    byokProxyUrl: "",
   };
 
   const MIN_TEXT_CHARS = 40;
@@ -263,10 +266,12 @@
       return settings;
     }
     const stored = await api.storageGet(DEFAULTS);
-    settings = {
+    settings = api.resolveSettings ? api.resolveSettings(stored) : {
       enabled: stored.enabled !== false,
       threshold: Number(stored.threshold) || DEFAULTS.threshold,
       proxyUrl: String(stored.proxyUrl || DEFAULTS.proxyUrl).replace(/\/$/, ""),
+      mode: "demo",
+      proToken: "",
     };
     return settings;
   }
@@ -361,9 +366,11 @@
         return response.body;
       });
     }
+    const headers = { "Content-Type": "application/json" };
+    if (settings.proToken) headers["X-Pro-Token"] = settings.proToken;
     return fetch(`${settings.proxyUrl}/evaluate`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     }).then(async (response) => {
       if (!response.ok) {
@@ -440,8 +447,16 @@
       api.onStorageChanged((changes) => {
         if (changes.enabled) settings.enabled = changes.enabled.newValue !== false;
         if (changes.threshold) settings.threshold = Number(changes.threshold.newValue) || DEFAULTS.threshold;
-        if (changes.proxyUrl) {
-          settings.proxyUrl = String(changes.proxyUrl.newValue || DEFAULTS.proxyUrl).replace(/\/$/, "");
+        if (changes.proxyUrl || changes.mode || changes.proToken || changes.byokProxyUrl) {
+          const apiNow = extensionApi();
+          const next = {
+            ...settings,
+            proxyUrl: changes.proxyUrl ? changes.proxyUrl.newValue : settings.proxyUrl,
+            mode: changes.mode ? changes.mode.newValue : settings.mode,
+            proToken: changes.proToken ? changes.proToken.newValue : settings.proToken,
+            byokProxyUrl: changes.byokProxyUrl ? changes.byokProxyUrl.newValue : settings.byokProxyUrl,
+          };
+          settings = apiNow?.resolveSettings ? apiNow.resolveSettings(next) : next;
         }
         generation += 1;
         queue.length = 0;

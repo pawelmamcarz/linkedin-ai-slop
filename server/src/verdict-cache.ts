@@ -15,7 +15,7 @@ import { mapAnswers, type EvaluateResult, type JevAnswers } from "./map-answers.
  * - VERDICT_CACHE_MAX maksymalna liczba wpisów (domyślnie 2000); nadmiar usuwa najstarsze
  * - LOG_TOKEN_USAGE=0 wyłącza log zużycia tokenów (domyślnie włączony, =1 też włącza)
  *
- * Log nie zawiera treści posta ani klucza API.
+ * Log nie zawiera treści posta, klucza API ani tokenu Pro. Pole tier to demo albo pro.
  */
 
 export const DEFAULT_VERDICT_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -145,11 +145,13 @@ export function logTokenUsage(fields: {
   outputTokens: number | null;
   model: string;
   textChars: number;
+  tier: "demo" | "pro";
 }): void {
   if (!tokenLogEnabled()) return;
   console.log(
     JSON.stringify({
       event: "evaluate",
+      tier: fields.tier,
       cache: fields.cache,
       input_tokens: fields.inputTokens,
       output_tokens: fields.outputTokens,

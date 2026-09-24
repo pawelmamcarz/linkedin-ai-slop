@@ -167,10 +167,41 @@
     }
   }
 
+  function resolveSettings(stored) {
+    const defaults = {
+      enabled: true,
+      threshold: 0.65,
+      proxyUrl: DEFAULT_PROXY_ORIGIN,
+      mode: "demo",
+      proToken: "",
+      byokProxyUrl: "",
+    };
+    const source = stored && typeof stored === "object" ? stored : {};
+    const merged = { ...defaults, ...source };
+    const custom = String(merged.byokProxyUrl || "").replace(/\/$/, "");
+    const storedProxy = String(source.proxyUrl || "").replace(/\/$/, "");
+    let mode = source.mode;
+    if (mode !== "demo" && mode !== "byok" && mode !== "pro") {
+      mode = storedProxy && storedProxy !== DEFAULT_PROXY_ORIGIN ? "byok" : "demo";
+    }
+    const byokProxyUrl = custom || (storedProxy && storedProxy !== DEFAULT_PROXY_ORIGIN ? storedProxy : "");
+    const proxyUrl = mode === "byok" ? byokProxyUrl || DEFAULT_PROXY_ORIGIN : DEFAULT_PROXY_ORIGIN;
+    const proToken = mode === "pro" ? String(merged.proToken || "").trim() : "";
+    return {
+      enabled: merged.enabled !== false,
+      threshold: Number(merged.threshold) || defaults.threshold,
+      mode,
+      proxyUrl,
+      proToken,
+      byokProxyUrl,
+    };
+  }
+
   return {
     hasRuntime,
     storageGet,
     storageSet,
+    resolveSettings,
     onStorageChanged,
     sendMessage,
     onMessage,

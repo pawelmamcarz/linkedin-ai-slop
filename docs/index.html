@@ -33,6 +33,7 @@
     <header class="top top-wide">
       <a class="brand" href="index.html"><img class="brand-mark" src="brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
       <nav>
+        <a href="pro.html">Plany</a>
         <a href="demo.html">Demo</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Prywatność</a>
@@ -130,6 +131,30 @@
         </article>
       </div>
 
+      <h2 class="section-title" id="plany">Plany</h2>
+      <p class="fine">Tylko LinkedIn. Rozszerzenie jest darmowe. Płatny jest wyłącznie Hosted Pro, gdy Checkout jest włączony na proxy.</p>
+      <div class="grid-3" style="margin-top: 12px">
+        <article class="card">
+          <p class="plan-kicker">Działa dziś</p>
+          <h2>Free / BYOK</h2>
+          <p class="price">0 USD</p>
+          <p>Własne proxy i własny <code>TYPESAFE_API_KEY</code> w <code>server/.env</code>. W opcjach wybierz BYOK i wpisz adres, na przykład <code>http://127.0.0.1:8787</code>. Limity ustawiasz u siebie.</p>
+        </article>
+        <article class="card">
+          <p class="plan-kicker">Działa dziś, marketing</p>
+          <h2>Hosted Demo</h2>
+          <p class="price">0 USD</p>
+          <p>Publiczne proxy <code>https://proxy-production-ebcc.up.railway.app</code>. To nie jest plan płatny. Limit około 60 ocen na minutę z IP. Dobowy hamulec włącza operator (<code>DEMO_MODE</code>, domyślnie 40 na dobę, gdy brak jawnego capu).</p>
+        </article>
+        <article class="card">
+          <p class="plan-kicker">Kod gotowy, Checkout po kluczach</p>
+          <h2>Hosted Pro</h2>
+          <p class="price">od ~5 USD/mies. albo ~40 USD/rok</p>
+          <p>Ten sam stos proxy, wyższe limity, nagłówek z tokenem Pro. Jednorazowo sensowny przedział kopii to około 9–19 USD, ale w Checkout są subskrypcje miesięczna i roczna. Bez kluczy Stripe przycisk pokazuje „wkrótce”.</p>
+          <p class="actions"><a class="button" href="pro.html">Przejdź do Pro</a></p>
+        </article>
+      </div>
+
       <h2 class="section-title">Proxy demo i własny klucz</h2>
       <div class="grid-2">
         <article class="card">
@@ -150,7 +175,7 @@
         <p>
           Na proxy idzie identyfikator posta, tekst (do 6000 znaków) i opcjonalnie imię z karty.
           Proxy nie zapisuje treści postów na dysk. W pamięci trzyma skrót znormalizowanego tekstu i werdykt, z czasem życia, oraz licznik żądań na IP.
-          Rozszerzenie w storage przeglądarki (<code>storage.sync</code>, a gdy sync nie działa, <code>storage.local</code>) trzyma tylko włącznik, próg i adres proxy.
+          Rozszerzenie w storage przeglądarki (<code>storage.sync</code>, a gdy sync nie działa, <code>storage.local</code>) trzyma włącznik, próg, tryb, adres proxy i opcjonalny token Pro. Klucza TypeSafe tam nie ma.
           Szczegóły: <a href="privacy.html">polityka prywatności</a> i <a href="terms.html">regulamin</a>.
         </p>
       </aside>
@@ -178,6 +203,7 @@
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Prywatność</a>
         <a href="terms.html">Regulamin</a>
+        <a href="pro.html">Plany</a>
         <a href="demo.html">Demo</a>
         <a href="en/index.html" hreflang="en">English</a>
       </nav>

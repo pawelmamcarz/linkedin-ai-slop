@@ -14,7 +14,7 @@ EN: A Human, Mixed, or AI slop badge on the LinkedIn post card while you scroll.
 
 Scrollujesz feed i od razu widzisz, czy post jest ludzki, mieszany, czy to AI slop.
 
-Rozszerzenie LinkedIn AI Slop pyta model Jev (jev-latest). Klucz API nie siedzi w rozszerzeniu. Publiczne proxy to demo z limitem 60 ocen na minutę. Do codziennej pracy stawiasz własne.
+Rozszerzenie LinkedIn AI Slop pyta model Jev (jev-latest). Klucz API nie siedzi w rozszerzeniu. Publiczne proxy to demo z limitem 60 ocen na minutę. Do codziennej pracy stawiasz własne (BYOK). Hosted Pro to token i wyższe limity, nie klucz TypeSafe.
 
 Kod i instalacja z GitHuba: https://github.com/pawelmamcarz/linkedin-ai-slop
 Strona: https://pawelmamcarz.github.io/linkedin-ai-slop/
@@ -39,7 +39,7 @@ https://github.com/pawelmamcarz/linkedin-ai-slop
 
 You scroll the LinkedIn feed and see whether a post is human, mixed, or AI slop.
 
-LinkedIn AI Slop asks the Jev model (jev-latest). The API key is not inside the extension. The public proxy is a demo, 60 scores per minute per IP. For daily use, run your own.
+LinkedIn AI Slop asks the Jev model (jev-latest). The API key is not inside the extension. The public proxy is a demo, 60 scores per minute per IP. For daily use, run your own (BYOK). Hosted Pro is a token and higher limits, not the TypeSafe key.
 
 Code: https://github.com/pawelmamcarz/linkedin-ai-slop
 Page: https://pawelmamcarz.github.io/linkedin-ai-slop/en/

@@ -9,7 +9,8 @@ W zipie jest tylko zawartość `extension/`. `manifest.json` leży w korzeniu ar
 - [ ] `npm run pack:extension` po ostatniej zmianie w `extension/`
 - [ ] W zipie są `icons/icon16.png`, `icons/icon48.png`, `icons/icon128.png`
 - [ ] Domyślny adres proxy to `https://proxy-production-ebcc.up.railway.app`
-- [ ] W repozytorium nie ma `TYPESAFE_API_KEY` ani pliku `.env`
+- [ ] W repozytorium nie ma `TYPESAFE_API_KEY`, tokenu Pro ani pliku `.env`
+- [ ] Kroki Stripe i Railway: [`MONETIZATION.md`](MONETIZATION.md)
 - [ ] Polityka prywatności działa pod adresem poniżej
 
 ## Konto dewelopera
@@ -39,7 +40,7 @@ Produkt jest tylko na LinkedIn. Nie ma adapterów Facebooka, X ani Instagrama.
 
 | Uprawnienie | Po co |
 | --- | --- |
-| `storage` | Włącznik, próg i adres proxy. Najpierw `storage.sync`, przy braku sync (część instalacji Safari) `storage.local`. |
+| `storage` | Włącznik, próg, tryb (Demo / BYOK / Pro), adres proxy i opcjonalny token Pro. Najpierw `storage.sync`, przy braku sync (część instalacji Safari) `storage.local`. Klucza TypeSafe tu nie ma. |
 | `https://www.linkedin.com/*` i `https://*.linkedin.com/*` | Content script jest podpięty pod `www.linkedin.com`. Szerszy host jest na liście uprawnień. |
 | `https://proxy-production-ebcc.up.railway.app/*` | Service worker woła `GET /health` i `POST /evaluate`. Klucza API tu nie ma. |
 | `http://127.0.0.1/*` i `http://localhost/*` | Lokalne proxy i podgląd `/demo`. |
@@ -73,7 +74,7 @@ Odznaki: Ludzki, Mieszany, AI slop. Najedź, żeby zobaczyć prawdopodobieństwa
 
 Jak to liczy: tekst widocznego posta idzie na proxy, a proxy pyta TypeSafe Jev (model jev-latest). Próg is_ai_slop ustawisz suwakiem. Domyślnie 0.65.
 
-Klucz TYPESAFE_API_KEY nie jest w rozszerzeniu. Domyślne proxy to publiczne demo na Railway (limit 60 ocen na minutę z jednego adresu IP). W opcjach możesz wpisać własne proxy i własny klucz.
+Klucz TYPESAFE_API_KEY nie jest w rozszerzeniu. Domyślne proxy to publiczne demo na Railway (limit 60 ocen na minutę z jednego adresu IP). W opcjach: Demo, BYOK (własne proxy) albo Pro (token, nie klucz TypeSafe). Plany: https://pawelmamcarz.github.io/linkedin-ai-slop/pro.html
 
 Rozszerzenie trzyma tylko włącznik, próg i adres URL. Nie czyta skrzynki, nie publikuje postów, nie sprzedaje danych.
 
@@ -88,7 +89,7 @@ Badges: Human, Mixed, AI slop. Hover for the probabilities.
 
 The visible post text goes to a proxy. The proxy asks TypeSafe Jev (model jev-latest). You can move the is_ai_slop threshold. The default is 0.65.
 
-TYPESAFE_API_KEY is not inside the extension. The default proxy is a public Railway demo (60 evaluations per minute per IP). You can point the options page at your own proxy and your own key.
+TYPESAFE_API_KEY is not inside the extension. The default proxy is a public Railway demo (60 evaluations per minute per IP). Options: Demo, BYOK (your own proxy), or Pro (a token, not the TypeSafe key). Plans: https://pawelmamcarz.github.io/linkedin-ai-slop/en/pro.html
 
 The extension stores only the toggle, the threshold, and the proxy URL. It does not read your inbox, publish posts, or sell data.
 
