@@ -55,6 +55,10 @@ label {
   color: var(--muted);
 }
 
+#threshold + .hint {
+  line-height: 1.5;
+}
+
 input[type="url"], input[type="password"], input[type="range"] {
   width: 100%;
   font: inherit;
