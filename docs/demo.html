@@ -3,20 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Podgląd odznak — LinkedIn AI Slop</title>
+    <title>Podgląd odznak: LinkedIn AI Slop</title>
     <meta
       name="description"
       content="Statyczny podgląd odznak Ludzki, Mieszany i AI slop na kartach z tymi samymi selektorami co rozszerzenie."
     />
+    <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="top">
-      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+      <a class="brand" href="index.html"><img class="brand-mark" src="brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
       <nav>
-        <a href="demo.html" aria-current="page">Podgląd</a>
+        <a href="demo.html" aria-current="page">Demo</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a class="lang-link" href="en/index.html" hreflang="en">EN</a>
       </nav>
     </header>
     <div class="wrap">
@@ -26,7 +29,7 @@
           To nie jest LinkedIn. Karty używają tych samych selektorów co content
           script (<code>feed-shared-update-v2</code>, <code>data-id</code>,
           <code>article[data-id="main-feed-card"]</code>). Odznaki poniżej są
-          przykładem — strona działa bez proxy i bez klucza. Najedź, żeby
+          przykładem. Strona działa bez proxy i bez klucza. Najedź, żeby
           zobaczyć przykładowe prawdopodobieństwa.
         </p>
       </header>
@@ -39,7 +42,7 @@
             name="proxy"
             type="url"
             inputmode="url"
-            placeholder="zostaw puste — przykładowe odznaki"
+            placeholder="zostaw puste, przykładowe odznaki"
             autocomplete="off"
             spellcheck="false"
             value=""
@@ -305,7 +308,7 @@
           }
           if (!base) {
             restore();
-            setStatus("Pole puste — zostają przykładowe odznaki. Żywa ocena wymaga działającego proxy.", false);
+            setStatus("Pole puste. Zostają przykładowe odznaki. Żywa ocena wymaga działającego proxy.", false);
             return;
           }
 
@@ -356,5 +359,14 @@
         });
       })();
     </script>
+    <footer class="site-footer narrow-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a href="en/index.html" hreflang="en">English</a>
+      </nav>
+    </footer>
   </body>
 </html>

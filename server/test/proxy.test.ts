@@ -4,6 +4,7 @@ import type { Server } from "node:http";
 import { resetClient } from "../src/evaluate.ts";
 import { resolveListenHost, startServer } from "../src/index.ts";
 import { resetRateLimit } from "../src/rate-limit.ts";
+import { resetVerdictCache } from "../src/verdict-cache.ts";
 import { JEV_MODEL } from "../../jev/questions.ts";
 import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
 
@@ -72,6 +73,11 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(body.hasApiKey, true);
     assert.equal(body.defaultProxy, DEFAULT_PROXY_URL);
     assert.equal(JSON.stringify(body).includes("test-key"), false);
+    assert.equal(typeof body.cache.entries, "number");
+    assert.equal(typeof body.cache.hits, "number");
+    assert.equal(typeof body.cache.misses, "number");
+    assert.equal(body.cache.enabled, true);
+    assert.equal(body.dailyIpCap, 0);
   });
 
   it("POST /evaluate woła System One i mapuje odznakę", async () => {
@@ -136,6 +142,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
     const previous = process.env.EVALUATE_RATE_LIMIT;
     process.env.EVALUATE_RATE_LIMIT = "1";
     resetRateLimit();
+    resetVerdictCache();
     const headers = {
       "Content-Type": "application/json",
       "X-Forwarded-For": "203.0.113.50",
@@ -188,6 +195,104 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(missing.status, 503);
     assert.equal(body.error, "missing_api_key");
     assert.equal(jevCalls.length, callsBeforeMissingKey);
+    process.env.TYPESAFE_API_KEY = "test-key-not-a-real-secret";
+    resetClient();
+  });
+
+  it("drugie identyczne POST /evaluate jest X-Cache HIT i nie woła Jev", async () => {
+    const previousLimit = process.env.EVALUATE_RATE_LIMIT;
+    process.env.EVALUATE_RATE_LIMIT = "0";
+    resetRateLimit();
+    resetVerdictCache();
+    const headers = { "Content-Type": "application/json" };
+    const text = "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.";
+    const firstBody = {
+      postId: "urn:li:activity:cache-1",
+      text,
+      author: "Ada",
+      threshold: 0.65,
+    };
+    const before = jevCalls.length;
+    const first = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(firstBody),
+    });
+    const firstJson = await first.json();
+    const second = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        postId: "urn:li:activity:cache-2",
+        text: `  Shipped   the billing retry last Tuesday.\nFailure rate dropped from 4.1% to 0.6%.  `,
+        author: "Inny autor",
+        threshold: 0.95,
+      }),
+    });
+    const secondJson = await second.json();
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 200);
+    assert.equal(first.headers.get("x-cache"), "MISS");
+    assert.equal(second.headers.get("x-cache"), "HIT");
+    assert.equal(jevCalls.length, before + 1);
+    assert.equal(firstJson.badge, "human");
+    assert.equal(firstJson.postId, "urn:li:activity:cache-1");
+    assert.equal(firstJson.threshold, 0.65);
+    assert.equal(secondJson.postId, "urn:li:activity:cache-2");
+    assert.equal(secondJson.badge, "human");
+    assert.equal(secondJson.labelPl, "Ludzki");
+    assert.equal(secondJson.threshold, 0.95);
+    assert.equal(JSON.stringify(secondJson).includes(text), false);
+
+    const health = await fetch(`${base}/health`);
+    const healthBody = await health.json();
+    assert.equal(healthBody.cache.hits >= 1, true);
+    assert.equal(healthBody.cache.misses >= 1, true);
+    assert.equal(JSON.stringify(healthBody).includes("test-key"), false);
+
+    if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    resetRateLimit();
+  });
+
+  it("EVALUATE_DAILY_IP_CAP blokuje kolejny unikalny post i nie woła Jev", async () => {
+    const previousDaily = process.env.EVALUATE_DAILY_IP_CAP;
+    const previousLimit = process.env.EVALUATE_RATE_LIMIT;
+    process.env.EVALUATE_DAILY_IP_CAP = "1";
+    process.env.EVALUATE_RATE_LIMIT = "0";
+    resetRateLimit();
+    resetVerdictCache();
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Forwarded-For": "203.0.113.77",
+    };
+    const before = jevCalls.length;
+    const first = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        postId: "urn:li:activity:day-1",
+        text: "Hired two SDEs in Kraków last month. Both start Monday on the billing team.",
+      }),
+    });
+    const second = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        postId: "urn:li:activity:day-2",
+        text: "I'm humbled and thrilled to announce that consistency is the ultimate leadership hack for everyone.",
+      }),
+    });
+    const body = await second.json();
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 429);
+    assert.equal(body.error, "daily_limited");
+    assert.equal(jevCalls.length, before + 1);
+    if (previousDaily === undefined) delete process.env.EVALUATE_DAILY_IP_CAP;
+    else process.env.EVALUATE_DAILY_IP_CAP = previousDaily;
+    if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    resetRateLimit();
   });
 
   after(() => {

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="shot.css" />
+  </head>
+  <body>
+    <div class="frame">
+      <div class="top">
+        <div class="brand"><img src="../../../docs/brand/mark.png" alt="" /> Opcje i prywatność</div>
+        <div class="kicker">Klucz zostaje na proxy</div>
+      </div>
+      <div class="row">
+        <article class="card">
+          <h2>Ustawienia rozszerzenia</h2>
+          <form>
+            <label><input type="checkbox" checked /> Oceniaj posty podczas scrollowania</label>
+            <label>Próg AI slop: 0.65</label>
+            <input type="range" min="0.15" max="0.95" step="0.05" value="0.65" />
+            <label>Adres proxy</label>
+            <input readonly value="https://proxy-production-ebcc.up.railway.app" />
+            <div class="fakebtn">Sprawdź proxy</div>
+          </form>
+          <p class="note">Przycisk powinien pokazać model jev-latest. Własny adres, także localhost, zapisujesz tutaj.</p>
+        </article>
+        <article class="card">
+          <h2>Co wychodzi z przeglądarki</h2>
+          <p>Identyfikator posta, tekst do 6000 znaków i opcjonalnie imię z karty. Komentarze nie idą.</p>
+          <h2 style="margin-top: 16px">Co zostaje na serwerze</h2>
+          <p>Klucz TYPESAFE_API_KEY. Treść posta nie jest zapisywana na dysk. Powtórzony tekst bierze werdykt z pamięci.</p>
+          <h2 style="margin-top: 16px">Limit demo</h2>
+          <p>60 żądań na minutę z jednego IP. Do codziennej pracy: własne proxy i własny klucz.</p>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>

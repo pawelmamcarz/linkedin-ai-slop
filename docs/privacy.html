@@ -8,15 +8,18 @@
       name="description"
       content="Polityka prywatności rozszerzenia LinkedIn AI Slop: jakie dane idą na proxy i do TypeSafe."
     />
+    <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="top">
-      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+      <a class="brand" href="index.html"><img class="brand-mark" src="brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
       <nav>
-        <a href="demo.html">Podgląd</a>
+        <a href="demo.html">Demo</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html" aria-current="page">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a class="lang-link" href="en/privacy.html" hreflang="en">EN</a>
       </nav>
     </header>
     <main class="wrap">
@@ -48,8 +51,10 @@
           na serwerze. Nie ma go w rozszerzeniu ani na tej stronie.
         </p>
         <p>
-          Proxy nie zapisuje treści postów. Trzyma w pamięci licznik żądań na adres IP
-          (okno 60 sekund), żeby ograniczyć publiczne demo do 60 ocen na minutę.
+          Proxy nie zapisuje treści postów na dysk. W pamięci trzyma licznik żądań na adres IP
+          (okno 60 sekund, do 60 ocen na minutę) oraz skrót SHA-256 znormalizowanego tekstu
+          razem z werdyktem, z czasem życia (domyślnie 12 godzin). Surowego tekstu w tej pamięci nie ma.
+          Trafienie w cache nie woła TypeSafe drugi raz.
         </p>
       </section>
 
@@ -63,8 +68,17 @@
 
       <p class="actions">
         <a class="button" href="index.html">Wróć</a>
-        <a class="button button-quiet" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Repozytorium</a>
+        <a class="button button-quiet" href="terms.html">Regulamin</a>
       </p>
     </main>
+    <footer class="site-footer narrow-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a href="en/privacy.html" hreflang="en">English</a>
+      </nav>
+    </footer>
   </body>
 </html>

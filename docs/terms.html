@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Regulamin: LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Regulamin darmowego demo proxy i rozszerzenia LinkedIn AI Slop. Best-effort, limity, brak gwarancji, zakaz nadużyć."
+    />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/terms.html" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html"><img class="brand-mark" src="brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
+      <nav>
+        <a href="demo.html">Demo</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
+        <a href="terms.html" aria-current="page">Regulamin</a>
+        <a class="lang-link" href="en/terms.html" hreflang="en">EN</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>Regulamin</h1>
+      <p class="lede">
+        Krótki regulamin darmowego rozszerzenia i publicznego proxy demo.
+        Kod: <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
+      </p>
+
+      <section>
+        <h2>Co dostajesz</h2>
+        <p>
+          LinkedIn AI Slop to narzędzie, które oznacza posty na feedzie LinkedIn odznaką
+          Ludzki, Mieszany albo AI slop. Publiczne proxy
+          (<code>https://proxy-production-ebcc.up.railway.app</code>) jest darmowym demo.
+          Działa w dobrej wierze, bez umowy SLA i bez gwarancji dostępności.
+        </p>
+      </section>
+
+      <section>
+        <h2>Limity</h2>
+        <p>
+          Demo przyjmuje do 60 żądań <code>POST /evaluate</code> na minutę z jednego adresu IP.
+          Tekst jest obcięty do 6000 znaków. Powtórzony, znormalizowany tekst może dostać werdykt
+          z pamięci podręcznej i wtedy nie woła modelu drugi raz. Operator może włączyć dobowy limit
+          <code>EVALUATE_DAILY_IP_CAP</code>. Do poważnego użycia uruchom własne proxy i własny klucz.
+        </p>
+      </section>
+
+      <section>
+        <h2>Brak gwarancji</h2>
+        <p>
+          Odznaka jest sygnałem modelu, nie faktem i nie poradą. Nie ma gwarancji poprawności,
+          kompletności ani przydatności do konkretnego celu. Autor nie odpowiada za decyzje podjęte
+          na podstawie odznaki, ani za przerwy w działaniu demo.
+        </p>
+      </section>
+
+      <section>
+        <h2>Zakaz nadużyć</h2>
+        <p>
+          Nie używaj demo do scrapowania LinkedIn, obchodzenia limitów, odsprzedaży ocen ani do
+          zapytań, które nie pochodzą z normalnego scrollowania feedu. Nie próbuj wyciągać klucza API.
+          Nadużycie może skończyć się blokadą adresu IP albo wyłączeniem publicznego proxy.
+        </p>
+      </section>
+
+      <section>
+        <h2>Prywatność i kontakt</h2>
+        <p>
+          Zasady danych: <a href="privacy.html">polityka prywatności</a>.
+          Kontakt: <a href="https://mamcarz.com">mamcarz.com</a>,
+          <a href="https://www.linkedin.com/in/pawelmamcarz/">LinkedIn</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>English summary</h2>
+        <p>
+          The extension and the hosted proxy are a free, best-effort demo. There is no warranty and no SLA.
+          The public proxy allows 60 evaluate requests per minute per IP, cuts text at 6000 characters,
+          and may serve a cached verdict for repeated text. Scraping, limit evasion, resale, and key extraction are not allowed.
+          For serious use, run your own proxy (BYOK). Privacy: <a href="privacy.html">privacy policy</a>.
+          Contact: <a href="https://mamcarz.com">mamcarz.com</a> or
+          <a href="https://www.linkedin.com/in/pawelmamcarz/">LinkedIn</a>.
+        </p>
+      </section>
+
+      <p class="actions">
+        <a class="button" href="index.html">Wróć</a>
+        <a class="button button-quiet" href="privacy.html">Prywatność</a>
+      </p>
+    </main>
+    <footer class="site-footer narrow-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
+        <a href="terms.html">Regulamin</a>
+        <a href="en/terms.html" hreflang="en">English</a>
+      </nav>
+    </footer>
+  </body>
+</html>

@@ -40,6 +40,35 @@ Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia 
 
 Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund na adres IP**. Rozszerzenie trzyma równoległość 2 i kolejkę 40, więc szybki scroll potrafi zbliżyć się do ~60 ocen na minutę, gdy Jev odpowiada w około 2 s. Limit 30 na minutę ucinałby taką sesję. `EVALUATE_RATE_LIMIT=0` wyłącza limit (własne proxy). `GET /health` nie jest limitowany. Adres IP bierze się z pierwszego wpisu `X-Forwarded-For` (Railway). `TRUST_PROXY=0` ignoruje ten nagłówek.
 
+Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła tekstu krótszego niż 40 znaków. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie). Opcjonalny dobowy limit: `EVALUATE_DAILY_IP_CAP` (liczba, `0` albo brak wyłącza).
+
+Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego tekstu (trim, zbite białe znaki, obcięcie). Nie zapisuje treści posta ani klucza. Próg z żądania jest nakładany przy odczycie, więc trafienie nie woła TypeSafe i zwraca ten sam kształt JSON co świeża ocena. Nagłówek `X-Cache` to `HIT` albo `MISS`.
+
+| Zmienna | Domyślnie | Znaczenie |
+| --- | --- | --- |
+| `VERDICT_CACHE` | włączony | `0` wyłącza cache |
+| `VERDICT_CACHE_TTL_MS` | 12 godzin | czas życia wpisu |
+| `VERDICT_CACHE_MAX` | 2000 | nadmiar usuwa najstarsze wpisy |
+| `LOG_TOKEN_USAGE` | włączony | `0` wyłącza log. `1` też włącza |
+| `EVALUATE_DAILY_IP_CAP` | `0` | dobowy limit ocen na IP |
+
+Log na stdout jest jednym obiektem JSON: `event`, `cache`, `input_tokens`, `output_tokens`, `model`, `text_chars`. Bez treści posta i bez klucza. `GET /health` dopisuje `cache` (liczba wpisów, trafienia, pudła, hit rate) i `dailyIpCap`. Samej wartości klucza nie zwraca.
+
+Sprawdzenie cache lokalnie (dwa identyczne `POST /evaluate`, drugie ma `X-Cache: HIT` i nie woła Jev):
+
+```bash
+curl -sD - http://127.0.0.1:8787/evaluate \
+  -H 'Content-Type: application/json' \
+  -d '{"postId":"urn:li:activity:1","text":"Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%."}' \
+  -o /tmp/eval.json
+curl -sD - http://127.0.0.1:8787/evaluate \
+  -H 'Content-Type: application/json' \
+  -d '{"postId":"urn:li:activity:1","text":"Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%."}' \
+  -o /tmp/eval2.json
+```
+
+Drugie wywołanie jest tańsze: w logu `cache` jest `HIT`, a `input_tokens` pochodzą z pierwszego wołania Jev.
+
 - `GET /` i `GET /health` — czy proces żyje i czy klucz jest ustawiony (samej wartości nie zwraca). Pole `model` pochodzi z `jev/questions.ts` (`jev-latest`)
 - `POST /evaluate` — jedno wywołanie Jev na post. Ciało: `postId`, `text`, opcjonalnie `author` i `threshold`
 - `GET /demo` — lokalny podgląd selektorów, bez logowania do LinkedIn

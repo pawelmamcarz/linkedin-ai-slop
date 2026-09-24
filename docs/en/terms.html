@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms: LinkedIn AI Slop</title>
+    <meta name="description" content="Terms for the free LinkedIn AI Slop demo proxy and extension. Best effort, limits, no warranty, no abuse." />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/en/terms.html" />
+    <link rel="icon" href="../favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html"><img class="brand-mark" src="../brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
+      <nav>
+        <a href="../demo.html">Demo</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html" aria-current="page">Terms</a>
+        <a class="lang-link" href="../terms.html" hreflang="pl">PL</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>Terms of use</h1>
+      <p class="lede">
+        Short terms for the free extension and the public demo proxy.
+        Code: <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
+      </p>
+      <section>
+        <h2>What you get</h2>
+        <p>
+          LinkedIn AI Slop marks posts on the LinkedIn feed with Human, Mixed, or AI slop
+          (the on-screen labels are Ludzki, Mieszany, AI slop). The public proxy
+          (<code>https://proxy-production-ebcc.up.railway.app</code>) is a free demo.
+          It is best-effort, with no SLA and no availability warranty. The product is for LinkedIn only.
+        </p>
+      </section>
+      <section>
+        <h2>Limits</h2>
+        <p>
+          The demo accepts up to 60 <code>POST /evaluate</code> requests per minute from one IP address.
+          Text is cut at 6000 characters. Repeated, normalized text may get a cached verdict and then
+          does not call the model again. The operator may turn on a daily cap with
+          <code>EVALUATE_DAILY_IP_CAP</code>. For serious use, run your own proxy and your own key.
+        </p>
+      </section>
+      <section>
+        <h2>No warranty</h2>
+        <p>
+          A badge is a model signal, not a fact and not advice. There is no warranty of accuracy,
+          completeness, or fitness for a particular purpose. The author is not liable for decisions
+          made from a badge, or for downtime of the demo.
+        </p>
+      </section>
+      <section>
+        <h2>No abuse</h2>
+        <p>
+          Do not use the demo to scrape LinkedIn, evade limits, resell scores, or send traffic that
+          does not come from normal feed scrolling. Do not try to extract the API key.
+          Abuse can end in an IP block or in the public proxy being turned off.
+        </p>
+      </section>
+      <section>
+        <h2>Privacy and contact</h2>
+        <p>
+          Data rules: <a href="privacy.html">privacy policy</a>.
+          Contact: <a href="https://mamcarz.com">mamcarz.com</a>,
+          <a href="https://www.linkedin.com/in/pawelmamcarz/">LinkedIn</a>.
+        </p>
+      </section>
+      <p class="actions">
+        <a class="button" href="index.html">Back</a>
+        <a class="button button-quiet" href="privacy.html">Privacy</a>
+      </p>
+    </main>
+    <footer class="site-footer narrow-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="../terms.html" hreflang="pl">Polski</a>
+      </nav>
+    </footer>
+  </body>
+</html>

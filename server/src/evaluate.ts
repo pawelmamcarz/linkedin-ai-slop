@@ -1,7 +1,8 @@
 import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { JEV_MODEL, JEV_QUESTIONS, type JevPostState } from "../../jev/questions.ts";
-import { DEFAULT_SLOP_THRESHOLD, MAX_TEXT_CHARS } from "../../jev/thresholds.ts";
+import { DEFAULT_SLOP_THRESHOLD } from "../../jev/thresholds.ts";
 import { mapAnswers, type EvaluateResult, type JevAnswers } from "./map-answers.ts";
+import { normalizePostText } from "./verdict-cache.ts";
 
 export type EvaluateRequest = {
   postId: string;
@@ -38,8 +39,16 @@ export class MissingApiKeyError extends Error {
   }
 }
 
+export type EvaluateMeta = {
+  result: EvaluateResult;
+  answers: JevAnswers;
+  model: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+};
+
 export function buildState(input: EvaluateRequest): JevPostState {
-  const text = input.text.replace(/\s+/g, " ").trim().slice(0, MAX_TEXT_CHARS);
+  const text = normalizePostText(input.text);
   return {
     platform: "linkedin",
     author: input.author?.trim() ? input.author.trim().slice(0, 200) : null,
@@ -55,7 +64,11 @@ export function buildSystemOnePayload(input: EvaluateRequest) {
   };
 }
 
-export async function evaluatePost(input: EvaluateRequest): Promise<EvaluateResult> {
+function finiteToken(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+export async function evaluateWithMeta(input: EvaluateRequest): Promise<EvaluateMeta> {
   const threshold = clampThreshold(input.threshold);
   const payload = buildSystemOnePayload(input);
   const result = await getClient().systemOne({
@@ -63,12 +76,19 @@ export async function evaluatePost(input: EvaluateRequest): Promise<EvaluateResu
     state: payload.state,
     questions: payload.questions,
   });
-  return mapAnswers(
-    input.postId,
-    result.model ?? JEV_MODEL,
-    result.answers as JevAnswers,
-    threshold,
-  );
+  const answers = result.answers as JevAnswers;
+  const model = result.model ?? JEV_MODEL;
+  return {
+    result: mapAnswers(input.postId, model, answers, threshold),
+    answers,
+    model,
+    inputTokens: finiteToken(result.usage?.input_tokens),
+    outputTokens: finiteToken(result.usage?.output_tokens),
+  };
+}
+
+export async function evaluatePost(input: EvaluateRequest): Promise<EvaluateResult> {
+  return (await evaluateWithMeta(input)).result;
 }
 
 export function clampThreshold(value: unknown): number {

@@ -25,7 +25,15 @@ Oznaczać posty na feedzie LinkedIn odznaką: Ludzki, Mieszany albo AI slop, na 
 
 https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
-Źródło: `docs/privacy.html`.
+Źródło: `docs/privacy.html`. Wersja angielska: https://pawelmamcarz.github.io/linkedin-ai-slop/en/privacy.html (`docs/en/privacy.html`).
+
+## Regulamin
+
+https://pawelmamcarz.github.io/linkedin-ai-slop/terms.html
+
+Źródło: `docs/terms.html`. Wersja angielska: https://pawelmamcarz.github.io/linkedin-ai-slop/en/terms.html.
+
+Produkt jest tylko na LinkedIn. Nie ma adapterów Facebooka, X ani Instagrama.
 
 ## Uprawnienia
 
@@ -40,9 +48,10 @@ https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
 | Zasób | Wymiar | Uwagi |
 | --- | --- | --- |
-| Ikona sklepu | 128×128 PNG | Jest w `extension/icons/icon128.png`. |
-| Zrzut ekranu | **1280×800** albo **640×400** | Minimum 1, maksimum 5. JPEG albo 24-bit PNG bez przezroczystości. Pokaż feed z odznakami. |
-| Mały kafelek promo (opcjonalnie) | 440×280 | |
+| Ikona sklepu | 128×128 PNG | `extension/icons/icon128.png` (znak: chmurka z lupą). Jest też `icon16.png` i `icon48.png`. Źródło: `docs/brand/mark.svg`, odświeżenie: `npm run brand`. |
+| Zrzut ekranu | **1280×800** | Gotowe do wgrania, 24-bit PNG bez przezroczystości: `store/screenshots/01-overview.png`, `store/screenshots/02-feed.png`, `store/screenshots/03-options.png`. Odświeżenie: `npm run shots`. |
+| Mały kafelek promo (opcjonalnie) | 440×280 | `store/screenshots/tile-440x280.png` |
+| Obraz OG | 1200×630 | `docs/og.png` |
 | Marquee (opcjonalnie) | 1400×560 | |
 
 ## Opis krótki (PL, do 132 znaków)

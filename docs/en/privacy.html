@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy: LinkedIn AI Slop</title>
+    <meta name="description" content="Privacy policy for the LinkedIn AI Slop extension: what goes to the proxy and to TypeSafe." />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/en/privacy.html" />
+    <link rel="icon" href="../favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html"><img class="brand-mark" src="../brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
+      <nav>
+        <a href="../demo.html">Demo</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html" aria-current="page">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a class="lang-link" href="../privacy.html" hreflang="pl">PL</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>Privacy</h1>
+      <p class="lede">
+        The extension scores posts you already see on the LinkedIn feed.
+        Code: <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
+      </p>
+      <section>
+        <h2>What leaves the browser</h2>
+        <p>
+          When a post comes into view, the extension sends the post id, the text (up to 6000 characters),
+          and optionally the name visible on the card. Text shorter than 40 characters is not sent.
+          Comments under the post are skipped.
+        </p>
+        <p>
+          The default address is <code>https://proxy-production-ebcc.up.railway.app</code>.
+          You can set your own proxy in the options, including a local one.
+        </p>
+      </section>
+      <section>
+        <h2>Where it goes</h2>
+        <p>
+          The proxy calls TypeSafe Jev (<code>POST https://api.typesafe.ai/v1/systemone</code>, model <code>jev-latest</code>).
+          <code>TYPESAFE_API_KEY</code> lives only on the server. It is not in the extension and not on this page.
+        </p>
+        <p>
+          The proxy does not write post text to disk. Memory holds a per-IP request counter
+          (60 second window, 60 scores per minute) and a SHA-256 of the normalized text together with the verdict,
+          with a time to live (12 hours by default). The raw text is not kept in that cache.
+          A cache hit does not call TypeSafe again.
+        </p>
+      </section>
+      <section>
+        <h2>What stays in Chrome</h2>
+        <p>
+          <code>chrome.storage.sync</code> stores only the toggle, the threshold, and the proxy URL.
+          The extension does not read your LinkedIn profile beyond the visible post card and does not sell data.
+        </p>
+      </section>
+      <p class="actions">
+        <a class="button" href="index.html">Back</a>
+        <a class="button button-quiet" href="terms.html">Terms</a>
+      </p>
+    </main>
+    <footer class="site-footer narrow-footer">
+      <a href="https://mamcarz.com">Paweł Mamcarz</a>
+      <nav>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="../privacy.html" hreflang="pl">Polski</a>
+      </nav>
+    </footer>
+  </body>
+</html>
