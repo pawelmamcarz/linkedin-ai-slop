@@ -170,7 +170,7 @@ jev/                pytania i progi, do review
 
 CORS proxy puszcza `https://www.linkedin.com`, `https://pawelmamcarz.github.io`, `localhost`, `127.0.0.1`, `chrome-extension://` oraz `safari-web-extension://`. Rozszerzenie i tak woła proxy z service workera (uprawnienie hosta), więc ocena feedu nie zależy od CORS strony. Publiczne demo na Railway odbije origin Safari dopiero po wdrożeniu tej wersji proxy.
 
-Gdy zmienisz port lokalnego proxy, zaktualizuj adres w opcjach. Content script podglądu `/demo` jest podpięty pod `http://127.0.0.1:8787` i `http://localhost:8787` jako opcjonalne uprawnienie, nie jako domyślny host.
+Gdy zmienisz port lokalnego proxy, zaktualizuj adres w opcjach. Content script podglądu `/demo` jest podpięty pod `http://127.0.0.1:8787` i `http://localhost:8787`. Te hosty są w wymaganych `host_permissions`. Opcjonalne zostają własne proxy: `https://*.up.railway.app/*` oraz dowolny `https`/`http`.
 
 ## Gdy LinkedIn zmieni DOM
 

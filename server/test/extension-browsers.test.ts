@@ -36,6 +36,7 @@ function loadApi(): ExtApi {
 describe("manifest hostów", () => {
   const manifest = JSON.parse(readFileSync(resolve(root, "extension/manifest.json"), "utf8")) as {
     host_permissions: string[];
+    optional_host_permissions: string[];
     background: { service_worker: string };
     content_scripts: { js: string[] }[];
     browser_specific_settings?: unknown;
@@ -50,6 +51,17 @@ describe("manifest hostów", () => {
       "http://localhost/*",
     ]) {
       assert.ok(manifest.host_permissions.includes(host), host);
+    }
+  });
+
+  it("nie powtarza localhost w optional_host_permissions", () => {
+    assert.deepEqual(manifest.optional_host_permissions, [
+      "https://*.up.railway.app/*",
+      "https://*/*",
+      "http://*/*",
+    ]);
+    for (const host of ["http://127.0.0.1/*", "http://localhost/*"]) {
+      assert.equal(manifest.optional_host_permissions.includes(host), false, host);
     }
   });
 
