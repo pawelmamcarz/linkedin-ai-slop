@@ -363,14 +363,113 @@
     syncCardBlur(el);
   }
 
+  const CONTENT_BLUR = "blur(8px)";
+
   function syncCardBlur(el) {
     const slop = el.dataset.laisVerdict === "slop";
     const revealed = el.dataset.laisRevealed === "1";
     const allow = slop && settings.blurSlop !== false;
-    el.classList.toggle("li-ai-slop-blurred", allow && !revealed);
+    const blur = allow && !revealed;
+    el.classList.toggle("li-ai-slop-blurred", blur);
     el.classList.toggle("li-ai-slop-revealed", allow && revealed);
+    ensureBlurLayer(el, blur);
     const badge = el.querySelector(":scope > .lais-badge");
     if (badge) syncRevealControl(badge, allow);
+  }
+
+  function isExtensionChrome(node) {
+    return (
+      node.classList?.contains("lais-badge") ||
+      node.classList?.contains("lais-blur") ||
+      node.classList?.contains("lais-reveal")
+    );
+  }
+
+  function childElements(node) {
+    const kids = node.children ? Array.from(node.children) : [];
+    if (node.shadowRoot) kids.push(...node.shadowRoot.children);
+    return kids;
+  }
+
+  function ensureBlurLayer(el, on) {
+    const badge = el.querySelector(":scope > .lais-badge");
+    if (!on) {
+      el.querySelector(":scope > .lais-blur")?.remove();
+      if (badge) badge.style.removeProperty("z-index");
+      clearPaintedFilters(el);
+      return;
+    }
+    let veil = el.querySelector(":scope > .lais-blur");
+    if (!veil) {
+      const doc = el.ownerDocument || document;
+      veil = doc.createElement("div");
+      veil.className = "lais-blur";
+      veil.setAttribute("aria-hidden", "true");
+      el.appendChild(veil);
+    }
+    veil.style.setProperty("position", "absolute", "important");
+    veil.style.setProperty("top", "0", "important");
+    veil.style.setProperty("right", "0", "important");
+    veil.style.setProperty("bottom", "0", "important");
+    veil.style.setProperty("left", "0", "important");
+    veil.style.setProperty("z-index", "20", "important");
+    veil.style.setProperty("display", "block", "important");
+    veil.style.setProperty("box-sizing", "border-box", "important");
+    veil.style.setProperty("pointer-events", "none", "important");
+    veil.style.setProperty("background", "rgba(255, 252, 248, 0.4)", "important");
+    veil.style.setProperty("backdrop-filter", "blur(14px) saturate(0.85)", "important");
+    veil.style.setProperty("-webkit-backdrop-filter", "blur(14px) saturate(0.85)", "important");
+    veil.dataset.laisVeil = "blur-14";
+    if (badge) {
+      badge.style.setProperty("z-index", "21", "important");
+      el.appendChild(badge);
+    }
+    paintContentFilters(el);
+  }
+
+  function paintContentFilters(el) {
+    function visit(node) {
+      for (const child of childElements(node)) {
+        if (isExtensionChrome(child)) continue;
+        let display = child.style?.display || "";
+        try {
+          if (display !== "contents" && typeof getComputedStyle === "function") {
+            display = getComputedStyle(child).display || display;
+          }
+        } catch {
+          /* zostaw inline */
+        }
+        if (display === "contents") {
+          visit(child);
+          continue;
+        }
+        child.style.setProperty("filter", CONTENT_BLUR, "important");
+        child.style.setProperty("-webkit-filter", CONTENT_BLUR, "important");
+        child.dataset.laisFiltered = "1";
+      }
+    }
+    visit(el);
+  }
+
+  function clearPaintedFilters(el) {
+    const drop = [];
+    function visit(node) {
+      for (const child of childElements(node)) {
+        if (child.dataset?.laisFiltered === "1") drop.push(child);
+        visit(child);
+      }
+    }
+    visit(el);
+    try {
+      el.querySelectorAll("[data-lais-filtered='1']").forEach((node) => drop.push(node));
+    } catch {
+      /* ignore */
+    }
+    for (const node of drop) {
+      node.style.removeProperty("filter");
+      node.style.removeProperty("-webkit-filter");
+      delete node.dataset.laisFiltered;
+    }
   }
 
   function syncRevealControl(badge, show) {
@@ -514,6 +613,9 @@
     if (cached) {
       if (!el.querySelector(":scope > .lais-badge")) {
         setBadge(el, cached.badge || "human", cached);
+      } else if (cached.badge === "slop") {
+        el.dataset.laisVerdict = "slop";
+        syncCardBlur(el);
       }
       return;
     }
@@ -696,7 +798,12 @@
   }
 
   function clearBadges() {
-    document.querySelectorAll(".lais-badge").forEach((n) => n.remove());
+    document.querySelectorAll("[data-lais-filtered]").forEach((node) => {
+      node.style.removeProperty("filter");
+      node.style.removeProperty("-webkit-filter");
+      delete node.dataset.laisFiltered;
+    });
+    document.querySelectorAll(".lais-badge, .lais-blur").forEach((n) => n.remove());
     document.querySelectorAll(".li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
       el.classList.remove("li-ai-slop-blurred", "li-ai-slop-revealed");
       delete el.dataset.laisVerdict;
