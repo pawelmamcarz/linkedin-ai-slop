@@ -70,11 +70,12 @@ describe("selektory LinkedIn (fixture)", () => {
     });
     const badge = host.querySelector(".lais-badge");
     assert.ok(badge);
-    assert.equal(badge!.textContent, "AI slop");
+    assert.equal(badge!.querySelector(".lais-badge__label")!.textContent, "AI slop");
     assert.ok(badge!.classList.contains("lais-badge--slop"));
-    const title = badge!.getAttribute("title") || "";
-    assert.match(title, /^AI slop: 91%/);
-    assert.match(title, /Intensywność: heavy/);
+    assert.equal(badge!.getAttribute("title"), "AI slop: 91%");
+    const tip = badge!.querySelector(".lais-tip");
+    assert.equal(tip?.querySelector(".lais-tip__pct")?.textContent, "AI slop: 91%");
+    assert.match(tip?.querySelector(".lais-tip__meta")?.textContent || "", /Intensywność: heavy/);
   });
 
   it("pokazuje procent slopu na Ludzki i Mieszany, bez fałszywego 0%", () => {
@@ -101,17 +102,30 @@ describe("selektory LinkedIn (fixture)", () => {
       hasSubstance: true,
       substanceProbability: 0.62,
     });
-    assert.match(human.querySelector(".lais-badge")!.getAttribute("title") || "", /^AI slop: 8%/);
-    assert.match(mixed.querySelector(".lais-badge")!.getAttribute("title") || "", /^AI slop: 41%/);
+    assert.equal(human.querySelector(".lais-badge")!.getAttribute("title"), "AI slop: 8%");
+    assert.equal(mixed.querySelector(".lais-badge")!.getAttribute("title"), "AI slop: 41%");
+    assert.equal(human.querySelector(".lais-tip__pct")!.textContent, "AI slop: 8%");
+    assert.equal(mixed.querySelector(".lais-tip__pct")!.textContent, "AI slop: 41%");
 
     const pending = document.createElement("div");
     document.body.appendChild(pending);
     slop.setBadge(pending, "pending");
-    assert.equal(pending.querySelector(".lais-badge")!.getAttribute("title"), "Czekam na Jev (proxy lokalne)");
+    const pendingBadge = pending.querySelector(".lais-badge")!;
+    assert.equal(pendingBadge.getAttribute("title"), "Czekam na Jev (proxy lokalne)");
+    assert.equal(pendingBadge.querySelector(".lais-tip"), null);
+
+    const errored = document.createElement("div");
+    document.body.appendChild(errored);
+    slop.setBadge(errored, "error", { message: "Proxy nie oceniło posta", slopProbability: 0.9 });
+    const errorBadge = errored.querySelector(".lais-badge")!;
+    assert.equal(errorBadge.getAttribute("title"), "Proxy nie oceniło posta");
+    assert.equal(errorBadge.querySelector(".lais-tip"), null);
 
     const bare = document.createElement("div");
     document.body.appendChild(bare);
     slop.setBadge(bare, "human", { labelPl: "Ludzki", voice: "human" });
-    assert.doesNotMatch(bare.querySelector(".lais-badge")!.getAttribute("title") || "", /AI slop:/);
+    const bareBadge = bare.querySelector(".lais-badge")!;
+    assert.equal(bareBadge.getAttribute("title"), null);
+    assert.equal(bareBadge.querySelector(".lais-tip"), null);
   });
 });
