@@ -5,7 +5,7 @@ Produkt jest tylko na LinkedIn. Trzy warianty, bez nowych cen:
 | Wariant | Cena | Co jest live |
 | --- | --- | --- |
 | Free / BYOK | 0 | Rozszerzenie + własne proxy + własny `TYPESAFE_API_KEY`. Live. |
-| Hosted Demo | 0, marketing | Publiczne proxy Railway. Limit ~60/min na IP. Nie jest planem płatnym. |
+| Hosted Demo | 0, marketing | Publiczne proxy Railway. Limit ~60/min i około 200/dobę na IP. Nie jest planem płatnym. |
 | Hosted Pro | od ~5 USD/mies. albo ~40 USD/rok | Ten sam proxy, token w nagłówku, wyższe limity. Bramka tokenu jest w kodzie. Checkout działa po ustawieniu Stripe. |
 
 Jednorazowo w kopii wolno mówić o przedziale ~9–19 USD. Checkout wystawia subskrypcję, nie płatność jednorazową.
@@ -25,8 +25,8 @@ Bez kluczy Stripe przycisk nie tworzy sesji. `GET /billing/checkout` zwraca HTML
 Root Directory zostaje `/`. W zmiennych serwisu:
 
 - `TYPESAFE_API_KEY` (już jest na demo)
-- `DEMO_MODE=1` (dobowy cap demo 40, gdy `EVALUATE_DAILY_IP_CAP` puste)
-- opcjonalnie `EVALUATE_DAILY_IP_CAP=40`
+- `DEMO_MODE=1` (dobowy cap demo 200, gdy `EVALUATE_DAILY_IP_CAP` puste)
+- `EVALUATE_DAILY_IP_CAP=200` (jawny cap na produkcji)
 - `PRO_TOKENS` (ręczna lista, plain albo `sha256:<hex>`)
 - `PRO_RATE_LIMIT=300`, `PRO_DAILY_CAP=2000` (domyślne, można pominąć)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`

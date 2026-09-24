@@ -44,7 +44,7 @@ Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content sc
 
 Trzy warianty, bez mieszania cen: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
 
-`DEMO_MODE=1` włącza dobowy limit demo **40** na IP, gdy `EVALUATE_DAILY_IP_CAP` jest puste. Jawna wartość tej zmiennej wygrywa (`0` albo brak i brak `DEMO_MODE` wyłącza dobowy cap, tak jest lokalne BYOK). Na publicznym Railway ustaw `DEMO_MODE=1`.
+`DEMO_MODE=1` włącza dobowy limit demo **200** na IP, gdy `EVALUATE_DAILY_IP_CAP` jest puste. Jawna wartość tej zmiennej wygrywa (`0` albo brak i brak `DEMO_MODE` wyłącza dobowy cap, tak jest lokalne BYOK). Na publicznym Railway ustaw `DEMO_MODE=1` albo jawne `EVALUATE_DAILY_IP_CAP=200`. Po wyczerpaniu limitu Demo proxy zwraca `429` z `error: demo_limit` i `upgrade: true` (bez wołania TypeSafe). Pro zostaje przy `rate_limited` / `daily_limited`, bez `upgrade`.
 
 Token Pro: nagłówek `X-Pro-Token` albo `Authorization: Bearer`. Lista `PRO_TOKENS` (plain albo `sha256:<hex>`, po przecinku). Zły token to 401, bez zejścia na demo. Pro domyślnie **300/min** (`PRO_RATE_LIMIT`) i **2000/dobę** (`PRO_DAILY_CAP`). Kubełki demo i Pro są osobne. Token Pro nie jest kluczem TypeSafe i nie trafia do logów.
 
@@ -56,8 +56,8 @@ Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego t
 | `VERDICT_CACHE_TTL_MS` | 12 godzin | czas życia wpisu |
 | `VERDICT_CACHE_MAX` | 2000 | nadmiar usuwa najstarsze wpisy |
 | `LOG_TOKEN_USAGE` | włączony | `0` wyłącza log. `1` też włącza |
-| `EVALUATE_DAILY_IP_CAP` | `0` (albo 40 przy `DEMO_MODE=1`) | dobowy limit ocen demo na IP |
-| `DEMO_MODE` | wyłączony | `1` włącza domyślny cap demo 40 |
+| `EVALUATE_DAILY_IP_CAP` | `0` (albo 200 przy `DEMO_MODE=1`) | dobowy limit ocen demo na IP |
+| `DEMO_MODE` | wyłączony | `1` włącza domyślny cap demo 200 |
 | `PRO_TOKENS` | puste | tokeny Pro, plain albo `sha256:` |
 | `PRO_RATE_LIMIT` | 300 | ocen Pro na minutę na IP |
 | `PRO_DAILY_CAP` | 2000 | ocen Pro na dobę na IP |

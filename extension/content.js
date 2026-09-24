@@ -90,6 +90,8 @@
   let observer = null;
   let intersect = null;
   let warnedProxy = false;
+  let demoLimitedUntil = 0;
+  const DEMO_LIMIT_KEY = "lais-demo-limit-until";
   let selectorMissLogged = false;
   let booted = false;
   let generation = 0;
@@ -235,6 +237,13 @@
       badge.title = "Czekam na Jev (proxy lokalne)";
       return;
     }
+    if (state === "info") {
+      badge.textContent = result?.labelPl || "Potrzebujesz Pro";
+      badge.title =
+        result?.message ||
+        "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.";
+      return;
+    }
     if (state === "error") {
       badge.textContent = "Błąd";
       badge.title = result?.message || "Nie udało się ocenić posta";
@@ -304,8 +313,49 @@
     return rect.bottom > 0 && rect.top < height && rect.height > 0;
   }
 
+  function demoLimitActive() {
+    if (settings.mode !== "demo") return false;
+    const until = Math.max(demoLimitedUntil, readDemoLimitUntil());
+    return until > Date.now();
+  }
+
+  function readDemoLimitUntil() {
+    try {
+      const n = Number(sessionStorage.getItem(DEMO_LIMIT_KEY));
+      return Number.isFinite(n) ? n : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function utcDayEnd(now = Date.now()) {
+    const day = new Date(now).toISOString().slice(0, 10);
+    return Date.parse(`${day}T00:00:00.000Z`) + 86_400_000;
+  }
+
+  function markDemoLimit() {
+    const until = utcDayEnd();
+    demoLimitedUntil = until;
+    try {
+      sessionStorage.setItem(DEMO_LIMIT_KEY, String(until));
+    } catch {
+      /* sesja bez storage */
+    }
+    queue.length = 0;
+  }
+
+  function clearDemoLimit() {
+    demoLimitedUntil = 0;
+    try {
+      sessionStorage.removeItem(DEMO_LIMIT_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
   function enqueue(el) {
     if (!settings.enabled) return;
+    if (demoLimitActive()) return;
     const post = extractPost(el);
     if (!post) return;
     if (seen.has(post.id) || inFlight.has(post.id)) return;
@@ -326,6 +376,16 @@
       evaluate(item)
         .catch((error) => {
           if (item.gen !== generation) return;
+          if (error?.code === "demo_limit" && error?.upgrade && settings.mode === "demo") {
+            markDemoLimit();
+            seen.add(item.id);
+            setBadge(item.el, "info", {
+              labelPl: "Potrzebujesz Pro",
+              message:
+                "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.",
+            });
+            return;
+          }
           failedAt.set(item.id, Date.now());
           setBadge(item.el, "error", { message: error.message });
         })
@@ -338,6 +398,15 @@
   }
 
   async function evaluate(item) {
+    if (demoLimitActive()) {
+      seen.add(item.id);
+      setBadge(item.el, "info", {
+        labelPl: "Potrzebujesz Pro",
+        message:
+          "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.",
+      });
+      return;
+    }
     setBadge(item.el, "pending");
     tryExpand(item.el);
     const text = postText(item.el) || item.text;
@@ -358,11 +427,7 @@
     const api = extensionApi();
     if (api?.hasRuntime?.() && api.sendMessage) {
       return api.sendMessage({ type: "evaluate", payload }).then((response) => {
-        if (!response?.ok) {
-          const message = response?.body?.message || response?.body?.error || "Proxy nie oceniło posta";
-          noteProxy(message);
-          throw new Error(message);
-        }
+        if (!response?.ok) throw proxyError(response?.body, "Proxy nie oceniło posta");
         return response.body;
       });
     }
@@ -374,18 +439,25 @@
       body: JSON.stringify(payload),
     }).then(async (response) => {
       if (!response.ok) {
-        let message = `HTTP ${response.status}`;
+        let body = null;
         try {
-          const err = await response.json();
-          message = err.message || err.error || message;
+          body = await response.json();
         } catch {
           /* puste ciało */
         }
-        noteProxy(message);
-        throw new Error(message);
+        throw proxyError(body, `HTTP ${response.status}`);
       }
       return response.json();
     });
+  }
+
+  function proxyError(body, fallback) {
+    const message = body?.message || body?.error || fallback;
+    const error = new Error(message);
+    error.code = body?.error;
+    error.upgrade = body?.upgrade === true;
+    noteProxy(message);
+    return error;
   }
 
   function noteProxy(message) {
@@ -462,6 +534,7 @@
         queue.length = 0;
         warnedProxy = false;
         failedAt.clear();
+        if (settings.mode !== "demo") clearDemoLimit();
         if (!settings.enabled) {
           clearBadges();
           return;
