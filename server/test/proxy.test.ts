@@ -311,7 +311,11 @@ describe("proxy HTTP", { concurrency: false }, () => {
     const body = await second.json();
     assert.equal(first.status, 200);
     assert.equal(second.status, 429);
-    assert.equal(body.error, "daily_limited");
+    assert.equal(body.error, "demo_limit");
+    assert.equal(body.upgrade, true);
+    assert.equal(typeof body.message, "string");
+    assert.match(body.message, /Pro/);
+    assert.ok(second.headers.get("retry-after"));
     assert.equal(jevCalls.length, before + 1);
     if (previousDaily === undefined) delete process.env.EVALUATE_DAILY_IP_CAP;
     else process.env.EVALUATE_DAILY_IP_CAP = previousDaily;
@@ -451,10 +455,16 @@ describe("proxy HTTP", { concurrency: false }, () => {
         text: "I'm humbled and thrilled to announce that consistency is the ultimate leadership hack for everyone.",
       }),
     });
+    const demoBody = await demoBlocked.json();
     assert.equal(demo.status, 200);
     assert.equal(demoBlocked.status, 429);
-    assert.equal((await demoBlocked.json()).error, "daily_limited");
+    assert.equal(demoBody.error, "demo_limit");
+    assert.equal(demoBody.upgrade, true);
+    assert.match(demoBody.message, /Pro/);
+    assert.ok(demoBlocked.headers.get("retry-after"));
     assert.equal(pro.status, 200);
+    const proJson = await pro.json();
+    assert.equal(proJson.upgrade, undefined);
     if (previousDemo === undefined) delete process.env.DEMO_MODE;
     else process.env.DEMO_MODE = previousDemo;
     if (previousDaily === undefined) delete process.env.EVALUATE_DAILY_IP_CAP;
@@ -463,6 +473,76 @@ describe("proxy HTTP", { concurrency: false }, () => {
     else process.env.PRO_DAILY_CAP = previousProDaily;
     if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
     else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    if (previousTokens === undefined) delete process.env.PRO_TOKENS;
+    else process.env.PRO_TOKENS = previousTokens;
+    resetRateLimit();
+  });
+
+  it("DEMO_MODE: limit minutowy Demo to demo_limit, Pro zostaje rate_limited", async () => {
+    const previousDemo = process.env.DEMO_MODE;
+    const previousLimit = process.env.EVALUATE_RATE_LIMIT;
+    const previousPro = process.env.PRO_RATE_LIMIT;
+    const previousTokens = process.env.PRO_TOKENS;
+    process.env.DEMO_MODE = "1";
+    process.env.EVALUATE_RATE_LIMIT = "1";
+    process.env.PRO_RATE_LIMIT = "1";
+    process.env.PRO_TOKENS = "good-pro-token";
+    resetRateLimit();
+    resetVerdictCache();
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Forwarded-For": "203.0.113.92",
+    };
+    const before = jevCalls.length;
+    const text = "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.";
+    const first = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ postId: "urn:li:activity:min-demo", text }),
+    });
+    const blocked = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        postId: "urn:li:activity:min-demo-2",
+        text: "Hired two SDEs in Kraków last month. Both start Monday on the billing team.",
+      }),
+    });
+    const body = await blocked.json();
+    const proFirst = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: { ...headers, "X-Pro-Token": "good-pro-token" },
+      body: JSON.stringify({
+        postId: "urn:li:activity:min-pro",
+        text: "Hired two SDEs in Kraków last month. Both start Monday on the billing team.",
+      }),
+    });
+    const proBlocked = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: { ...headers, "X-Pro-Token": "good-pro-token" },
+      body: JSON.stringify({
+        postId: "urn:li:activity:min-pro-2",
+        text: "I'm humbled and thrilled to announce that consistency is the ultimate leadership hack for everyone.",
+      }),
+    });
+    const proBody = await proBlocked.json();
+    assert.equal(first.status, 200);
+    assert.equal(blocked.status, 429);
+    assert.equal(body.error, "demo_limit");
+    assert.equal(body.upgrade, true);
+    assert.match(body.message, /Pro/);
+    assert.ok(blocked.headers.get("retry-after"));
+    assert.equal(jevCalls.length, before + 2);
+    assert.equal(proFirst.status, 200);
+    assert.equal(proBlocked.status, 429);
+    assert.equal(proBody.error, "rate_limited");
+    assert.equal(proBody.upgrade, undefined);
+    if (previousDemo === undefined) delete process.env.DEMO_MODE;
+    else process.env.DEMO_MODE = previousDemo;
+    if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    if (previousPro === undefined) delete process.env.PRO_RATE_LIMIT;
+    else process.env.PRO_RATE_LIMIT = previousPro;
     if (previousTokens === undefined) delete process.env.PRO_TOKENS;
     else process.env.PRO_TOKENS = previousTokens;
     resetRateLimit();

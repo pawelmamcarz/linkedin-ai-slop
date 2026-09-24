@@ -74,6 +74,21 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.ok(badge!.classList.contains("lais-badge--slop"));
     assert.match(badge!.getAttribute("title") || "", /Intensywność: heavy/);
   });
+
+  it("limit Demo maluje informację o Pro, nie błąd", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    slop.setBadge(host, "info", {
+      labelPl: "Potrzebujesz Pro",
+      message:
+        "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.",
+    });
+    const badge = host.querySelector(".lais-badge");
+    assert.equal(badge!.textContent, "Potrzebujesz Pro");
+    assert.ok(badge!.classList.contains("lais-badge--info"));
+    assert.equal(badge!.classList.contains("lais-badge--error"), false);
+    assert.match(badge!.getAttribute("title") || "", /limit Demo/);
+  });
 });
 
 const activityFixture = readFileSync(

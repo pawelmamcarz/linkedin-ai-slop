@@ -26,6 +26,8 @@
       <h1>Plans</h1>
       <p class="lede">
         LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and Checkout is on.
+        The threshold slider (about 0.15 to 0.95, default 0.65) lives in the extension options. Lower means more „AI slop” badges.
+        <a href="index.html#threshold">How the slider works</a>.
       </p>
 
       <section>
@@ -37,7 +39,7 @@
         <h2>Hosted Demo</h2>
         <p>
           The default URL <code>https://proxy-production-ebcc.up.railway.app</code> is a public demo, not a paid plan.
-          The per-minute cap is about 60 scores per IP. The daily brake is in the code: <code>DEMO_MODE=1</code> means 40 scores per day when <code>EVALUATE_DAILY_IP_CAP</code> is unset.
+          The per-minute cap is about 60 scores per IP. The daily brake is in the code: <code>DEMO_MODE=1</code> means 200 scores per day when <code>EVALUATE_DAILY_IP_CAP</code> is unset.
           On Railway that brake applies only after the variable is set. Leave <code>DEMO_MODE</code> unset for local BYOK.
         </p>
       </section>

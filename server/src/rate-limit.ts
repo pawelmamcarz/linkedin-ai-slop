@@ -5,7 +5,7 @@ import type { Tier } from "./pro-tokens.ts";
 export const DEFAULT_EVALUATE_RATE_LIMIT = 60;
 export const DEFAULT_EVALUATE_RATE_WINDOW_MS = 60_000;
 /** Dobowy hamulec publicznego demo, gdy DEMO_MODE=1 i brak EVALUATE_DAILY_IP_CAP. */
-export const DEFAULT_DEMO_DAILY_IP_CAP = 40;
+export const DEFAULT_DEMO_DAILY_IP_CAP = 200;
 /** Pro: wyższe okno minutowe i dobowe niż anonimowe demo. 0 w env wyłącza dany hamulec. */
 export const DEFAULT_PRO_RATE_LIMIT = 300;
 export const DEFAULT_PRO_DAILY_CAP = 2000;
