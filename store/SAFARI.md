@@ -55,6 +55,7 @@ Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Rozszerzenie: `com.mamcarz.li
 - [ ] App Store Connect → New App, platforma macOS, Bundle ID `com.mamcarz.linkedinaislop`.
 - [ ] W Xcode ustaw Team na targetach LinkedInAISlop i LinkedInAISlop Extension (Signing & Capabilities). Albo lokalny plik `safari/Config/Local.xcconfig` (jest w `.gitignore`) z linią `DEVELOPMENT_TEAM = TWOJE_TEAM_ID`. W repo to pole zostaje puste.
 - [ ] Archiwum Release, nie Debug: Xcode → Product → Archive, albo `DEVELOPMENT_TEAM=TWOJE_TEAM_ID npm run safari:archive`.
+- [ ] Ikona aplikacji: `safari/LinkedInAISlop/Assets.xcassets` (`AppIcon`, w tym 512pt @2x = 1024×1024). Archiwum Release kompiluje z tego ICNS. Brak tego slotu daje błąd App Store Connect „Missing required icon … 512pt x 512pt @2x”.
 - [ ] Zrzuty: `store/screenshots/` (1280×800). Connect może poprosić o inny rozmiar macOS.
 - [ ] Privacy Policy URL: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 - [ ] Hardened Runtime jest włączony w Release (`ENABLE_HARDENED_RUNTIME` w `safari/Config/Release.xcconfig`). App Sandbox jest już w entitlements.
@@ -69,6 +70,7 @@ Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Rozszerzenie: `com.mamcarz.li
 - [ ] App Store Connect → New App, macOS platform, Bundle ID `com.mamcarz.linkedinaislop`.
 - [ ] In Xcode, set Team on LinkedInAISlop and LinkedInAISlop Extension (Signing & Capabilities). Or a local `safari/Config/Local.xcconfig` (gitignored) with `DEVELOPMENT_TEAM = YOUR_TEAM_ID`. The committed value stays empty.
 - [ ] Release archive, not the Debug ad-hoc build: Xcode → Product → Archive, or `DEVELOPMENT_TEAM=YOUR_TEAM_ID npm run safari:archive`.
+- [ ] App icon: `safari/LinkedInAISlop/Assets.xcassets` (`AppIcon`, including 512pt @2x = 1024×1024). A Release archive compiles the ICNS from that set. Without the 1024 slot, App Store Connect reports “Missing required icon … 512pt x 512pt @2x”.
 - [ ] Screenshots: `store/screenshots/` (1280×800). Connect may ask for another macOS size.
 - [ ] Privacy Policy URL: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 - [ ] Hardened Runtime is on for Release (`ENABLE_HARDENED_RUNTIME` in `safari/Config/Release.xcconfig`). App Sandbox is already in the entitlements.
