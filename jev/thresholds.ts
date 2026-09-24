@@ -18,7 +18,7 @@ export const SUBSTANCE_THRESHOLD = 0.5;
 export const INTENSITY_HUMAN_MAX = 0.75;
 export const INTENSITY_MIXED_MAX = 1.5;
 
-export const DEFAULT_PROXY_URL = "http://127.0.0.1:8787";
+export const DEFAULT_PROXY_URL = "https://proxy-production-ebcc.up.railway.app";
 export const DEFAULT_CONCURRENCY = 2;
 export const MIN_TEXT_CHARS = 40;
 export const MAX_TEXT_CHARS = 6000;

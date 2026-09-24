@@ -1,7 +1,7 @@
 const DEFAULTS = {
   enabled: true,
   threshold: 0.65,
-  proxyUrl: "http://127.0.0.1:8787",
+  proxyUrl: "https://proxy-production-ebcc.up.railway.app",
 };
 
 const enabledEl = document.querySelector("#enabled");
@@ -57,10 +57,12 @@ document.querySelector("#check").addEventListener("click", async () => {
       return;
     }
     if (response?.ok) {
-      statusEl.textContent = "Proxy działa, ale w server/.env nie ma TYPESAFE_API_KEY.";
+      statusEl.textContent = "Proxy działa, ale nie ma ustawionego TYPESAFE_API_KEY.";
       return;
     }
-    statusEl.textContent = response?.body?.message || "Brak połączenia z proxy. Czy `npm start` w server/ jest włączone?";
+    statusEl.textContent =
+      response?.body?.message ||
+      "Brak połączenia z proxy. Domyślny adres to hostowane proxy. Lokalne `npm start` w server/ jest potrzebne tylko przy własnym kluczu.";
   });
 });
 
@@ -70,9 +72,6 @@ async function ensureProxyPermission(proxyUrl) {
     origin = new URL(proxyUrl).origin + "/";
   } catch {
     return false;
-  }
-  if (origin.startsWith("http://127.0.0.1") || origin.startsWith("http://localhost")) {
-    return true;
   }
   const has = await chrome.permissions.contains({ origins: [origin] });
   if (has) return true;

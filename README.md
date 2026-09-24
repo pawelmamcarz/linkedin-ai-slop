@@ -2,15 +2,21 @@
 
 Rozszerzenie Chrome/Edge (Manifest V3) na feed LinkedIn. Przy scrollowaniu wyciąga tekst posta i pyta model **Jev** (TypeSafe System One), czy to AI-slop. Na karcie pojawia się odznaka: **Ludzki**, **Mieszany** albo **AI slop**.
 
-Klucz API zostaje w lokalnym proxy. Rozszerzenie go nie zawiera.
+Klucz API zostaje na proxy. Rozszerzenie go nie zawiera. Domyślnie proxy to publiczne demo:
 
-Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.github.io/linkedin-ai-slop/) — opis i statyczny podgląd odznak (`docs/`). Proxy z `TYPESAFE_API_KEY` nie jest hostowane na Pages.
+[https://proxy-production-ebcc.up.railway.app](https://proxy-production-ebcc.up.railway.app)
+
+Repozytorium jest publiczne: [https://github.com/pawelmamcarz/linkedin-ai-slop](https://github.com/pawelmamcarz/linkedin-ai-slop).
+
+Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.github.io/linkedin-ai-slop/) (opis, podgląd odznak, polityka prywatności w `docs/`). Na Pages nie ma klucza. `TYPESAFE_API_KEY` siedzi tylko w zmiennych Railway albo w lokalnym `server/.env`.
 
 ## Uruchomienie
 
 Potrzebny Node.js 20+.
 
 ### 1. Proxy
+
+Domyślne rozszerzenie woła już hostowane proxy. Własny klucz (BYOK) jest opcjonalny:
 
 ```bash
 cd server
@@ -28,10 +34,14 @@ npm install
 npm start
 ```
 
-Proxy słucha na `http://127.0.0.1:8787`.
+Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia `PORT`, a `HOST` jest puste, proces słucha na `0.0.0.0`. Na Railway `HOST` jest już `0.0.0.0` i ten wpis wygrywa. Port `8788` nie jest domyślny.
 
-- `GET /health` — czy proces żyje i czy klucz jest ustawiony (samej wartości nie zwraca)
-- `POST /evaluate` — jedno wywołanie Jev na post
+`railway.toml` w katalogu głównym ustawia build `npm --prefix server ci --include=dev` i start `npm --prefix server start`. W Railway **Root Directory musi być `/`**. Przy `/server` deploy pada: `Cannot find module '/jev/thresholds.ts' imported from /app/src/index.ts`, bo `server/src` importuje `../../jev`.
+
+Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund na adres IP**. Rozszerzenie trzyma równoległość 2 i kolejkę 40, więc szybki scroll potrafi zbliżyć się do ~60 ocen na minutę, gdy Jev odpowiada w około 2 s. Limit 30 na minutę ucinałby taką sesję. `EVALUATE_RATE_LIMIT=0` wyłącza limit (własne proxy). `GET /health` nie jest limitowany. Adres IP bierze się z pierwszego wpisu `X-Forwarded-For` (Railway). `TRUST_PROXY=0` ignoruje ten nagłówek.
+
+- `GET /` i `GET /health` — czy proces żyje i czy klucz jest ustawiony (samej wartości nie zwraca). Pole `model` pochodzi z `jev/questions.ts` (`jev-latest`)
+- `POST /evaluate` — jedno wywołanie Jev na post. Ciało: `postId`, `text`, opcjonalnie `author` i `threshold`
 - `GET /demo` — lokalny podgląd selektorów, bez logowania do LinkedIn
 
 Sprawdzenie bez przeglądarki:
@@ -58,7 +68,7 @@ z `"model": "jev-latest"` przez `@typesafe-ai/sdk`.
 1. Otwórz `chrome://extensions` (w Edge: `edge://extensions`).
 2. Włącz tryb dewelopera.
 3. **Załaduj rozpakowane** i wskaż katalog `extension/`.
-4. Ikona rozszerzenia: włącz ocenę, próg, adres proxy. Domyślny adres to `http://127.0.0.1:8787`. Przycisk **Sprawdź proxy** powinien pokazać model `jev-latest`.
+4. Ikona rozszerzenia: włącz ocenę, próg, adres proxy. Domyślny adres to `https://proxy-production-ebcc.up.railway.app`. Przycisk **Sprawdź proxy** powinien pokazać model `jev-latest`. Własny URL (także `http://127.0.0.1:8787`) zapisuje się w opcjach. Chrome pyta wtedy o zgodę na ten host.
 
 ### 3. Feed
 
@@ -106,9 +116,9 @@ server/             Node + TypeScript, trzyma TYPESAFE_API_KEY
 jev/                pytania i progi, do review
 ```
 
-CORS proxy puszcza `https://www.linkedin.com`, `localhost`, `127.0.0.1` oraz `chrome-extension://`. Rozszerzenie i tak woła proxy z service workera (uprawnienie hosta), więc ocena nie zależy od CORS strony.
+CORS proxy puszcza `https://www.linkedin.com`, `https://pawelmamcarz.github.io`, `localhost`, `127.0.0.1` oraz `chrome-extension://`. Rozszerzenie i tak woła proxy z service workera (uprawnienie hosta), więc ocena feedu nie zależy od CORS strony.
 
-Gdy zmienisz port, zaktualizuj adres w opcjach. Content script podglądu `/demo` jest podpięty tylko pod port **8787**.
+Gdy zmienisz port lokalnego proxy, zaktualizuj adres w opcjach. Content script podglądu `/demo` jest podpięty pod `http://127.0.0.1:8787` i `http://localhost:8787` jako opcjonalne uprawnienie, nie jako domyślny host.
 
 ## Gdy LinkedIn zmieni DOM
 
@@ -126,10 +136,18 @@ npm run typecheck
 
 Test proxy podmienia `fetch` do `api.typesafe.ai` i sprawdza, że wychodzi `POST /v1/systemone` z `model: jev-latest` i czterema pytaniami. Żywego klucza ten test nie wymaga.
 
+## Paczka Chrome Web Store
+
+```bash
+npm run pack:extension
+```
+
+Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md).
+
 ## Poza zakresem
 
-Chrome Web Store, aplikacja mobilna, wątki komentarzy.
+Aplikacja mobilna, wątki komentarzy. Wysłanie paczki do Chrome Web Store jest ręczne.
 
 ## Prywatność
 
-Tekst widocznego posta i opcjonalnie imię autora idą na `127.0.0.1`, a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w `chrome.storage.sync` tylko włącznik, próg i URL.
+Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w `chrome.storage.sync` tylko włącznik, próg i URL. Polityka: [docs/privacy.html](docs/privacy.html).

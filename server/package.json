@@ -15,13 +15,13 @@
   },
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0",
-    "dotenv": "^16.6.1"
+    "dotenv": "^16.6.1",
+    "tsx": "^4.20.5"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",
     "@types/node": "^22.18.6",
     "jsdom": "^26.1.0",
-    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }

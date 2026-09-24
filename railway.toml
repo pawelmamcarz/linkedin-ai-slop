@@ -1,0 +1,16 @@
+# rootDirectory na Railway musi być "/" (całe repo).
+# server/src/index.ts importuje ../../jev/*. Przy rootDirectory=/server
+# plik ląduje w /app/src/index.ts i Node szuka /jev/thresholds.ts, którego nie ma.
+# Build i start idą z katalogu głównego, żeby obraz zawierał jev/ i server/.
+
+[build]
+builder = "RAILPACK"
+buildCommand = "npm --prefix server ci --include=dev"
+watchPatterns = ["server/**", "jev/**", "railway.toml", "package.json"]
+
+[deploy]
+startCommand = "npm --prefix server start"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

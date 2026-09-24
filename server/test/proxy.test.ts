@@ -2,8 +2,10 @@ import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { Server } from "node:http";
 import { resetClient } from "../src/evaluate.ts";
-import { startServer } from "../src/index.ts";
+import { resolveListenHost, startServer } from "../src/index.ts";
+import { resetRateLimit } from "../src/rate-limit.ts";
 import { JEV_MODEL } from "../../jev/questions.ts";
+import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
 
 const originalFetch = globalThis.fetch;
 const jevCalls: { url: string; body: Record<string, unknown>; authorization: string }[] = [];
@@ -68,6 +70,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(body.model, JEV_MODEL);
     assert.equal(body.endpoint, "https://api.typesafe.ai/v1/systemone");
     assert.equal(body.hasApiKey, true);
+    assert.equal(body.defaultProxy, DEFAULT_PROXY_URL);
     assert.equal(JSON.stringify(body).includes("test-key"), false);
   });
 
@@ -115,6 +118,53 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(response.headers.get("access-control-allow-origin"), "https://www.linkedin.com");
   });
 
+  it("puszcza chrome-extension i GitHub Pages", async () => {
+    const extension = await fetch(`${base}/health`, {
+      headers: { Origin: "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
+    });
+    assert.equal(
+      extension.headers.get("access-control-allow-origin"),
+      "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef",
+    );
+    const pages = await fetch(`${base}/health`, {
+      headers: { Origin: "https://pawelmamcarz.github.io" },
+    });
+    assert.equal(pages.headers.get("access-control-allow-origin"), "https://pawelmamcarz.github.io");
+  });
+
+  it("POST /evaluate zwraca 429 po limicie na IP i nie woła Jev", async () => {
+    const previous = process.env.EVALUATE_RATE_LIMIT;
+    process.env.EVALUATE_RATE_LIMIT = "1";
+    resetRateLimit();
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Forwarded-For": "203.0.113.50",
+    };
+    const payload = JSON.stringify({
+      postId: "urn:li:activity:9",
+      text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+    });
+    const before = jevCalls.length;
+    const first = await fetch(`${base}/evaluate`, { method: "POST", headers, body: payload });
+    const second = await fetch(`${base}/evaluate`, { method: "POST", headers, body: payload });
+    const body = await second.json();
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 429);
+    assert.equal(body.error, "rate_limited");
+    assert.ok(second.headers.get("retry-after"));
+    assert.equal(jevCalls.length, before + 1);
+    if (previous === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previous;
+    resetRateLimit();
+  });
+
+  it("bez HOST, z PORT, nasłuch jest 0.0.0.0", () => {
+    assert.equal(resolveListenHost({}), "127.0.0.1");
+    assert.equal(resolveListenHost({ PORT: "8080" }), "0.0.0.0");
+    assert.equal(resolveListenHost({ PORT: "8080", HOST: "127.0.0.1" }), "127.0.0.1");
+    assert.equal(resolveListenHost({ HOST: "0.0.0.0" }), "0.0.0.0");
+  });
+
   it("zwraca 400 dla pustego tekstu i 503 bez klucza", async () => {
     const bad = await fetch(`${base}/evaluate`, {
       method: "POST",
@@ -125,6 +175,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
 
     delete process.env.TYPESAFE_API_KEY;
     resetClient();
+    const callsBeforeMissingKey = jevCalls.length;
     const missing = await fetch(`${base}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -136,7 +187,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
     const body = await missing.json();
     assert.equal(missing.status, 503);
     assert.equal(body.error, "missing_api_key");
-    assert.equal(jevCalls.length, 1);
+    assert.equal(jevCalls.length, callsBeforeMissingKey);
   });
 
   after(() => {
