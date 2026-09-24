@@ -33,6 +33,7 @@
     <header class="top top-wide">
       <a class="brand" href="index.html"><img class="brand-mark" src="../brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
       <nav>
+        <a href="pro.html">Plans</a>
         <a href="../demo.html">Demo</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Privacy</a>
@@ -130,6 +131,30 @@
         </article>
       </div>
 
+      <h2 class="section-title" id="plans">Plans</h2>
+      <p class="fine">LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and only after Checkout is turned on at the proxy.</p>
+      <div class="grid-3" style="margin-top: 12px">
+        <article class="card">
+          <p class="plan-kicker">Live today</p>
+          <h2>Free / BYOK</h2>
+          <p class="price">0 USD</p>
+          <p>Your own proxy and your own <code>TYPESAFE_API_KEY</code> in <code>server/.env</code>. In options pick BYOK and set the URL, for example <code>http://127.0.0.1:8787</code>. You set the limits.</p>
+        </article>
+        <article class="card">
+          <p class="plan-kicker">Live today, marketing</p>
+          <h2>Hosted Demo</h2>
+          <p class="price">0 USD</p>
+          <p>Public proxy <code>https://proxy-production-ebcc.up.railway.app</code>. This is not a paid plan. About 60 scores per minute per IP. The operator turns on a daily cap (<code>DEMO_MODE</code>, 40 per day when no explicit cap is set).</p>
+        </article>
+        <article class="card">
+          <p class="plan-kicker">Code ready, Checkout after keys</p>
+          <h2>Hosted Pro</h2>
+          <p class="price">from ~5 USD/mo or ~40 USD/yr</p>
+          <p>Same proxy stack, higher limits, a Pro token header. A one-time price around 9–19 USD is a fair way to talk about it, but Checkout is the monthly and yearly subscription. Without Stripe keys the button says “coming soon”.</p>
+          <p class="actions"><a class="button" href="pro.html">Open Pro</a></p>
+        </article>
+      </div>
+
       <h2 class="section-title">Demo proxy and your own key</h2>
       <div class="grid-2">
         <article class="card">
@@ -150,7 +175,7 @@
         <p>
           The proxy receives the post id, the text (up to 6000 characters), and optionally the name on the card.
           It does not write post text to disk. Memory holds a hash of the normalized text and the verdict, with a TTL, plus the per-IP request counter.
-          The extension stores only the toggle, the threshold, and the proxy URL in extension storage (<code>storage.sync</code>, or <code>storage.local</code> when sync is unavailable).
+          The extension stores the toggle, the threshold, the mode, the proxy URL, and an optional Pro token in extension storage (<code>storage.sync</code>, or <code>storage.local</code> when sync is unavailable). The TypeSafe key is not stored there.
           Details: <a href="privacy.html">privacy policy</a> and <a href="terms.html">terms</a>.
         </p>
       </aside>
@@ -178,6 +203,7 @@
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
+        <a href="pro.html">Plans</a>
         <a href="../demo.html">Demo</a>
         <a href="../index.html" hreflang="pl">Polski</a>
       </nav>

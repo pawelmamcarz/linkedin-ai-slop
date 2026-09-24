@@ -40,7 +40,13 @@ Lokalnie, bez `PORT`, proces słucha na `127.0.0.1:8787`. Gdy platforma ustawia 
 
 Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund na adres IP**. Rozszerzenie trzyma równoległość 2 i kolejkę 40, więc szybki scroll potrafi zbliżyć się do ~60 ocen na minutę, gdy Jev odpowiada w około 2 s. Limit 30 na minutę ucinałby taką sesję. `EVALUATE_RATE_LIMIT=0` wyłącza limit (własne proxy). `GET /health` nie jest limitowany. Adres IP bierze się z pierwszego wpisu `X-Forwarded-For` (Railway). `TRUST_PROXY=0` ignoruje ten nagłówek.
 
-Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła tekstu krótszego niż 40 znaków. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie). Opcjonalny dobowy limit: `EVALUATE_DAILY_IP_CAP` (liczba, `0` albo brak wyłącza).
+Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła tekstu krótszego niż 40 znaków. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie).
+
+Trzy warianty, bez mieszania cen: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
+
+`DEMO_MODE=1` włącza dobowy limit demo **40** na IP, gdy `EVALUATE_DAILY_IP_CAP` jest puste. Jawna wartość tej zmiennej wygrywa (`0` albo brak i brak `DEMO_MODE` wyłącza dobowy cap, tak jest lokalne BYOK). Na publicznym Railway ustaw `DEMO_MODE=1`.
+
+Token Pro: nagłówek `X-Pro-Token` albo `Authorization: Bearer`. Lista `PRO_TOKENS` (plain albo `sha256:<hex>`, po przecinku). Zły token to 401, bez zejścia na demo. Pro domyślnie **300/min** (`PRO_RATE_LIMIT`) i **2000/dobę** (`PRO_DAILY_CAP`). Kubełki demo i Pro są osobne. Token Pro nie jest kluczem TypeSafe i nie trafia do logów.
 
 Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego tekstu (trim, zbite białe znaki, obcięcie). Nie zapisuje treści posta ani klucza. Próg z żądania jest nakładany przy odczycie, więc trafienie nie woła TypeSafe i zwraca ten sam kształt JSON co świeża ocena. Nagłówek `X-Cache` to `HIT` albo `MISS`.
 
@@ -50,9 +56,16 @@ Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego t
 | `VERDICT_CACHE_TTL_MS` | 12 godzin | czas życia wpisu |
 | `VERDICT_CACHE_MAX` | 2000 | nadmiar usuwa najstarsze wpisy |
 | `LOG_TOKEN_USAGE` | włączony | `0` wyłącza log. `1` też włącza |
-| `EVALUATE_DAILY_IP_CAP` | `0` | dobowy limit ocen na IP |
+| `EVALUATE_DAILY_IP_CAP` | `0` (albo 40 przy `DEMO_MODE=1`) | dobowy limit ocen demo na IP |
+| `DEMO_MODE` | wyłączony | `1` włącza domyślny cap demo 40 |
+| `PRO_TOKENS` | puste | tokeny Pro, plain albo `sha256:` |
+| `PRO_RATE_LIMIT` | 300 | ocen Pro na minutę na IP |
+| `PRO_DAILY_CAP` | 2000 | ocen Pro na dobę na IP |
+| `STRIPE_SECRET_KEY` | puste | Checkout Session; puste = „wkrótce” |
+| `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY` | puste | price id ~5 USD/mies. i ~40 USD/rok |
+| `STRIPE_WEBHOOK_SECRET` | puste | podpis webhooka, wydanie i cofnięcie tokenu |
 
-Log na stdout jest jednym obiektem JSON: `event`, `cache`, `input_tokens`, `output_tokens`, `model`, `text_chars`. Bez treści posta i bez klucza. `GET /health` dopisuje `cache` (liczba wpisów, trafienia, pudła, hit rate) i `dailyIpCap`. Samej wartości klucza nie zwraca.
+Log na stdout jest jednym obiektem JSON: `event`, `tier` (`demo` albo `pro`), `cache`, `input_tokens`, `output_tokens`, `model`, `text_chars`. Bez treści posta, bez klucza i bez tokenu Pro. `GET /health` dopisuje `cache`, `tier`, `dailyIpCap` i `stripeCheckout`. Samej wartości klucza nie zwraca. Zły token Pro na `/health` i `/evaluate` daje 401.
 
 Sprawdzenie cache lokalnie (dwa identyczne `POST /evaluate`, drugie ma `X-Cache: HIT` i nie woła Jev):
 
@@ -146,7 +159,7 @@ extension/          jedna paczka Chromium (Chrome, Brave, Edge) i źródło Safa
   ext-api.js        chrome.* albo browser.*, storage.sync z zejściem na local
   content.js        MutationObserver + IntersectionObserver, deduplikacja, debounce, max 2 żądania naraz
   background.js     fetch do proxy (klucz tu nie występuje)
-  options.html      włącznik, próg, URL proxy
+  options.html      tryb Demo / BYOK / Pro, próg, URL proxy, token Pro
 safari/             wrapper Xcode; build kopiuje extension/ do bundla
 server/             Node + TypeScript, trzyma TYPESAFE_API_KEY
   POST /evaluate    { postId, text, author? } → mapowanie na odznakę
@@ -187,4 +200,4 @@ Aplikacja mobilna, wątki komentarzy. Wysłanie paczki do Chrome Web Store jest 
 
 ## Prywatność
 
-Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w storage przeglądarki tylko włącznik, próg i URL. Polityka: [docs/privacy.html](docs/privacy.html).
+Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w storage przeglądarki włącznik, próg, tryb, URL i opcjonalny token Pro. Klucza TypeSafe tam nie ma. Polityka: [docs/privacy.html](docs/privacy.html).

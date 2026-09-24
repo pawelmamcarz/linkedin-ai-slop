@@ -16,7 +16,7 @@ const DEFAULT_PROXY = "https://proxy-production-ebcc.up.railway.app";
 
 ExtApi.onMessage((message) => {
   if (!message || (message.type !== "evaluate" && message.type !== "health")) return undefined;
-  const task = message.type === "health" ? health(message.proxyUrl) : evaluate(message.payload);
+  const task = message.type === "health" ? health(message.proxyUrl, message.proToken) : evaluate(message.payload);
   return task.catch((error) => ({
     ok: false,
     status: 0,
@@ -29,15 +29,28 @@ ExtApi.onMessage((message) => {
 
 async function proxyBase(override) {
   if (override) return String(override).replace(/\/$/, "");
-  const stored = await ExtApi.storageGet({ proxyUrl: DEFAULT_PROXY });
-  return String(stored.proxyUrl || DEFAULT_PROXY).replace(/\/$/, "");
+  const stored = await ExtApi.storageGet({});
+  return ExtApi.resolveSettings(stored).proxyUrl;
+}
+
+async function proHeaders(explicitToken) {
+  if (typeof explicitToken === "string") {
+    const token = explicitToken.trim();
+    return token ? { "X-Pro-Token": token } : {};
+  }
+  const stored = await ExtApi.storageGet({});
+  const token = ExtApi.resolveSettings(stored).proToken;
+  return token ? { "X-Pro-Token": token } : {};
 }
 
 async function evaluate(payload) {
   const base = await proxyBase(payload?.proxyUrl);
   const response = await fetch(`${base}/evaluate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(await proHeaders()),
+    },
     body: JSON.stringify({
       postId: payload?.postId,
       text: payload?.text,
@@ -49,9 +62,9 @@ async function evaluate(payload) {
   return { ok: response.ok, status: response.status, body };
 }
 
-async function health(proxyUrl) {
+async function health(proxyUrl, proToken) {
   const base = await proxyBase(proxyUrl);
-  const response = await fetch(`${base}/health`);
+  const response = await fetch(`${base}/health`, { headers: await proHeaders(proToken) });
   const body = await response.json().catch(() => ({ error: "bad_response" }));
   return { ok: response.ok, status: response.status, body };
 }

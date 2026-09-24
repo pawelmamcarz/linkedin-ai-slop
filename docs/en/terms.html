@@ -41,7 +41,7 @@
           The demo accepts up to 60 <code>POST /evaluate</code> requests per minute from one IP address.
           Text is cut at 6000 characters. Repeated, normalized text may get a cached verdict and then
           does not call the model again. The operator may turn on a daily cap with
-          <code>EVALUATE_DAILY_IP_CAP</code>. For serious use, run your own proxy and your own key.
+          <code>EVALUATE_DAILY_IP_CAP</code> or <code>DEMO_MODE</code>. Hosted Pro (a token, higher limits, about 5 USD per month or 40 USD per year) works when the operator turns Stripe on. Otherwise run your own proxy and your own key.
         </p>
       </section>
       <section>

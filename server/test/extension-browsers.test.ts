@@ -18,6 +18,12 @@ type ExtApi = {
   permissionsContains: (origin: string) => Promise<boolean>;
   permissionsRequest: (origin: string) => Promise<boolean>;
   sendMessage: (message: unknown) => Promise<unknown>;
+  resolveSettings: (stored: Record<string, unknown>) => {
+    mode: string;
+    proxyUrl: string;
+    proToken: string;
+    byokProxyUrl: string;
+  };
 };
 
 function loadApi(): ExtApi {
@@ -158,6 +164,27 @@ describe("manifest Firefox", () => {
       entry.matches.some((match) => match.includes("linkedin.com")),
     );
     assert.ok(linkedIn.matches.includes("*://*.linkedin.com/*"));
+  });
+});
+
+describe("tryby proxy", () => {
+  it("rozróżnia demo, BYOK i Pro bez wysyłania klucza TypeSafe", () => {
+    const api = loadApi();
+    const demo = api.resolveSettings({ proxyUrl: "https://proxy-production-ebcc.up.railway.app" });
+    assert.equal(demo.mode, "demo");
+    assert.equal(demo.proToken, "");
+    const byok = api.resolveSettings({ proxyUrl: "http://127.0.0.1:8787" });
+    assert.equal(byok.mode, "byok");
+    assert.equal(byok.proxyUrl, "http://127.0.0.1:8787");
+    const pro = api.resolveSettings({
+      mode: "pro",
+      proToken: " pro_secret ",
+      byokProxyUrl: "http://127.0.0.1:8787",
+    });
+    assert.equal(pro.mode, "pro");
+    assert.equal(pro.proxyUrl, "https://proxy-production-ebcc.up.railway.app");
+    assert.equal(pro.proToken, "pro_secret");
+    assert.equal(JSON.stringify(pro).includes("TYPESAFE"), false);
   });
 });
 

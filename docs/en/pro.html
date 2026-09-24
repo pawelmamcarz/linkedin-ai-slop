@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plans: LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Free BYOK, Hosted Demo, and Hosted Pro for LinkedIn AI Slop. Pro from about 5 USD per month or 40 USD per year."
+    />
+    <link rel="canonical" href="https://pawelmamcarz.github.io/linkedin-ai-slop/en/pro.html" />
+    <link rel="icon" href="../favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html"><img class="brand-mark" src="../brand/mark.png" width="28" height="28" alt="" /> LinkedIn AI Slop</a>
+      <nav>
+        <a href="pro.html" aria-current="page">Plans</a>
+        <a href="../demo.html">Demo</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a class="lang-link" href="../pro.html" hreflang="pl">PL</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>Plans</h1>
+      <p class="lede">
+        LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and it starts only after Stripe keys are set on the proxy.
+      </p>
+
+      <section>
+        <h2>Free / BYOK</h2>
+        <p>You run <code>server/</code> and put your own <code>TYPESAFE_API_KEY</code> in <code>server/.env</code>. In the extension options pick BYOK and the proxy URL. The key never enters the extension. This mode is live.</p>
+      </section>
+
+      <section>
+        <h2>Hosted Demo</h2>
+        <p>
+          The default URL <code>https://proxy-production-ebcc.up.railway.app</code> is a public demo, not a paid plan.
+          The per-minute cap is about 60 scores per IP. The daily brake is in the code: <code>DEMO_MODE=1</code> means 40 scores per day when <code>EVALUATE_DAILY_IP_CAP</code> is unset.
+          On Railway that brake applies only after the variable is set. Leave <code>DEMO_MODE</code> unset for local BYOK.
+        </p>
+      </section>
+
+      <section>
+        <h2>Hosted Pro</h2>
+        <p>
+          Price: from about <strong>5 USD per month</strong> or about <strong>40 USD per year</strong>.
+          A one-time price around 9–19 USD is a fair way to describe it, but Checkout sells a monthly or yearly subscription, not a one-time charge.
+        </p>
+        <p>
+          After payment the proxy shows a Pro token. Paste it in options (Pro mode). The extension sends <code>X-Pro-Token</code>. That is not the TypeSafe key.
+          Pro has higher limits (300 per minute and 2000 per day per IP by default).
+        </p>
+        <p>
+          The token gate is in the code. Checkout on the live proxy turns on only when Railway has <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_PRICE_MONTHLY</code> or <code>STRIPE_PRICE_YEARLY</code>.
+          Without those, the links below return a “coming soon” page and point at GitHub.
+        </p>
+        <p class="actions">
+          <a class="button" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=monthly">Checkout: about 5 USD / month</a>
+          <a class="button button-quiet" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=yearly">Checkout: about 40 USD / year</a>
+        </p>
+        <p class="note">If Checkout is not configured, write via <a href="https://github.com/pawelmamcarz/linkedin-ai-slop/issues">GitHub Issues</a>.</p>
+      </section>
+
+      <p class="actions">
+        <a class="button button-quiet" href="index.html">Back</a>
+        <a class="button button-quiet" href="../pro.html" hreflang="pl">Polski</a>
+      </p>
+    </main>
+  </body>
+</html>

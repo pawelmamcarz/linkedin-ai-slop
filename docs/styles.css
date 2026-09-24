@@ -476,6 +476,23 @@ code {
 
 .project:hover { border-color: var(--ink); }
 
+.plan-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.price {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
 .section-title {
   margin: 28px 0 10px;
   font-size: 22px;

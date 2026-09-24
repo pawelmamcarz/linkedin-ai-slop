@@ -1,9 +1,11 @@
 import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { Server } from "node:http";
+import { createHmac } from "node:crypto";
 import { resetClient } from "../src/evaluate.ts";
 import { resolveListenHost, startServer } from "../src/index.ts";
-import { resetRateLimit } from "../src/rate-limit.ts";
+import { issuedTokenForCustomer, resetProTokens, tokenDigest } from "../src/pro-tokens.ts";
+import { DEFAULT_DEMO_DAILY_IP_CAP, resetRateLimit } from "../src/rate-limit.ts";
 import { resetVerdictCache } from "../src/verdict-cache.ts";
 import { JEV_MODEL } from "../../jev/questions.ts";
 import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
@@ -124,7 +126,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(response.headers.get("access-control-allow-origin"), "https://www.linkedin.com");
   });
 
-  it("puszcza chrome-extension, safari-web-extension i GitHub Pages", async () => {
+  it("puszcza chrome-extension, moz-extension, safari-web-extension i GitHub Pages", async () => {
     const extension = await fetch(`${base}/health`, {
       headers: { Origin: "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
     });
@@ -132,6 +134,22 @@ describe("proxy HTTP", { concurrency: false }, () => {
       extension.headers.get("access-control-allow-origin"),
       "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef",
     );
+    const firefox = await fetch(`${base}/health`, {
+      headers: { Origin: "moz-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
+    });
+    assert.equal(
+      firefox.headers.get("access-control-allow-origin"),
+      "moz-extension://abcdefghijklmnopqrstuvwxyzabcdef",
+    );
+    const preflight = await fetch(`${base}/evaluate`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef",
+        "Access-Control-Request-Headers": "content-type,x-pro-token",
+      },
+    });
+    assert.equal(preflight.status, 204);
+    assert.match(preflight.headers.get("access-control-allow-headers") ?? "", /X-Pro-Token/);
     const safari = await fetch(`${base}/health`, {
       headers: { Origin: "safari-web-extension://abcdefghijklmnopqrstuvwxyzabcdef" },
     });
@@ -300,6 +318,221 @@ describe("proxy HTTP", { concurrency: false }, () => {
     if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
     else process.env.EVALUATE_RATE_LIMIT = previousLimit;
     resetRateLimit();
+  });
+
+  it("zły token Pro dostaje 401 i nie woła Jev", async () => {
+    const previous = process.env.PRO_TOKENS;
+    process.env.PRO_TOKENS = "good-pro-token";
+    resetRateLimit();
+    const before = jevCalls.length;
+    const response = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Pro-Token": "not-the-token",
+      },
+      body: JSON.stringify({
+        postId: "urn:li:activity:bad",
+        text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+      }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 401);
+    assert.equal(body.error, "invalid_pro_token");
+    assert.equal(jevCalls.length, before);
+    assert.equal(JSON.stringify(body).includes("not-the-token"), false);
+    if (previous === undefined) delete process.env.PRO_TOKENS;
+    else process.env.PRO_TOKENS = previous;
+  });
+
+  it("anonimowy limit minutowy nie blokuje tokenu Pro", async () => {
+    const previousLimit = process.env.EVALUATE_RATE_LIMIT;
+    const previousPro = process.env.PRO_RATE_LIMIT;
+    const previousTokens = process.env.PRO_TOKENS;
+    process.env.EVALUATE_RATE_LIMIT = "1";
+    process.env.PRO_RATE_LIMIT = "2";
+    process.env.PRO_TOKENS = `sha256:${tokenDigest("hashed-pro-token")}`;
+    resetRateLimit();
+    resetVerdictCache();
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Forwarded-For": "203.0.113.90",
+    };
+    const demoBody = JSON.stringify({
+      postId: "urn:li:activity:demo-limit",
+      text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+    });
+    const first = await fetch(`${base}/evaluate`, { method: "POST", headers, body: demoBody });
+    const blocked = await fetch(`${base}/evaluate`, { method: "POST", headers, body: demoBody });
+    const proHeaders = { ...headers, Authorization: "Bearer hashed-pro-token" };
+    const proText = "Hired two SDEs in Kraków last month. Both start Monday on the billing team.";
+    const proFirst = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: proHeaders,
+      body: JSON.stringify({ postId: "urn:li:activity:pro-1", text: proText }),
+    });
+    const proSecond = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: proHeaders,
+      body: JSON.stringify({ postId: "urn:li:activity:pro-2", text: `${proText} Extra note.` }),
+    });
+    const proThird = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: proHeaders,
+      body: JSON.stringify({ postId: "urn:li:activity:pro-3", text: "I'm humbled and thrilled to announce that consistency is the ultimate leadership hack for everyone." }),
+    });
+    const proLimited = await proThird.json();
+    assert.equal(first.status, 200);
+    assert.equal(blocked.status, 429);
+    assert.equal((await blocked.json()).error, "rate_limited");
+    assert.equal(proFirst.status, 200);
+    assert.equal(proSecond.status, 200);
+    assert.equal(proThird.status, 429);
+    assert.equal(proLimited.error, "rate_limited");
+    const health = await fetch(`${base}/health`, { headers: { "X-Pro-Token": "hashed-pro-token" } });
+    const healthBody = await health.json();
+    assert.equal(healthBody.tier, "pro");
+    assert.equal(JSON.stringify(healthBody).includes("hashed-pro-token"), false);
+    if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    if (previousPro === undefined) delete process.env.PRO_RATE_LIMIT;
+    else process.env.PRO_RATE_LIMIT = previousPro;
+    if (previousTokens === undefined) delete process.env.PRO_TOKENS;
+    else process.env.PRO_TOKENS = previousTokens;
+    resetRateLimit();
+  });
+
+  it("DEMO_MODE ustawia dobowy limit demo, a Pro ma osobny kubełek", async () => {
+    const previousDemo = process.env.DEMO_MODE;
+    const previousDaily = process.env.EVALUATE_DAILY_IP_CAP;
+    const previousProDaily = process.env.PRO_DAILY_CAP;
+    const previousLimit = process.env.EVALUATE_RATE_LIMIT;
+    const previousTokens = process.env.PRO_TOKENS;
+    process.env.DEMO_MODE = "1";
+    delete process.env.EVALUATE_DAILY_IP_CAP;
+    process.env.PRO_DAILY_CAP = "2";
+    process.env.EVALUATE_RATE_LIMIT = "0";
+    process.env.PRO_TOKENS = "good-pro-token";
+    resetRateLimit();
+    const health = await fetch(`${base}/health`);
+    const healthBody = await health.json();
+    assert.equal(healthBody.tier, "demo");
+    assert.equal(healthBody.demoMode, true);
+    assert.equal(healthBody.dailyIpCap, DEFAULT_DEMO_DAILY_IP_CAP);
+    assert.equal(healthBody.stripeCheckout, false);
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Forwarded-For": "203.0.113.91",
+      "X-Pro-Token": "good-pro-token",
+    };
+    process.env.EVALUATE_DAILY_IP_CAP = "1";
+    resetRateLimit();
+    const demo = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "203.0.113.91" },
+      body: JSON.stringify({
+        postId: "urn:li:activity:cap-demo",
+        text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+      }),
+    });
+    const demoBlocked = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": "203.0.113.91" },
+      body: JSON.stringify({
+        postId: "urn:li:activity:cap-demo-2",
+        text: "Hired two SDEs in Kraków last month. Both start Monday on the billing team.",
+      }),
+    });
+    const pro = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        postId: "urn:li:activity:cap-pro",
+        text: "I'm humbled and thrilled to announce that consistency is the ultimate leadership hack for everyone.",
+      }),
+    });
+    assert.equal(demo.status, 200);
+    assert.equal(demoBlocked.status, 429);
+    assert.equal((await demoBlocked.json()).error, "daily_limited");
+    assert.equal(pro.status, 200);
+    if (previousDemo === undefined) delete process.env.DEMO_MODE;
+    else process.env.DEMO_MODE = previousDemo;
+    if (previousDaily === undefined) delete process.env.EVALUATE_DAILY_IP_CAP;
+    else process.env.EVALUATE_DAILY_IP_CAP = previousDaily;
+    if (previousProDaily === undefined) delete process.env.PRO_DAILY_CAP;
+    else process.env.PRO_DAILY_CAP = previousProDaily;
+    if (previousLimit === undefined) delete process.env.EVALUATE_RATE_LIMIT;
+    else process.env.EVALUATE_RATE_LIMIT = previousLimit;
+    if (previousTokens === undefined) delete process.env.PRO_TOKENS;
+    else process.env.PRO_TOKENS = previousTokens;
+    resetRateLimit();
+  });
+
+  it("checkout bez kluczy Stripe mówi wkrótce, a webhook wydaje i cofa token", async () => {
+    delete process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_PRICE_MONTHLY;
+    const unavailable = await fetch(`${base}/billing/checkout?plan=monthly`);
+    const page = await unavailable.text();
+    assert.equal(unavailable.status, 503);
+    assert.match(page, /wkrótce/);
+    const post = await fetch(`${base}/billing/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "yearly" }),
+    });
+    assert.equal(post.status, 503);
+    assert.equal((await post.json()).error, "checkout_unconfigured");
+
+    process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_only";
+    resetProTokens();
+    const payload = JSON.stringify({
+      type: "checkout.session.completed",
+      data: { object: { customer: "cus_test", payment_status: "paid", status: "complete" } },
+    });
+    const stamp = Math.floor(Date.now() / 1000);
+    const signature = createHmac("sha256", "whsec_test_only").update(`${stamp}.${payload}`).digest("hex");
+    const issued = await fetch(`${base}/billing/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Stripe-Signature": `t=${stamp},v1=${signature}`,
+      },
+      body: payload,
+    });
+    assert.equal(issued.status, 200);
+    const token = issuedTokenForCustomer("cus_test");
+    assert.ok(token?.startsWith("pro_"));
+    const rejected = await fetch(`${base}/billing/webhook`, {
+      method: "POST",
+      headers: { "Stripe-Signature": "t=1,v1=deadbeef" },
+      body: payload,
+    });
+    assert.equal(rejected.status, 400);
+
+    const revokePayload = JSON.stringify({
+      type: "customer.subscription.deleted",
+      data: { object: { customer: "cus_test", status: "canceled" } },
+    });
+    const revokeStamp = Math.floor(Date.now() / 1000);
+    const revokeSig = createHmac("sha256", "whsec_test_only").update(`${revokeStamp}.${revokePayload}`).digest("hex");
+    const revoked = await fetch(`${base}/billing/webhook`, {
+      method: "POST",
+      headers: { "Stripe-Signature": `t=${revokeStamp},v1=${revokeSig}` },
+      body: revokePayload,
+    });
+    assert.equal(revoked.status, 200);
+    assert.equal(issuedTokenForCustomer("cus_test"), null);
+    const denied = await fetch(`${base}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Pro-Token": token ?? "" },
+      body: JSON.stringify({
+        postId: "urn:li:activity:revoked",
+        text: "Shipped the billing retry last Tuesday. Failure rate dropped from 4.1% to 0.6%.",
+      }),
+    });
+    assert.equal(denied.status, 401);
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+    resetProTokens();
   });
 
   after(() => {
