@@ -25,7 +25,7 @@
     <main class="wrap">
       <h1>Plans</h1>
       <p class="lede">
-        LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and it starts only after Stripe keys are set on the proxy.
+        LinkedIn only. The extension is free. Hosted Pro is the only paid tier, and Checkout is on.
       </p>
 
       <section>
@@ -46,21 +46,16 @@
         <h2>Hosted Pro</h2>
         <p>
           Price: from about <strong>5 USD per month</strong> or about <strong>40 USD per year</strong>.
-          A one-time price around 9–19 USD is a fair way to describe it, but Checkout sells a monthly or yearly subscription, not a one-time charge.
+          Monthly or yearly subscription via Stripe Checkout.
         </p>
         <p>
-          After payment the proxy shows a Pro token. Paste it in options (Pro mode). The extension sends <code>X-Pro-Token</code>. That is not the TypeSafe key.
-          Pro has higher limits (300 per minute and 2000 per day per IP by default).
-        </p>
-        <p>
-          The token gate is in the code. Checkout on the live proxy turns on only when Railway has <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_PRICE_MONTHLY</code> or <code>STRIPE_PRICE_YEARLY</code>.
-          Without those, the links below return a “coming soon” page and point at GitHub.
+          The public proxy with higher limits. After you pay, you get a Pro token and paste it in the extension options.
+          Demo has lower daily caps. Pro is for heavier use.
         </p>
         <p class="actions">
           <a class="button" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=monthly">Checkout: about 5 USD / month</a>
           <a class="button button-quiet" href="https://proxy-production-ebcc.up.railway.app/billing/checkout?plan=yearly">Checkout: about 40 USD / year</a>
         </p>
-        <p class="note">If Checkout is not configured, write via <a href="https://github.com/pawelmamcarz/linkedin-ai-slop/issues">GitHub Issues</a>.</p>
       </section>
 
       <p class="actions">
