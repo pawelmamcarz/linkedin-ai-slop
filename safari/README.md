@@ -16,6 +16,16 @@ Debug jest ad-hoc (`CODE_SIGN_IDENTITY = -`, `CODE_SIGNING_REQUIRED = NO`, puste
 
 `MARKETING_VERSION` jest w `safari/Config/Shared.xcconfig` i ma być równy `extension/manifest.json` (teraz 0.2.1). Skrypty build i archive i tak podają wersję z manifestu do `xcodebuild`.
 
+Bundle id aplikacji: `com.mamcarz.linkedinaislop`. Safari Web Extension: `com.mamcarz.linkedinaislop.extension`.
+
+Zanim utworzysz aplikację w App Store Connect:
+
+1. Na https://developer.apple.com/account/resources/identifiers/list zrób Register App ID `com.mamcarz.linkedinaislop` (macOS).
+2. Register App ID `com.mamcarz.linkedinaislop.extension` (macOS).
+3. Dopiero potem App Store Connect → Apps → New App, platforma macOS, Bundle ID `com.mamcarz.linkedinaislop`.
+
+Pełna checklista: [`store/SAFARI.md`](../store/SAFARI.md).
+
 Wymagane: macOS 13+, Safari 16.4+, Xcode. Ta maszyna CI jest Linuxem i nie buduje `.app`.
 
 ## Jedna komenda na Macu
@@ -64,7 +74,7 @@ Gdy wolisz projekt wygenerowany przez Xcode:
 xcrun safari-web-extension-converter extension \
   --project-location safari/converted \
   --app-name "LinkedIn AI Slop" \
-  --bundle-identifier com.pawelmamcarz.linkedin-ai-slop \
+  --bundle-identifier com.mamcarz.linkedinaislop \
   --swift \
   --macos-only \
   --copy-resources \
