@@ -6,7 +6,7 @@
     <title>LinkedIn AI Slop</title>
     <meta
       name="description"
-      content="Rozszerzenie Chrome, które oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena przez TypeSafe Jev. Klucz zostaje w lokalnym proxy, nie na tej stronie."
+      content="Rozszerzenie Chrome, które oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena przez TypeSafe Jev (model jev-latest). Klucz TYPESAFE_API_KEY zostaje na proxy."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -16,13 +16,15 @@
       <nav>
         <a href="demo.html">Podgląd</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
       </nav>
     </header>
     <main class="wrap">
       <h1>LinkedIn AI Slop</h1>
       <p class="lede">
         Rozszerzenie do Chrome i Edge. Przy scrollowaniu feedu LinkedIn na karcie
-        pojawia się odznaka.
+        pojawia się odznaka. Kod jest publiczny:
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
       </p>
       <ul class="pills" aria-label="Rodzaje odznak">
         <li class="lais-badge lais-badge--human lais-badge--inline">Ludzki</li>
@@ -58,10 +60,14 @@
 
       <section>
         <h2>Instalacja z repozytorium</h2>
-        <p>Rozszerzenia nie ma w Chrome Web Store. Ładuje się je z GitHuba.</p>
+        <p>
+          Możesz załadować katalog <code>extension/</code> z publicznego repozytorium
+          albo paczkę <code>store/linkedin-ai-slop-extension.zip</code>
+          (<code>npm run pack:extension</code>).
+        </p>
         <ol class="steps">
           <li>
-            Sklonuj albo pobierz
+            Pobierz
             <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
           </li>
           <li>
@@ -70,24 +76,30 @@
           </li>
           <li>
             Wybierz <strong>Załaduj rozpakowane</strong> i wskaż katalog
-            <code>extension/</code>.
+            <code>extension/</code> (albo rozpakowany zip).
           </li>
           <li>
-            W opcjach rozszerzenia włącz ocenę. Domyślny adres proxy to
-            <code>http://127.0.0.1:8787</code>. Przycisk <strong>Sprawdź proxy</strong>
-            powinien pokazać model <code>jev-latest</code>.
+            W opcjach włącz ocenę. Domyślny adres proxy to
+            <code>https://proxy-production-ebcc.up.railway.app</code>.
+            Przycisk <strong>Sprawdź proxy</strong> powinien pokazać model
+            <code>jev-latest</code>.
           </li>
         </ol>
       </section>
 
       <aside class="callout">
-        <h2>Proxy zostaje u Ciebie</h2>
+        <h2>Hostowane proxy i własny klucz</h2>
         <p>
-          Node trzyma <code>TYPESAFE_API_KEY</code> i woła Jev. Uruchamiasz je
-          lokalnie (<code>cd server</code>, potem <code>npm install</code> i
-          <code>npm start</code>) albo na innym hoście, który sam prowadzisz.
-          GitHub Pages serwuje tylko pliki z <code>docs/</code>. Nie ma tu
-          procesu Node, nie ma klucza i ta strona sama nie woła TypeSafe.
+          Domyślne proxy jest na Railway. Klucz <code>TYPESAFE_API_KEY</code> zostaje
+          po stronie serwera. Ta strona go nie ma i sama nie woła TypeSafe.
+          Własne proxy jest opcjonalne: <code>cd server</code>, potem
+          <code>npm install</code> i <code>npm start</code>, a w opcjach rozszerzenia
+          adres <code>http://127.0.0.1:8787</code>. GitHub Pages serwuje tylko pliki
+          z <code>docs/</code>.
+        </p>
+        <p>
+          Publiczne <code>POST /evaluate</code> przyjmuje do 60 żądań na minutę
+          z jednego adresu IP, żeby demo nie wypaliło klucza.
         </p>
       </aside>
 

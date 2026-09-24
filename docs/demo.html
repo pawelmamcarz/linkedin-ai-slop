@@ -16,6 +16,7 @@
       <nav>
         <a href="demo.html" aria-current="page">Podgląd</a>
         <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html">Prywatność</a>
       </nav>
     </header>
     <div class="wrap">
@@ -48,11 +49,14 @@
         </div>
         <p>
           Żywa ocena woła <code>POST /evaluate</code> na podanym adresie. Klucz
-          <code>TYPESAFE_API_KEY</code> zostaje na proxy — ta strona go nie
-          przyjmuje. Pages jest na HTTPS, więc <code>http://127.0.0.1</code>
-          przeglądarka zwykle blokuje. Proxy musi być osiągalne po HTTPS, a
-          jego <code>CORS_ORIGIN</code> musi puszczać tę stronę. Rozszerzenie
-          i tak woła proxy ze swojego service workera, nie stąd.
+          <code>TYPESAFE_API_KEY</code> zostaje na proxy. Ta strona go nie
+          przyjmuje. Publiczne demo:
+          <code>https://proxy-production-ebcc.up.railway.app</code>
+          (do 60 ocen na minutę z jednego IP). Lokalne proxy zostaw dla własnego
+          klucza. Pages jest na HTTPS, więc <code>http://127.0.0.1</code>
+          przeglądarka zwykle blokuje. Serwer puszcza origin tej strony
+          (<code>https://pawelmamcarz.github.io</code>). Rozszerzenie i tak woła
+          proxy ze swojego service workera, nie stąd.
         </p>
         <p id="proxy-status" role="status"></p>
       </form>

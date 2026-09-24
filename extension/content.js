@@ -21,7 +21,7 @@
   const DEFAULTS = {
     enabled: true,
     threshold: 0.65,
-    proxyUrl: "http://127.0.0.1:8787",
+    proxyUrl: "https://proxy-production-ebcc.up.railway.app",
   };
 
   const MIN_TEXT_CHARS = 40;

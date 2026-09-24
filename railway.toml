@@ -1,0 +1,14 @@
+# Serwis Railway „proxy” buduje się z katalogu głównego repozytorium.
+# server/src importuje ../../jev, więc rootDirectory nie może być samym /server.
+# Dashboard: build `npm --prefix server ci`, start `npm --prefix server start`.
+
+[build]
+builder = "RAILPACK"
+buildCommand = "npm --prefix server ci"
+
+[deploy]
+startCommand = "npm --prefix server start"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

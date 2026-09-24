@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prywatność: LinkedIn AI Slop</title>
+    <meta
+      name="description"
+      content="Polityka prywatności rozszerzenia LinkedIn AI Slop: jakie dane idą na proxy i do TypeSafe."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="index.html">LinkedIn AI Slop</a>
+      <nav>
+        <a href="demo.html">Podgląd</a>
+        <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">GitHub</a>
+        <a href="privacy.html" aria-current="page">Prywatność</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <h1>Prywatność</h1>
+      <p class="lede">
+        Rozszerzenie ocenia posty, które sam widzisz na feedzie LinkedIn.
+        Kod: <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">github.com/pawelmamcarz/linkedin-ai-slop</a>.
+      </p>
+
+      <section>
+        <h2>Co wychodzi z przeglądarki</h2>
+        <p>
+          Gdy post wejdzie w widok, rozszerzenie wysyła na proxy identyfikator posta,
+          tekst (do 6000 znaków) i opcjonalnie imię autora widoczne na karcie.
+          Tekst krótszy niż 40 znaków nie jest wysyłany. Komentarze pod postem są pomijane.
+        </p>
+        <p>
+          Domyślny adres to
+          <code>https://proxy-production-ebcc.up.railway.app</code>.
+          W opcjach możesz wpisać własne proxy, także lokalne.
+        </p>
+      </section>
+
+      <section>
+        <h2>Gdzie to trafia</h2>
+        <p>
+          Proxy woła TypeSafe Jev (<code>POST https://api.typesafe.ai/v1/systemone</code>,
+          model <code>jev-latest</code>). Klucz <code>TYPESAFE_API_KEY</code> jest tylko
+          na serwerze. Nie ma go w rozszerzeniu ani na tej stronie.
+        </p>
+        <p>
+          Proxy nie zapisuje treści postów. Trzyma w pamięci licznik żądań na adres IP
+          (okno 60 sekund), żeby ograniczyć publiczne demo do 60 ocen na minutę.
+        </p>
+      </section>
+
+      <section>
+        <h2>Co zostaje w Chrome</h2>
+        <p>
+          <code>chrome.storage.sync</code> trzyma wyłącznie włącznik, próg i adres proxy.
+          Rozszerzenie nie czyta profilu LinkedIn poza kartą widocznego posta i nie sprzedaje danych.
+        </p>
+      </section>
+
+      <p class="actions">
+        <a class="button" href="index.html">Wróć</a>
+        <a class="button button-quiet" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Repozytorium</a>
+      </p>
+    </main>
+  </body>
+</html>

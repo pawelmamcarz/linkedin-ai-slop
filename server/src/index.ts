@@ -6,6 +6,7 @@ import { config as loadEnv } from "dotenv";
 import { DEFAULT_PROXY_URL } from "../../jev/thresholds.ts";
 import { JEV_ENDPOINT, JEV_MODEL } from "../../jev/questions.ts";
 import { evaluatePost, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
+import { clientIp, consumeEvaluateSlot } from "./rate-limit.ts";
 
 const envPath = resolve(import.meta.dirname, "../.env");
 if (existsSync(envPath)) {
@@ -51,6 +52,17 @@ export function createProxyServer(): Server {
       }
 
       if (req.method === "POST" && url.pathname === "/evaluate") {
+        const limit = consumeEvaluateSlot(clientIp(req));
+        if (!limit.allowed) {
+          const windowSec = Math.round(limit.windowMs / 1000);
+          res.setHeader("Retry-After", String(limit.retryAfterSec));
+          json(res, 429, {
+            error: "rate_limited",
+            message: `Limit publicznego demo: ${limit.limit} ocen na ${windowSec}s z jednego adresu IP. Spróbuj za ${limit.retryAfterSec}s albo uruchom własne proxy.`,
+          });
+          return;
+        }
+
         const body = await readJson(req);
         const postId = String(body.postId ?? "").trim();
         const text = String(body.text ?? "").trim();
@@ -77,7 +89,22 @@ export function createProxyServer(): Server {
   });
 }
 
-export function startServer(port = Number(process.env.PORT) || 8787, host = process.env.HOST || "127.0.0.1"): Promise<Server> {
+/** HOST wygrywa. Sam PORT (Railway) oznacza 0.0.0.0, nie 127.0.0.1. */
+export function resolveListenHost(env: NodeJS.ProcessEnv = process.env): string {
+  const host = env.HOST?.trim();
+  if (host) return host;
+  if (env.PORT?.trim()) return "0.0.0.0";
+  return "127.0.0.1";
+}
+
+export function resolveListenPort(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = env.PORT?.trim();
+  if (!raw) return 8787;
+  const port = Number(raw);
+  return Number.isFinite(port) && port > 0 ? port : 8787;
+}
+
+export function startServer(port = resolveListenPort(), host = resolveListenHost()): Promise<Server> {
   const server = createProxyServer();
   return new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -95,8 +122,8 @@ function isDirectRun(): boolean {
 }
 
 if (isDirectRun()) {
-  const port = Number(process.env.PORT) || 8787;
-  const host = process.env.HOST || "127.0.0.1";
+  const port = resolveListenPort();
+  const host = resolveListenHost();
   startServer(port, host).then(() => {
     const keyState = process.env.TYPESAFE_API_KEY?.trim()
       ? "TYPESAFE_API_KEY ustawiony"
@@ -122,6 +149,7 @@ function applyCors(req: IncomingMessage, res: ServerResponse): void {
 function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
   if (origin === "https://www.linkedin.com" || origin === "https://linkedin.com") return true;
+  if (origin === "https://pawelmamcarz.github.io") return true;
   if (origin.startsWith("chrome-extension://") || origin.startsWith("moz-extension://")) {
     return true;
   }

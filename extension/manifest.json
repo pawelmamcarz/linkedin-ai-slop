@@ -1,15 +1,20 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn AI Slop",
-  "version": "0.1.0",
-  "description": "Oznacza posty na feedzie LinkedIn według oceny AI-slop. Klucz Jev zostaje w lokalnym proxy.",
+  "version": "0.2.0",
+  "description": "Oznacza posty na feedzie LinkedIn według oceny AI-slop. Klucz Jev zostaje na proxy, nie w rozszerzeniu.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.linkedin.com/*",
-    "http://127.0.0.1/*",
-    "http://localhost/*"
+    "https://proxy-production-ebcc.up.railway.app/*"
   ],
-  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "optional_host_permissions": [
+    "https://*.up.railway.app/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://*/*",
+    "http://*/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },

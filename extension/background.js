@@ -1,9 +1,9 @@
 /**
- * Service worker: woła lokalne proxy, żeby content script na https://www.linkedin.com
+ * Service worker: woła proxy, żeby content script na https://www.linkedin.com
  * nie trzymał klucza i nie walczył z CORS / mixed content.
  * Domyślny adres trzymaj zgodny z jev/thresholds.ts (DEFAULT_PROXY_URL).
  */
-const DEFAULT_PROXY = "http://127.0.0.1:8787";
+const DEFAULT_PROXY = "https://proxy-production-ebcc.up.railway.app";
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || (message.type !== "evaluate" && message.type !== "health")) return;
