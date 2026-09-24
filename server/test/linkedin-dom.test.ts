@@ -79,13 +79,40 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.match(tip?.querySelector(".lais-tip__meta")?.textContent || "", /Intensywność: heavy/);
     assert.ok(host.classList.contains("li-ai-slop-blurred"));
     assert.equal(host.dataset.laisVerdict, "slop");
+    assert.ok(host.querySelector(":scope > .lais-blur"));
     const reveal = badge!.querySelector(".lais-reveal");
     assert.equal(reveal?.textContent, "Pokaż");
     assert.match(reveal?.getAttribute("title") || "", /AI slop/);
     reveal?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
     assert.equal(host.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(host.querySelector(":scope > .lais-blur"), null);
     assert.ok(host.classList.contains("li-ai-slop-revealed"));
     assert.equal(host.querySelector(".lais-reveal")?.textContent, "Ukryj");
+  });
+
+  it("rozmywa treść pod display:contents, nie samą odznakę", () => {
+    const card = document.createElement("div");
+    card.className = "feed-shared-update-v2";
+    const shell = document.createElement("div");
+    shell.style.display = "contents";
+    const copy = document.createElement("div");
+    copy.className = "update-components-text";
+    copy.textContent = "Po potasowaniu talii kart i rozłożeniu jej przed zespołem zostaje jeden scenariusz.";
+    const photo = document.createElement("img");
+    photo.alt = "talia";
+    shell.append(copy, photo);
+    card.appendChild(shell);
+    document.body.appendChild(card);
+    slop.setBadge(card, "slop", { labelPl: "AI slop", slopProbability: 0.88 });
+    assert.equal(shell.dataset.laisFiltered, undefined);
+    assert.match(copy.style.getPropertyValue("filter"), /blur\(8px\)/);
+    assert.match(photo.style.getPropertyValue("filter"), /blur\(8px\)/);
+    assert.equal(card.querySelector(".lais-badge")!.style.getPropertyValue("filter"), "");
+    const veil = card.querySelector(":scope > .lais-blur") as HTMLElement;
+    assert.ok(veil);
+    assert.equal(veil.dataset.laisVeil, "blur-14");
+    assert.match(readFileSync(resolve(import.meta.dirname, "../../extension/badge.css"), "utf8"), /backdrop-filter:\s*blur\(14px\)/);
+    assert.equal(card.querySelector(".lais-badge")!.style.getPropertyValue("z-index"), "21");
   });
 
   it("rozmywa tylko AI slop i respektuje wyłącznik", () => {
@@ -109,6 +136,7 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
     slop.applySettings({ blurSlop: false });
     assert.equal(slopCard.classList.contains("li-ai-slop-blurred"), false);
+    assert.equal(slopCard.querySelector(".lais-blur"), null);
     assert.equal(slopCard.querySelector(".lais-reveal"), null);
     slop.applySettings({ blurSlop: true });
     assert.ok(slopCard.classList.contains("li-ai-slop-blurred"));
