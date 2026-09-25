@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../extension/badge.css" />
+    <link rel="stylesheet" href="frame.css" />
+    <style>
+      .post-covered { padding-bottom: 18px; }
+      .actor { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+      .avatar { width: 40px; height: 40px; border-radius: 50%; background: #d6d3d1; }
+      .covered { position: relative; min-height: 92px; }
+      .covered .body { opacity: 0.15; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="chrome">
+        <div class="toolbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="url">Feed (podgląd, wymyślone karty)</div></div>
+        <div class="feed">
+          <article class="post post-covered">
+            <div class="actor">
+              <div class="avatar"></div>
+              <div>
+                <div class="who">Piotr Zieliński</div>
+                <p class="meta">Lider transformacji · 1 dzień</p>
+              </div>
+            </div>
+            <div class="lais-banner">
+              <span class="lais-banner__label">AI slop</span>
+              <button class="lais-reveal" type="button">Pokaż</button>
+            </div>
+            <div class="covered">
+              <div class="body">Jestem pokorny i podekscytowany. Spójność jest kluczem, a autentyczność wygrywa. Zostaw komentarz, jeśli chcesz playbook synergii.</div>
+            </div>
+          </article>
+          <article class="post">
+            <span class="lais-badge lais-badge--human"><span class="lais-badge__label">Ludzki</span></span>
+            <div class="who">Jan Kowalski</div>
+            <p class="meta">Płatności · 2 godz.</p>
+            <div class="body">We wtorek wyłączyliśmy ponawianie kodu 409. Odsetek nieudanych obciążeń spadł z 4,1% do 0,6%.</div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

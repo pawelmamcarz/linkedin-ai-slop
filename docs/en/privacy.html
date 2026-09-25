@@ -47,17 +47,54 @@
         </p>
         <p>
           The proxy does not write post text to disk. Memory holds a per-IP request counter
-          (60 second window, 60 scores per minute) and a SHA-256 of the normalized text together with the verdict,
-          with a time to live (12 hours by default). The raw text is not kept in that cache.
-          A cache hit does not call TypeSafe again.
+          (a 60 second window, 60 scores per minute, and a daily counter when the daily cap is on)
+          and a SHA-256 of the normalized text together with the verdict.
+          An entry lives 12 hours by default, and the cache holds up to 2000 entries. The raw text is not kept there.
+          A cache hit does not call TypeSafe again. Those counters and the cache disappear when the process restarts.
+        </p>
+        <p>
+          The stdout log is one JSON object: event, tier (demo or pro), cache hit, model token counts, model name, and text length.
+          It does not include the post text, the API key, or the Pro token.
+        </p>
+        <p>
+          TypeSafe receives that same text (up to 6000 characters) and, when present, the author name, as the Jev question state.
+          The API key stays in the server header. TypeSafe handles that call under its own terms.
+        </p>
+      </section>
+      <section>
+        <h2>Payments (Stripe)</h2>
+        <p>
+          Demo is free. Paid plans (Pro at about 5 USD a month or about 40 USD a year,
+          Lifetime Pro at 199 PLN once, Team at 990 PLN a year for 10 seats) open Stripe Checkout on the proxy.
+          You enter the card at Stripe, not in the extension and not on this server.
+        </p>
+        <p>
+          The Team plan asks Checkout for a billing address and a tax id.
+          The proxy stores the Stripe customer id and the Pro token (and its SHA-256).
+          If a token file is configured on the server, the token stays on the proxy disk. Otherwise it is gone after a restart,
+          unless it is also listed in the server environment. The extension sees a token only after you paste it in the options.
+        </p>
+      </section>
+      <section>
+        <h2>What we do not do</h2>
+        <p>
+          We do not sell data. We do not use it for advertising and we do not embed ad pixels.
+          The extension does not publish posts and does not read the LinkedIn inbox.
         </p>
       </section>
       <section>
         <h2>What stays in the browser</h2>
         <p>
-          Extension storage (<code>storage.sync</code>, or <code>storage.local</code> when sync is unavailable) stores the toggle, the threshold, the mode (Demo, BYOK, or Pro), the proxy URL, and an optional Pro token. The Pro token is not <code>TYPESAFE_API_KEY</code>.
+          Extension storage (<code>storage.sync</code>, or <code>storage.local</code> when sync is unavailable) stores the toggle, the threshold, the mode (Demo, BYOK, or Pro), the proxy URL, your own proxy URL, the cover-AI-slop option, the minimum text length, and an optional Pro token. The Pro token is not <code>TYPESAFE_API_KEY</code>.
+          The tab <code>sessionStorage</code> may keep a Demo limit timestamp, without the post text.
           That covers Chrome, Brave, Edge, Firefox, and Safari.
-          The extension does not read your LinkedIn profile beyond the visible post card and does not sell data.
+          The extension does not read your LinkedIn profile beyond the visible post card and the menu used to skip the signed-in member's posts.
+        </p>
+      </section>
+      <section>
+        <h2>Contact</h2>
+        <p>
+          Paweł Mamcarz, <a href="mailto:pawel@mamcarz.com">pawel@mamcarz.com</a>.
         </p>
       </section>
       <p class="actions">

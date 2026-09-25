@@ -197,10 +197,10 @@ Test proxy podmienia `fetch` do `api.typesafe.ai` i sprawdza, że wychodzi `POST
 ## Paczka Chrome Web Store
 
 ```bash
-npm run pack:extension
+npm run pack:chrome
 ```
 
-Skrypt pakuje sam katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (`manifest.json` w korzeniu zipa). Ten zip jest dla Chrome, Brave i Edge. `npm run pack:firefox` składa `store/linkedin-ai-slop-firefox.xpi` z manifestem Firefox (te same pliki, inne tło i `browser_specific_settings`). Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md). Safari budujesz osobno na Macu (`bash scripts/build-safari.sh`).
+Skrypt składa `store/chrome/dist/linkedin-ai-slop-chrome-<wersja>.zip` (tylko pliki rozszerzenia, `manifest.json` w korzeniu, wersja zgodna z manifestem). Ten zip jest do Chrome Web Store. `npm run pack:extension` nadal pakuje cały katalog `extension/` do `store/linkedin-ai-slop-extension.zip` (Chrome, Brave i Edge poza sklepem). `npm run pack:firefox` składa `store/linkedin-ai-slop-firefox.xpi` z manifestem Firefox (te same pliki, inne tło i `browser_specific_settings`). Bez `server/`, bez `.env`, bez `node_modules`. Checklista publikacji: [`store/CHECKLIST.md`](store/CHECKLIST.md). Safari budujesz osobno na Macu (`bash scripts/build-safari.sh`).
 
 ## Poza zakresem
 

@@ -52,18 +52,59 @@
         </p>
         <p>
           Proxy nie zapisuje treści postów na dysk. W pamięci trzyma licznik żądań na adres IP
-          (okno 60 sekund, do 60 ocen na minutę) oraz skrót SHA-256 znormalizowanego tekstu
-          razem z werdyktem, z czasem życia (domyślnie 12 godzin). Surowego tekstu w tej pamięci nie ma.
-          Trafienie w cache nie woła TypeSafe drugi raz.
+          (okno 60 sekund, do 60 ocen na minutę, a przy włączonym limicie dobowym także licznik na bieżący dzień)
+          oraz skrót SHA-256 znormalizowanego tekstu razem z werdyktem. Czas życia wpisu to domyślnie 12 godzin,
+          a pamięć podręczna mieści do 2000 wpisów. Surowego tekstu w tej pamięci nie ma.
+          Trafienie w cache nie woła TypeSafe drugi raz. Po restarcie procesu te liczniki i cache znikają.
+        </p>
+        <p>
+          Log na stdout to jeden obiekt JSON: zdarzenie, poziom (demo albo pro), trafienie cache,
+          liczby tokenów modelu, nazwa modelu i długość tekstu. Nie ma w nim treści posta, klucza API ani tokenu Pro.
+        </p>
+        <p>
+          Do TypeSafe idzie ten sam tekst (do 6000 znaków) i opcjonalnie imię autora, jako stan pytania Jev.
+          Klucz API jest w nagłówku serwera. TypeSafe przetwarza to wywołanie według własnych zasad.
+        </p>
+      </section>
+
+      <section>
+        <h2>Płatności (Stripe)</h2>
+        <p>
+          Demo jest darmowe. Płatne plany (Pro około 5 USD miesięcznie albo około 40 USD rocznie,
+          Lifetime Pro 199 PLN jednorazowo, Team 990 PLN rocznie za 10 stanowisk) otwierają Stripe Checkout
+          na proxy. Numer karty wpisujesz u Stripe, nie w rozszerzeniu i nie na tym serwerze.
+        </p>
+        <p>
+          Plan Team prosi w Checkout o adres rozliczeniowy i NIP (identyfikator podatkowy).
+          Proxy zapisuje identyfikator klienta Stripe oraz token Pro (i jego skrót SHA-256).
+          Gdy na serwerze ustawiono plik tokenów, token zostaje na dysku proxy. Inaczej znika po restarcie,
+          dopóki nie jest też na liście w zmiennych środowiska. Rozszerzenie dostaje token dopiero wtedy,
+          gdy sam go wkleisz w opcjach.
+        </p>
+      </section>
+
+      <section>
+        <h2>Czego nie robimy</h2>
+        <p>
+          Nie sprzedajemy danych. Nie używamy ich do reklam i nie osadzamy pikseli reklamowych.
+          Rozszerzenie nie publikuje postów i nie czyta skrzynki LinkedIn.
         </p>
       </section>
 
       <section>
         <h2>Co zostaje w przeglądarce</h2>
         <p>
-          Storage rozszerzenia (<code>storage.sync</code>, a gdy przeglądarka nie udostępni sync, <code>storage.local</code>) trzyma włącznik, próg, tryb (Demo, BYOK albo Pro), adres proxy i opcjonalny token Pro. Token Pro nie jest kluczem <code>TYPESAFE_API_KEY</code>.
+          Storage rozszerzenia (<code>storage.sync</code>, a gdy przeglądarka nie udostępni sync, <code>storage.local</code>) trzyma włącznik, próg, tryb (Demo, BYOK albo Pro), adres proxy, adres własnego proxy, opcję zakrywania AI slop, minimalną długość tekstu i opcjonalny token Pro. Token Pro nie jest kluczem <code>TYPESAFE_API_KEY</code>.
+          W <code>sessionStorage</code> karty może zostać znacznik czasu limitu Demo, bez treści posta.
           Dotyczy Chrome, Brave, Edge, Firefox i Safari.
-          Rozszerzenie nie czyta profilu LinkedIn poza kartą widocznego posta i nie sprzedaje danych.
+          Rozszerzenie nie czyta profilu LinkedIn poza kartą widocznego posta i menu, z którego da się pominąć posty zalogowanej osoby.
+        </p>
+      </section>
+
+      <section>
+        <h2>Kontakt</h2>
+        <p>
+          Paweł Mamcarz, <a href="mailto:pawel@mamcarz.com">pawel@mamcarz.com</a>.
         </p>
       </section>
 

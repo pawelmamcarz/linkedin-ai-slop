@@ -1,6 +1,8 @@
 # Checklista Chrome Web Store
 
-Paczka: `store/linkedin-ai-slop-extension.zip` (odtworzysz ją przez `npm run pack:extension`).
+Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.5.zip` (`npm run pack:chrome`).
+
+Poniżej zostaje starsza notatka o `store/linkedin-ai-slop-extension.zip` (`npm run pack:extension`).
 
 W zipie jest tylko zawartość `extension/`. `manifest.json` leży w korzeniu archiwum. Nie ma `server/`, `.env` ani `node_modules`.
 

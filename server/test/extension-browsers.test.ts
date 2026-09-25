@@ -45,13 +45,13 @@ describe("manifest hostów", () => {
   it("obejmuje LinkedIn, publiczne proxy i localhost", () => {
     for (const host of [
       "https://www.linkedin.com/*",
-      "https://*.linkedin.com/*",
       "https://proxy-production-ebcc.up.railway.app/*",
       "http://127.0.0.1/*",
       "http://localhost/*",
     ]) {
       assert.ok(manifest.host_permissions.includes(host), host);
     }
+    assert.equal(manifest.host_permissions.includes("https://*.linkedin.com/*"), false);
   });
 
   it("nie powtarza localhost w optional_host_permissions", () => {
