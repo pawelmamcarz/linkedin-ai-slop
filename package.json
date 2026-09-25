@@ -7,10 +7,12 @@
     "test": "npm --prefix server test",
     "typecheck": "npm --prefix server run typecheck",
     "pack:extension": "node scripts/pack-extension.mjs",
+    "pack:chrome": "node scripts/package-chrome.mjs",
     "pack:firefox": "node scripts/pack-firefox.mjs",
     "safari:build": "bash scripts/build-safari.sh",
     "safari:archive": "bash scripts/archive-safari.sh",
     "brand": "node scripts/render-brand.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "shots:chrome": "node scripts/chrome-store-shots.mjs"
   }
 }

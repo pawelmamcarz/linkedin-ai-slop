@@ -16,6 +16,7 @@ const master = resolve(root, "docs/brand/mark-512.png");
 png(svg, master, null);
 png(master, resolve(root, "extension/icons/icon128.png"), "128");
 png(master, resolve(root, "extension/icons/icon48.png"), "48");
+png(master, resolve(root, "extension/icons/icon32.png"), "32");
 png(master, resolve(root, "extension/icons/icon16.png"), "16");
 png(master, resolve(root, "docs/favicon.png"), "32");
 png(master, resolve(root, "docs/brand/mark.png"), "88");

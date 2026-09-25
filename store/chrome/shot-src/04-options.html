@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../extension/options.css" />
+    <style>
+      html, body { width: 1280px; height: 800px; overflow: hidden; }
+      body { display: flex; justify-content: center; background: #e7e5e4; }
+      main { width: 440px; margin-top: 20px; background: #f6f3ee; border: 1px solid #d6d3d1; border-radius: 12px; height: fit-content; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LinkedIn AI Slop</h1>
+      <p class="lede">
+        Odznaki na Twoim feedzie. Tekst idzie do proxy, a stamtąd do Jev
+        (<code>jev-latest</code>). Klucz API nie trafia do rozszerzenia.
+      </p>
+      <form id="settings">
+        <label class="check">
+          <input id="enabled" type="checkbox" checked />
+          Oceniaj posty podczas scrollowania
+        </label>
+        <label class="check">
+          <input id="blur-slop" type="checkbox" checked />
+          Zakrywaj posty AI slop
+        </label>
+        <span class="hint">Cover AI slop posts. Domyślnie włączone. Baner na całą szerokość karty zakrywa treść z werdyktem AI slop. „Pokaż” odsłania jeden post, „Ukryj” zakrywa go z powrotem.</span>
+        <label>
+          Minimalna długość własnego tekstu
+          <input id="min-text" type="number" min="40" max="2000" step="10" value="200" />
+        </label>
+        <label>
+          Próg AI slop
+          <span id="threshold-value">0.65</span>
+          <input id="threshold" type="range" min="0.15" max="0.95" step="0.05" value="0.65" />
+        </label>
+        <fieldset class="modes">
+          <legend>Tryb</legend>
+          <label class="check">
+            <input type="radio" name="mode" value="demo" checked />
+            Demo: publiczne proxy, twarde limity
+          </label>
+          <label class="check">
+            <input type="radio" name="mode" value="byok" />
+            BYOK: własne proxy i własny klucz na serwerze
+          </label>
+          <label class="check">
+            <input type="radio" name="mode" value="pro" />
+            Pro: token i wyższe limity na hostowanym proxy
+          </label>
+        </fieldset>
+        <label>
+          Adres proxy
+          <input id="proxy" type="url" value="https://proxy-production-ebcc.up.railway.app" readonly />
+        </label>
+        <div class="actions">
+          <button type="submit">Zapisz</button>
+          <button type="button" class="secondary">Sprawdź proxy</button>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>
