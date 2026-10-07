@@ -1,0 +1,170 @@
+{
+  "health": {
+    "ok": true,
+    "service": "linkedin-ai-slop-proxy",
+    "model": "jev-latest",
+    "endpoint": "https://api.typesafe.ai/v1/systemone",
+    "hasApiKey": true,
+    "defaultProxy": "https://proxy-production-ebcc.up.railway.app",
+    "cache": {
+      "enabled": true,
+      "entries": 93,
+      "max": 2000,
+      "ttlMs": 43200000,
+      "hits": 10,
+      "misses": 96,
+      "hitRate": 0.094
+    },
+    "tier": "demo",
+    "demoMode": true,
+    "dailyIpCap": 500,
+    "rateLimit": 60,
+    "stripeCheckout": true
+  },
+  "synthetic_posts": [
+    [
+      "pl_generic",
+      "slop_candidate",
+      "W dzisiejszym dynamicznym świecie biznesu jedno jest pewne: zmiana to jedyna stała. Sukces nie przychodzi do tych, którzy czekają. Przychodzi do tych, którzy działają. Każdy dzień to nowa szansa, by wyjść ze strefy komfortu i przekuć wyzwania w możliwości. Pamiętaj: to nie technologia buduje przyszłość, ale ludzie. A Ty, jaki mały krok zrobisz dzisiaj, aby zmienić swoje jutro?"
+    ],
+    [
+      "pl_ai_polished_details",
+      "mixed_or_slop_candidate",
+      "We wtorek wdrożyliśmy nowy proces onboardingu w zespole 12 osób. Czas wdrożenia spadł o 30%. Ale prawdziwa lekcja? Nie chodzi o procesy. Chodzi o ludzi. O budowanie mostów, nie murów. O kulturę, w której każdy głos ma znaczenie. Bo w świecie nieustannej zmiany największą przewagą jest autentyczność. Jestem ogromnie wdzięczny za tę podróż. Razem możemy więcej! Jakie są Wasze doświadczenia?"
+    ],
+    [
+      "pl_concrete",
+      "human_candidate",
+      "We wtorek wyłączyliśmy ponawianie żądań po odpowiedzi 409. W logach było 37 błędów dziennie; po zmianie zostały 4. Retry pogarszał sytuację, bo poprzednie żądanie już zapisywało rekord. Dodaliśmy identyfikator operacji do tabeli płatności. Następny krok: sprawdzić timeout po zapisie, którego jeszcze nie potrafimy odtworzyć."
+    ],
+    [
+      "en_generic",
+      "slop_candidate",
+      "In a world where change is the only constant, one thing remains clear: success is not about working harder. It is about working smarter. Every challenge is an opportunity in disguise. The future belongs to those who embrace innovation, foster collaboration, and lead with authenticity. Let us build bridges, not walls. Together, we can unlock our limitless potential. What is one small step you will take today?"
+    ],
+    [
+      "pl_short",
+      "slop_candidate_short",
+      "Sukces to podróż, nie cel. Każde wyzwanie to szansa na rozwój. Wyjdź ze strefy komfortu, uwierz w siebie i działaj. Razem możemy więcej! Jakie są Twoje refleksje?"
+    ]
+  ],
+  "results": [
+    {
+      "case": "pl_generic",
+      "candidate_label": "slop_candidate",
+      "text_chars": 379,
+      "seconds": 0.44,
+      "status": 200,
+      "cache": "MISS",
+      "result": {
+        "postId": "audit-20261007-pl_generic",
+        "model": "jev-1.13.0",
+        "isAiSlop": true,
+        "slopProbability": 0.95,
+        "slopIntensity": 2,
+        "slopIntensityLabel": "heavy",
+        "hasSubstance": false,
+        "substanceProbability": 0.03,
+        "voice": "ai_slop",
+        "voiceConfidence": 1,
+        "badge": "slop",
+        "labelPl": "AI slop",
+        "threshold": 0.65
+      }
+    },
+    {
+      "case": "pl_ai_polished_details",
+      "candidate_label": "mixed_or_slop_candidate",
+      "text_chars": 391,
+      "seconds": 0.31,
+      "status": 200,
+      "cache": "MISS",
+      "result": {
+        "postId": "audit-20261007-pl_ai_polished_details",
+        "model": "jev-1.13.0",
+        "isAiSlop": true,
+        "slopProbability": 0.73,
+        "slopIntensity": 1.45,
+        "slopIntensityLabel": "mixed",
+        "hasSubstance": true,
+        "substanceProbability": 0.74,
+        "voice": "mixed",
+        "voiceConfidence": 0.52,
+        "badge": "slop",
+        "labelPl": "AI slop",
+        "threshold": 0.65
+      }
+    },
+    {
+      "case": "pl_concrete",
+      "candidate_label": "human_candidate",
+      "text_chars": 325,
+      "seconds": 0.29,
+      "status": 200,
+      "cache": "MISS",
+      "result": {
+        "postId": "audit-20261007-pl_concrete",
+        "model": "jev-1.13.0",
+        "isAiSlop": false,
+        "slopProbability": 0.05,
+        "slopIntensity": 0,
+        "slopIntensityLabel": "human",
+        "hasSubstance": true,
+        "substanceProbability": 0.97,
+        "voice": "human",
+        "voiceConfidence": 1,
+        "badge": "human",
+        "labelPl": "Ludzki",
+        "threshold": 0.65
+      }
+    },
+    {
+      "case": "en_generic",
+      "candidate_label": "slop_candidate",
+      "text_chars": 411,
+      "seconds": 0.31,
+      "status": 200,
+      "cache": "MISS",
+      "result": {
+        "postId": "audit-20261007-en_generic",
+        "model": "jev-1.13.0",
+        "isAiSlop": true,
+        "slopProbability": 0.97,
+        "slopIntensity": 2,
+        "slopIntensityLabel": "heavy",
+        "hasSubstance": false,
+        "substanceProbability": 0.03,
+        "voice": "ai_slop",
+        "voiceConfidence": 1,
+        "badge": "slop",
+        "labelPl": "AI slop",
+        "threshold": 0.65
+      }
+    },
+    {
+      "case": "pl_short",
+      "candidate_label": "slop_candidate_short",
+      "text_chars": 162,
+      "seconds": 0.39,
+      "status": 200,
+      "cache": "MISS",
+      "result": {
+        "postId": "audit-20261007-pl_short",
+        "model": "jev-1.13.0",
+        "isAiSlop": true,
+        "slopProbability": 0.93,
+        "slopIntensity": 2,
+        "slopIntensityLabel": "heavy",
+        "hasSubstance": false,
+        "substanceProbability": 0.04,
+        "voice": "ai_slop",
+        "voiceConfidence": 1,
+        "badge": "slop",
+        "labelPl": "AI slop",
+        "threshold": 0.65
+      }
+    }
+  ],
+  "checked_date": "2026-10-07",
+  "scope": "Five synthetic examples; not a measured detector accuracy benchmark."
+}

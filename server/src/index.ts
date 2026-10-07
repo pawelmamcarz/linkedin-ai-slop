@@ -147,11 +147,14 @@ export function createProxyServer(): Server {
           if (tier === "demo" && demoMode()) {
             json(res, 429, demoLimitBody(
               `Limit minutowy darmowego Demo: ${limit.limit} ocen na ${windowSec}s z jednego adresu IP. Pro odblokowuje wyższe limity.`,
+              "minute", limit.retryAfterSec,
             ));
             return;
           }
           json(res, 429, {
             error: "rate_limited",
+            limitType: "minute",
+            retryAfterSec: limit.retryAfterSec,
             message:
               tier === "pro"
                 ? `Limit Pro: ${limit.limit} ocen na ${windowSec}s. Spróbuj za ${limit.retryAfterSec}s.`
@@ -166,11 +169,14 @@ export function createProxyServer(): Server {
           if (tier === "demo") {
             json(res, 429, demoLimitBody(
               `Dzienny limit darmowego Demo: ${daily.cap} ocen z jednego adresu IP. Pro odblokowuje wyższe limity.`,
+              "daily", daily.retryAfterSec,
             ));
             return;
           }
           json(res, 429, {
             error: "daily_limited",
+            limitType: "daily",
+            retryAfterSec: daily.retryAfterSec,
             message: `Dzienny limit Pro: ${daily.cap} ocen. Spróbuj jutro.`,
           });
           return;
@@ -375,8 +381,8 @@ function html(res: ServerResponse, status: number, body: string): void {
   res.end(body);
 }
 
-function demoLimitBody(message: string): { error: "demo_limit"; upgrade: true; message: string } {
-  return { error: "demo_limit", upgrade: true, message };
+function demoLimitBody(message: string, limitType: "minute" | "daily", retryAfterSec: number) {
+  return { error: "demo_limit", upgrade: true, message, limitType, retryAfterSec };
 }
 
 function json(

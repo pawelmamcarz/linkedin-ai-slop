@@ -12,6 +12,8 @@ Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.
 
 ## Uruchomienie
 
+Wersja 0.2.6 ocenia samodzielne posty od 100 znaków własnego tekstu (przy udostępnieniu co najmniej 200), czeka na rozwinięcie „więcej” i odświeża wynik po zmianie tekstu. Zasłona ma 22% krycia, a mały baner pod autorem nie blokuje przycisków posta. Limit minutowy automatycznie wznawia kolejkę; tylko limit dobowy zatrzymuje Demo do odnowienia limitu. Zapisany własny próg długości zostaje zachowany — jeśli masz wcześniej zapisane 200, ustaw 100 w opcjach i zapisz.
+
 Potrzebny Node.js 20+.
 
 ### 1. Proxy

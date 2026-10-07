@@ -176,7 +176,7 @@
       proToken: "",
       byokProxyUrl: "",
       blurSlop: true,
-      minTextChars: 200,
+      minTextChars: 100,
     };
     const source = stored && typeof stored === "object" ? stored : {};
     const merged = { ...defaults, ...source };
@@ -203,7 +203,7 @@
 
   function clampMinTextChars(value) {
     const n = Number(value);
-    if (!Number.isFinite(n)) return 200;
+    if (!Number.isFinite(n)) return 100;
     return Math.min(2000, Math.max(40, Math.round(n)));
   }
 

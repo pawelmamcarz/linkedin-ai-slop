@@ -6,7 +6,7 @@ const DEFAULTS = {
   proToken: "",
   byokProxyUrl: "",
   blurSlop: true,
-  minTextChars: 200,
+  minTextChars: 100,
 };
 
 const enabledEl = document.querySelector("#enabled");

@@ -312,6 +312,8 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(first.status, 200);
     assert.equal(second.status, 429);
     assert.equal(body.error, "demo_limit");
+    assert.equal(body.limitType, "daily");
+    assert.equal(body.retryAfterSec, Number(second.headers.get("retry-after")));
     assert.equal(body.upgrade, true);
     assert.equal(typeof body.message, "string");
     assert.match(body.message, /Pro/);
@@ -529,6 +531,8 @@ describe("proxy HTTP", { concurrency: false }, () => {
     assert.equal(first.status, 200);
     assert.equal(blocked.status, 429);
     assert.equal(body.error, "demo_limit");
+    assert.equal(body.limitType, "minute");
+    assert.equal(body.retryAfterSec, Number(blocked.headers.get("retry-after")));
     assert.equal(body.upgrade, true);
     assert.match(body.message, /Pro/);
     assert.ok(blocked.headers.get("retry-after"));

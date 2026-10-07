@@ -31,17 +31,20 @@
     proToken: "",
     byokProxyUrl: "",
     blurSlop: true,
-    minTextChars: 200,
+    minTextChars: 100,
   };
 
   /** Domyślna minimalna długość własnego tekstu po odcięciu hashtagów, wzmianek, URL i emoji. */
-  const DEFAULT_MIN_TEXT_CHARS = 200;
+  const DEFAULT_MIN_TEXT_CHARS = 100;
+  const MIN_RESHARE_TEXT_CHARS = 200;
   const MIN_TEXT_CHARS_FLOOR = 40;
   const MIN_TEXT_CHARS_CEILING = 2000;
   const CONCURRENCY = 2;
   const DEBOUNCE_MS = 280;
   const INTERSECT_RATIO = 0.35;
   const MAX_QUEUE = 40;
+  const MAX_VERDICTS = 500;
+  const EXPAND_TIMEOUT_MS = 800;
 
   const POST_SELECTORS = [
     "div.feed-shared-update-v2",
@@ -143,7 +146,6 @@
     "form",
   ];
 
-  const seen = new Set();
   const verdicts = new Map();
   const inFlight = new Set();
   const failedAt = new Map();
@@ -155,7 +157,10 @@
   let intersect = null;
   let warnedProxy = false;
   let demoLimitedUntil = 0;
-  const DEMO_LIMIT_KEY = "lais-demo-limit-until";
+  let limitedUntil = 0;
+  let retryTimer = 0;
+  const DEMO_LIMIT_KEY = "lais-demo-daily-limit-until-v2";
+  const observedPosts = new Set();
   let selectorMissLogged = false;
   let booted = false;
   let generation = 0;
@@ -182,13 +187,13 @@
       }
     }
     return found.filter((el) => {
-      return !found.some((other) => {
-        if (other === el || !other.contains(el)) return false;
-        const inner = ownUrn(el);
-        const outer = ownUrn(other);
-        if (inner && outer && inner !== outer) return false;
-        return true;
-      });
+      const inner = ownUrn(el);
+      for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        if (!seenEl.has(parent)) continue;
+        const outer = ownUrn(parent);
+        if (!inner || !outer || inner === outer) return false;
+      }
+      return true;
     });
   }
 
@@ -340,7 +345,10 @@
     if (!el || isSkipped(el) || isOwnPost(el)) return null;
     const id = postId(el);
     const text = postText(el);
-    if (!id || !text || substantiveText(text).length < minTextChars()) return null;
+    const nested = queryAll(el, NESTED_UPDATE_SELECTORS.concat(POST_SELECTORS).join(","))
+      .some((node) => isInsideNestedUpdate(node, el));
+    const floor = nested ? Math.max(minTextChars(), MIN_RESHARE_TEXT_CHARS) : minTextChars();
+    if (!id || !text || substantiveText(text).length < floor) return null;
     return { id, text, author: postAuthor(el) };
   }
 
@@ -433,7 +441,7 @@
 
   function hashText(text) {
     let h = 2166136261;
-    const s = text.slice(0, 240);
+    const s = text.slice(0, 6000);
     for (let i = 0; i < s.length; i += 1) {
       h ^= s.charCodeAt(i);
       h = Math.imul(h, 16777619);
@@ -564,7 +572,7 @@
     syncCardCover(el);
   }
 
-  const SCRIM = "rgba(255, 252, 248, 0.92)";
+  const SCRIM = "rgba(255, 252, 248, 0.22)";
   const REPLACED_TAGS = new Set(["IMG", "VIDEO", "CANVAS", "SVG", "PICTURE", "INPUT"]);
   let repairingCover = false;
 
@@ -661,9 +669,7 @@
     visit(el);
     for (const node of drop) {
       if (node.dataset?.laisDimmed && !node.classList.contains("lais-cover")) {
-        node.classList.remove("lais-dimmed");
-        node.style.removeProperty("opacity");
-        delete node.dataset.laisDimmed;
+        restoreDimmed(node);
         continue;
       }
       node.remove();
@@ -671,7 +677,7 @@
   }
 
   function bannerCopy(el) {
-    const badge = el.querySelector(".lais-badge");
+    const badge = el.querySelector(":scope > .lais-badge");
     const label = badge?.querySelector(".lais-badge__label")?.textContent || "AI slop";
     const percent = badge?.querySelector(".lais-tip__pct")?.textContent || "";
     const meta = badge?.querySelector(".lais-tip__meta")?.textContent || "";
@@ -726,12 +732,12 @@
       "box-sizing": "border-box",
       width: floating ? "auto" : "100%",
       margin: inFlow ? "8px 0" : "0",
-      padding: revealed ? "10px 14px" : "16px 18px",
-      "border-radius": "14px",
+      padding: "8px 12px",
+      "border-radius": "8px",
       background: "#9f1239",
       color: "#fffdf8",
       "font-family": '"Segoe UI", system-ui, sans-serif',
-      "font-size": revealed ? "18px" : "22px",
+      "font-size": "14px",
       "font-weight": "750",
       "line-height": "1.2",
       "pointer-events": "auto",
@@ -810,13 +816,13 @@
       left: "0",
       "z-index": "20",
       display: "flex",
-      "align-items": "center",
+      "align-items": "flex-start",
       "box-sizing": "border-box",
       margin: "0",
-      padding: "16px",
+      padding: "8px",
       border: "0",
       background: SCRIM,
-      "pointer-events": "auto",
+      "pointer-events": "none",
       filter: "none",
       "-webkit-filter": "none",
       "backdrop-filter": "none",
@@ -855,27 +861,24 @@
     fillBanner(banner, card, false, "cover");
   }
 
-  function mountCoverBelowActor(card, actor) {
+  function mountCoverBelowActor(card, anchor) {
     ensurePaintBox(card);
     const doc = card.ownerDocument || document;
     const cover = doc.createElement("div");
     cover.className = "lais-cover lais-cover--below-actor";
     card.appendChild(cover);
     styleCover(cover);
-    const top = offsetBelow(card, actor);
+    const top = offsetBelow(card, anchor);
     pinBox(cover, { top: `${top}px` });
-    const banner = doc.createElement("div");
-    banner.setAttribute("role", "status");
-    cover.appendChild(banner);
-    fillBanner(banner, card, false, "cover");
   }
 
-  function mountFlowBanner(actor, card) {
+  function mountFlowBanner(actor, card, revealed = true) {
     const doc = actor.ownerDocument || document;
     const banner = doc.createElement("div");
     banner.setAttribute("role", "status");
     actor.insertAdjacentElement("afterend", banner);
-    fillBanner(banner, card, true, "flow");
+    fillBanner(banner, card, revealed, "flow");
+    return banner;
   }
 
   function mountOpenBanner(host, card) {
@@ -921,7 +924,7 @@
       "z-index": "20",
       display: "block",
       background: SCRIM,
-      "pointer-events": "auto",
+      "pointer-events": "none",
       filter: "none",
       "backdrop-filter": "none",
     });
@@ -930,8 +933,22 @@
   function dimReplaced(node) {
     if (!REPLACED_TAGS.has(node.tagName)) return;
     node.classList.add("lais-dimmed");
-    node.style.setProperty("opacity", "0.12", "important");
+    if (!node.dataset.laisDimmed) {
+      node.dataset.laisOriginalOpacity = node.style.getPropertyValue("opacity");
+      node.dataset.laisOriginalOpacityPriority = node.style.getPropertyPriority("opacity");
+    }
+    node.style.setProperty("opacity", "0.78", "important");
     node.dataset.laisDimmed = "1";
+  }
+
+  function restoreDimmed(node) {
+    node.classList.remove("lais-dimmed");
+    if (node.dataset.laisOriginalOpacity) {
+      node.style.setProperty("opacity", node.dataset.laisOriginalOpacity, node.dataset.laisOriginalOpacityPriority || "");
+    } else node.style.removeProperty("opacity");
+    delete node.dataset.laisDimmed;
+    delete node.dataset.laisOriginalOpacity;
+    delete node.dataset.laisOriginalOpacityPriority;
   }
 
   function hostBoxes(el) {
@@ -951,6 +968,11 @@
   }
 
   function ensureCover(el, allow, revealed) {
+    if (!coverNeedsRepair(el)) {
+      const banner = el.querySelector(".lais-banner");
+      const copy = bannerCopy(el);
+      if (!allow || (banner?.querySelector(".lais-tip__pct")?.textContent || "") === copy.percent) return;
+    }
     if (!allow) {
       clearCoverNodes(el);
       return;
@@ -960,8 +982,8 @@
     clearCoverNodes(el);
     const actor = actorHeader(el);
     if (actor && rooted) {
-      if (revealed) mountFlowBanner(actor, el);
-      else mountCoverBelowActor(el, actor);
+      const banner = mountFlowBanner(actor, el, revealed);
+      if (!revealed) mountCoverBelowActor(el, banner);
       return;
     }
     if (rooted) {
@@ -1003,14 +1025,17 @@
         return hasCover || !banner?.classList?.contains("lais-banner") || !el.classList.contains("li-ai-slop-revealed");
       }
       const cover = el.querySelector(":scope > .lais-cover.lais-cover--below-actor");
-      if (!el.classList.contains("li-ai-slop-covered") || !cover?.querySelector(".lais-banner")) return true;
+      const banner = actor.nextElementSibling;
+      if (!el.classList.contains("li-ai-slop-covered") || !cover || !banner?.classList?.contains("lais-banner")) return true;
+      const top = `${offsetBelow(el, banner)}px`;
+      if (cover.style.getPropertyValue("top") !== top) pinBox(cover, { top });
       return false;
     }
     if (!allow) return hasCover || hasBanner || el.classList.contains("li-ai-slop-covered");
     if (revealed) return hasCover || !hasBanner || !el.classList.contains("li-ai-slop-revealed");
     if (!el.classList.contains("li-ai-slop-covered") || !hasBanner) return true;
     if (!isContentsDisplay(el)) return !el.querySelector(":scope > .lais-cover");
-    const hosts = hostBoxes(el).filter((box) => canHostVeil(box));
+    const hosts = hostBoxes(el).filter((box) => canHostVeil(box) && (!actor || (box !== actor && !actor.contains(box))));
     if (!hosts.length) return !hasBanner;
     if (!hosts[0].querySelector(":scope > .lais-cover")) return true;
     return hosts.slice(1).some((box) => !box.querySelector(":scope > .lais-scrim"));
@@ -1079,6 +1104,13 @@
   function scan() {
     if (!settings.enabled) return;
     const posts = findPostElements(document);
+    const live = new Set(posts);
+    for (const el of observedPosts) {
+      if (!live.has(el)) {
+        intersect?.unobserve(el);
+        observedPosts.delete(el);
+      }
+    }
     if (posts.length === 0) {
       if (!selectorMissLogged) {
         selectorMissLogged = true;
@@ -1088,7 +1120,10 @@
     }
     selectorMissLogged = false;
     for (const el of posts) {
-      if (intersect) intersect.observe(el);
+      if (intersect && !observedPosts.has(el)) {
+        intersect.observe(el);
+        observedPosts.add(el);
+      }
       if (!intersect || isInView(el)) enqueue(el);
     }
   }
@@ -1119,8 +1154,7 @@
     return Date.parse(`${day}T00:00:00.000Z`) + 86_400_000;
   }
 
-  function markDemoLimit() {
-    const until = utcDayEnd();
+  function markDemoLimit(until) {
     demoLimitedUntil = until;
     try {
       sessionStorage.setItem(DEMO_LIMIT_KEY, String(until));
@@ -1139,17 +1173,26 @@
     }
   }
 
+  function resumeAfter(until) {
+    limitedUntil = Math.max(limitedUntil, until);
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(() => {
+      limitedUntil = 0;
+      pump();
+      scheduleScan();
+    }, Math.max(1, limitedUntil - Date.now()));
+  }
+
   function clearCardChrome(el) {
     if (!el) return;
     el.querySelectorAll("[data-lais-dimmed]").forEach((node) => {
-      node.classList.remove("lais-dimmed");
-      node.style.removeProperty("opacity");
-      delete node.dataset.laisDimmed;
+      restoreDimmed(node);
     });
     el.querySelectorAll(".lais-badge, .lais-cover, .lais-banner, .lais-scrim").forEach((node) => node.remove());
     el.classList.remove("li-ai-slop-covered", "li-ai-slop-blurred", "li-ai-slop-revealed");
     delete el.dataset.laisVerdict;
     delete el.dataset.laisRevealed;
+    delete el.dataset.laisTextHash;
   }
 
   function enqueue(el) {
@@ -1160,18 +1203,22 @@
       return;
     }
     const post = extractPost(el);
-    if (!post) return;
+    if (!post) {
+      clearCardChrome(el);
+      return;
+    }
+    const fingerprint = hashText(post.text);
     const cached = verdicts.get(post.id);
-    if (cached) {
-      if (!el.querySelector(":scope > .lais-badge")) {
-        setBadge(el, cached.badge || "human", cached);
-      } else if (cached.badge === "slop") {
-        el.dataset.laisVerdict = "slop";
+    if (cached?.fingerprint === fingerprint) {
+      if (!el.querySelector(":scope > .lais-badge") || el.dataset.laisTextHash !== fingerprint) {
+        setBadge(el, cached.result.badge || "human", cached.result);
+        el.dataset.laisTextHash = fingerprint;
+      } else if (cached.result.badge === "slop" && coverNeedsRepair(el)) {
         syncCardCover(el);
       }
       return;
     }
-    if (seen.has(post.id) || inFlight.has(post.id)) return;
+    if (inFlight.has(`${generation}:${post.id}`)) return;
     const failed = failedAt.get(post.id);
     if (failed && Date.now() - failed < 15000) return;
     if (queue.some((item) => item.id === post.id)) return;
@@ -1181,38 +1228,50 @@
   }
 
   function pump() {
+    if (!settings.enabled || demoLimitActive() || Date.now() < limitedUntil) return;
     while (active < CONCURRENCY && queue.length) {
       const item = queue.shift();
-      if (!item || item.gen !== generation || seen.has(item.id)) continue;
+      if (!item || item.gen !== generation || !item.el.isConnected) continue;
       active += 1;
-      inFlight.add(item.id);
-      evaluate(item)
-        .catch((error) => {
+      const flightKey = `${item.gen}:${item.id}`;
+      inFlight.add(flightKey);
+      (async () => {
+        try {
+          await evaluate(item);
+        } catch (error) {
           if (item.gen !== generation) return;
-          if (error?.code === "demo_limit" && error?.upgrade && settings.mode === "demo") {
-            markDemoLimit();
-            seen.add(item.id);
-            setBadge(item.el, "info", {
-              labelPl: "Potrzebujesz Pro",
-              message:
-                "Darmowy limit Demo na dziś się wyczerpał. Pro odblokowuje wyższe limity. Checkout jest na stronie Pro.",
+          if (error?.status === 429 || error?.code === "demo_limit" || error?.code === "rate_limited" || error?.code === "daily_limited") {
+            const daily = error.limitType === "daily" || error.code === "daily_limited" || /dzienny|dobowy|daily/i.test(error.message);
+            const seconds = Number(error.retryAfterSec);
+            const until = Number.isFinite(seconds) && seconds > 0
+              ? Date.now() + Math.min(seconds, 86_400) * 1000
+              : daily ? utcDayEnd() : Date.now() + 60_000;
+            if (daily && settings.mode === "demo") markDemoLimit(until);
+            else if (queue.length < MAX_QUEUE) queue.unshift(item);
+            resumeAfter(until);
+            setBadge(item.el, "info", daily && settings.mode === "demo" ? {
+              labelPl: "Limit Demo na dziś",
+              message: "Darmowy limit Demo na dziś się wyczerpał. Oceny wrócą po odnowieniu limitu; Pro ma wyższe limity.",
+            } : {
+              labelPl: "Chwila przerwy",
+              message: "Limit ocen. Kolejka wznowi się automatycznie po krótkiej przerwie.",
             });
             return;
           }
           failedAt.set(item.id, Date.now());
+          while (failedAt.size > MAX_VERDICTS) failedAt.delete(failedAt.keys().next().value);
           setBadge(item.el, "error", { message: error.message });
-        })
-        .finally(() => {
-          inFlight.delete(item.id);
+        } finally {
+          inFlight.delete(flightKey);
           active -= 1;
           pump();
-        });
+        }
+      })();
     }
   }
 
   async function evaluate(item) {
     if (demoLimitActive()) {
-      seen.add(item.id);
       setBadge(item.el, "info", {
         labelPl: "Potrzebujesz Pro",
         message:
@@ -1221,55 +1280,76 @@
       return;
     }
     setBadge(item.el, "pending");
-    tryExpand(item.el);
-    const text = postText(item.el) || item.text;
+    await tryExpand(item.el);
+    if (item.gen !== generation || !item.el.isConnected) return;
+    const current = extractPost(item.el);
+    if (!current) {
+      clearCardChrome(item.el);
+      return;
+    }
+    if (current.id !== item.id && !item.id.startsWith("hash:")) {
+      scheduleScan();
+      return;
+    }
+    const text = current.text;
+    const fingerprint = hashText(text);
     const payload = {
       postId: item.id,
       text,
-      author: item.author || undefined,
+      author: current.author || undefined,
       threshold: settings.threshold,
       proxyUrl: settings.proxyUrl,
     };
     const result = await requestEvaluation(payload);
     if (item.gen !== generation) return;
-    seen.add(item.id);
-    verdicts.set(item.id, result);
+    const latest = extractPost(item.el);
+    if (!latest || latest.id !== current.id || hashText(latest.text) !== fingerprint) {
+      if (!latest) clearCardChrome(item.el);
+      scheduleScan();
+      return;
+    }
+    failedAt.delete(item.id);
+    verdicts.delete(item.id);
+    verdicts.set(item.id, { fingerprint, result });
+    while (verdicts.size > MAX_VERDICTS) verdicts.delete(verdicts.keys().next().value);
     setBadge(item.el, result.badge || "human", result);
+    item.el.dataset.laisTextHash = fingerprint;
   }
 
-  function requestEvaluation(payload) {
+  async function requestEvaluation(payload) {
     const api = extensionApi();
     if (api?.hasRuntime?.() && api.sendMessage) {
-      return api.sendMessage({ type: "evaluate", payload }).then((response) => {
-        if (!response?.ok) throw proxyError(response?.body, "Proxy nie oceniło posta");
-        return response.body;
-      });
+      const response = await api.sendMessage({ type: "evaluate", payload });
+      if (!response?.ok) throw proxyError(response?.body, "Proxy nie oceniło posta", response?.status, response?.retryAfterSec);
+      return response.body;
     }
     const headers = { "Content-Type": "application/json" };
     if (settings.proToken) headers["X-Pro-Token"] = settings.proToken;
-    return fetch(`${settings.proxyUrl}/evaluate`, {
+    const response = await fetch(`${settings.proxyUrl}/evaluate`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
-    }).then(async (response) => {
-      if (!response.ok) {
-        let body = null;
-        try {
-          body = await response.json();
-        } catch {
-          /* puste ciało */
-        }
-        throw proxyError(body, `HTTP ${response.status}`);
-      }
-      return response.json();
     });
+    if (!response.ok) {
+      let body = null;
+      try {
+        body = await response.json();
+      } catch {
+        /* puste ciało */
+      }
+      throw proxyError(body, `HTTP ${response.status}`, response.status, Number(response.headers.get("Retry-After")));
+    }
+    return response.json();
   }
 
-  function proxyError(body, fallback) {
+  function proxyError(body, fallback, status, retryAfterSec) {
     const message = body?.message || body?.error || fallback;
     const error = new Error(message);
     error.code = body?.error;
     error.upgrade = body?.upgrade === true;
+    error.status = status;
+    error.limitType = body?.limitType;
+    error.retryAfterSec = body?.retryAfterSec || retryAfterSec;
     noteProxy(message);
     return error;
   }
@@ -1280,20 +1360,31 @@
     console.warn("[linkedin-ai-slop] proxy:", message);
   }
 
-  function tryExpand(el) {
+  async function tryExpand(el) {
     const buttons = el.querySelectorAll("button, .see-more, .line-clamp-show-more-button");
     for (const btn of buttons) {
       if (btn.closest(".comments-comment-item, .comments-comments-list")) continue;
-      const label = `${btn.innerText || ""} ${btn.getAttribute("aria-label") || ""}`
+      if (isInsideNestedUpdate(btn, el) || isExtensionChrome(btn)) continue;
+      const label = (btn.getAttribute("aria-label") || btn.innerText || btn.textContent || "")
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
       if (/^(…\s*)?(see more|show more|więcej|…more|…więcej)$/i.test(label)) {
-        try {
-          btn.click();
-        } catch {
-          /* LinkedIn czasem blokuje syntetyczny click — ocena idzie na skrócie */
-        }
+        const before = postText(el);
+        await new Promise((resolve) => {
+          const expansion = new MutationObserver(() => {
+            if (postText(el) !== before) finish();
+          });
+          const finish = () => {
+            clearTimeout(timer);
+            expansion.disconnect();
+            resolve();
+          };
+          const timer = setTimeout(finish, EXPAND_TIMEOUT_MS);
+          expansion.observe(el, { childList: true, subtree: true, characterData: true });
+          try { btn.click(); } catch { finish(); }
+          if (postText(el) !== before) finish();
+        });
         break;
       }
     }
@@ -1326,11 +1417,18 @@
 
   function watch() {
     if (observer) observer.disconnect();
-    observer = new MutationObserver(() => {
+    observer = new MutationObserver((records) => {
+      const relevant = records.some((record) => {
+        const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+        if (isExtensionChrome(target)) return false;
+        const nodes = [...record.addedNodes, ...record.removedNodes];
+        return record.type === "characterData" || !nodes.length || nodes.some((node) => !isExtensionChrome(node));
+      });
+      if (!relevant) return;
       repairSlopCovers();
       scheduleScan();
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
     window.addEventListener("scroll", scheduleScan, { passive: true });
     document.addEventListener("scroll", scheduleScan, { passive: true, capture: true });
     watchNavigation();
@@ -1354,15 +1452,14 @@
 
   function clearBadges() {
     document.querySelectorAll("[data-lais-dimmed]").forEach((node) => {
-      node.classList.remove("lais-dimmed");
-      node.style.removeProperty("opacity");
-      delete node.dataset.laisDimmed;
+      restoreDimmed(node);
     });
     document.querySelectorAll(".lais-badge, .lais-cover, .lais-banner, .lais-scrim").forEach((n) => n.remove());
     document.querySelectorAll(".li-ai-slop-covered, .li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
       el.classList.remove("li-ai-slop-covered", "li-ai-slop-blurred", "li-ai-slop-revealed");
       delete el.dataset.laisVerdict;
       delete el.dataset.laisRevealed;
+      delete el.dataset.laisTextHash;
     });
   }
 
@@ -1395,6 +1492,8 @@
         }
         generation += 1;
         queue.length = 0;
+        clearTimeout(retryTimer);
+        limitedUntil = 0;
         warnedProxy = false;
         failedAt.clear();
         if (settings.mode !== "demo") clearDemoLimit();
@@ -1402,7 +1501,6 @@
           clearBadges();
           return;
         }
-        seen.clear();
         verdicts.clear();
         clearBadges();
         scheduleScan();

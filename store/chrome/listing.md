@@ -1,6 +1,6 @@
-# Chrome Web Store: LinkedIn AI Slop 0.2.5
+# Chrome Web Store: LinkedIn AI Slop 0.2.6
 
-Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.5.zip` (po `git pull`). Odtworzysz ją przez `npm run pack:chrome`.
+Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip`. Odtworzysz ją przez `npm run pack:chrome`. Stan zgłoszenia i deklaracje danych: [CHROMEWEBSTORE.md](../../CHROMEWEBSTORE.md).
 
 Język domyślny pozycji: polski. Angielski wklej jako drugi język, jeśli panel na to pozwala.
 
@@ -33,38 +33,42 @@ Marks LinkedIn posts Human, Mixed, or AI slop using Jev. The API key stays on th
 
 ## Opis szczegółowy (PL)
 
-LinkedIn AI Slop dodaje odznakę na karcie posta, gdy scrollujesz feed LinkedIn.
+LinkedIn AI Slop oznacza posty na feedzie LinkedIn jako Ludzki, Mieszany albo AI slop, aby pomóc Ci zauważyć szablonowe i ogólnikowe treści.
 
-Odznaki: Ludzki, Mieszany, AI slop. Najedź na ocenioną odznakę, żeby zobaczyć „AI slop: N%”. Gdy werdykt to AI slop, karta dostaje baner na całą szerokość z przyciskiem „Pokaż”. „Ukryj” zakrywa ten post z powrotem.
+Posty są oceniane podczas przewijania. Po najechaniu na oznaczenie zobaczysz wynik oceny stylu tekstu. Post oznaczony jako AI slop otrzymuje mały baner i lekką zasłonę. „Pokaż” odsłania treść, „Ukryj” przywraca zasłonę. Przyciski posta pozostają dostępne. Zasłanianie możesz wyłączyć w ustawieniach.
 
-Jak to liczy: tekst widocznego posta (do 6000 znaków) i opcjonalnie imię z karty idą na proxy. Proxy pyta TypeSafe Jev (model jev-latest). Próg is_ai_slop ustawisz suwakiem. Domyślnie 0.65. Własny tekst krótszy niż 200 znaków po odcięciu hashtagów, wzmianek, linków i emoji nie jest wysyłany. Komentarze i post w środku udostępnienia są pomijane. Posty zalogowanej osoby są pomijane, gdy da się odczytać profil z menu.
+W ustawieniach możesz włączyć lub wyłączyć ocenianie, zmienić próg i minimalną długość tekstu oraz wybrać tryb Demo, własne proxy (BYOK) albo Pro. Demo jest bezpłatne i ma limity ocen. Płatny Pro jest opcjonalny. Po limicie minutowym ocenianie wznawia się automatycznie.
 
-Klucz TYPESAFE_API_KEY nie jest w rozszerzeniu. Domyślne proxy to https://proxy-production-ebcc.up.railway.app (publiczne Demo: 60 ocen na minutę i 200 na dobę z jednego adresu IP, gdy na serwerze włączony jest ten cap). W opcjach: Demo, BYOK (własne proxy) albo Pro (token, nie klucz TypeSafe).
+Domyślnie samodzielny tekst krótszy niż 100 znaków po usunięciu hashtagów, wzmianek, linków i emoji jest pomijany. Komentarze pod postami nie są oceniane. Przy udostępnieniu oceniany jest własny komentarz autora o długości co najmniej 200 znaków, bez tekstu cytowanego posta. Posty zalogowanej osoby są pomijane, jeśli uda się rozpoznać jej profil. Zapisany wcześniej własny próg długości pozostaje bez zmian.
 
-Ceny: Demo 0. Lifetime Pro 199 PLN jednorazowo, limit sprzedaży 50. Team 990 PLN rocznie, 10 stanowisk. Hosted Pro to około 5 USD miesięcznie albo około 40 USD rocznie. Płatność idzie przez Stripe Checkout na proxy.
+Ocena dotyczy stylu tekstu, może być błędna i nie stanowi dowodu, że post został napisany przez AI.
 
-Przeglądarki: Chrome, Brave, Firefox, Safari. Ta paczka jest pod Chrome (działa też w Brave i Edge). Firefox i Safari mają osobne paczki.
+Do oceny tekst widocznego posta (do 6000 znaków), identyfikator posta i opcjonalnie imię autora są wysyłane na skonfigurowany serwer, a tekst i imię dalej do TypeSafe. Ustawienia i opcjonalny token Pro są zapisywane w pamięci rozszerzenia. Klucz TypeSafe pozostaje na serwerze.
 
 Rozszerzenie nie czyta skrzynki, nie publikuje postów i nie sprzedaje danych.
+
+Rozszerzenie jest niezależnym projektem, niepowiązanym z LinkedIn.
 
 Kod: https://github.com/pawelmamcarz/linkedin-ai-slop
 Polityka: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
 ## Detailed description (EN)
 
-LinkedIn AI Slop badges a post card while you scroll the LinkedIn feed.
+LinkedIn AI Slop labels LinkedIn feed posts Human, Mixed, or AI slop to help you notice formulaic and generic writing.
 
-Badges: Human, Mixed, AI slop. Hover a scored badge to see "AI slop: N%". An AI slop verdict adds a full-width banner with a "Pokaż" (Show) button. "Ukryj" (Hide) covers that post again.
+Posts are evaluated as you scroll. Hover a badge to see the writing-style score. An AI slop verdict adds a small banner and a light cover. "Pokaż" (Show) reveals the content; "Ukryj" (Hide) restores the cover. Post buttons remain usable. You can disable covering in settings.
 
-The visible post text (up to 6000 characters) and, when present, the name on the card go to a proxy. The proxy asks TypeSafe Jev (model jev-latest). You can move the is_ai_slop threshold. The default is 0.65. Own text shorter than 200 characters after hashtags, mentions, links, and emoji are removed is not sent. Comments and the nested reshare are skipped. The signed-in member's posts are skipped when the profile can be read from the menu.
+Settings let you enable evaluation, change the threshold and minimum text length, and choose Demo, your own proxy (BYOK), or Pro. Demo is free with evaluation limits; paid Pro is optional. Evaluation resumes automatically after a minute rate limit.
 
-TYPESAFE_API_KEY is not inside the extension. The default proxy is https://proxy-production-ebcc.up.railway.app (public Demo: 60 scores per minute and 200 per day per IP when that cap is enabled on the server). Options: Demo, BYOK (your own proxy), or Pro (a token, not the TypeSafe key).
+By default, standalone text shorter than 100 characters after hashtags, mentions, links, and emoji are removed is skipped. Comments are not evaluated. Reshares require at least 200 characters of the sharing author's own commentary; the quoted post is excluded. The signed-in member's posts are skipped when their profile can be recognized. Previously saved custom length settings are preserved.
 
-Pricing: Demo is free. Lifetime Pro is 199 PLN once, limited to 50 sales. Team is 990 PLN per year for 10 seats. Hosted Pro is about 5 USD a month or about 40 USD a year. Payment goes through Stripe Checkout on the proxy.
+The judgment describes writing style, can be wrong, and does not prove AI authorship.
 
-Browsers: Chrome, Brave, Firefox, Safari. This package is for Chrome (it also loads in Brave and Edge). Firefox and Safari use separate packages.
+The visible post text (up to 6000 characters), post ID, and optional author name go to the configured server; text and name then go to TypeSafe. Settings and an optional Pro token are saved in extension storage. The TypeSafe key stays on the server.
 
 The extension does not read your inbox, publish posts, or sell data.
+
+This is an independent project, unaffiliated with LinkedIn.
 
 Code: https://github.com/pawelmamcarz/linkedin-ai-slop
 Privacy: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
@@ -150,14 +154,14 @@ Ikona 128: `extension/icons/icon128.png` (w zipie jest też 16, 32, 48).
 
 ## Checklista wgrania
 
-1. Załóż konto Chrome Web Store na koncie Google właściciela (Paweł Mamcarz) i opłać rejestrację.
-2. Zrób deploy GitHub Pages z tego repozytorium, potem otwórz https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html i sprawdź, że jest sekcja Stripe i adres pawel@mamcarz.com.
-3. `git pull`, weź `store/chrome/dist/linkedin-ai-slop-chrome-0.2.5.zip`. Nie pakuj katalogu `extension/` ręcznie.
-4. Nowa pozycja. Wgraj zip. Język domyślny: polski.
+1. Otwórz istniejącą pozycję `blekdfdinogdmbpakkgaecdpilanobge` u wydawcy `pawelmamcarz`.
+2. Sprawdź publiczną politykę prywatności z tabeli.
+3. Uruchom testy, typecheck i `npm run pack:chrome`; wybierz ZIP 0.2.6. Nie pakuj katalogu `extension/` ręcznie.
+4. Jeśli 0.2.5 nadal oczekuje na recenzję, wycofaj ją w celu aktualizacji poprawionego pakietu. Wgraj 0.2.6; język domyślny: polski.
 5. Wklej nazwę, krótki opis i opis szczegółowy z tego pliku. Kategoria: Productivity.
 6. Wklej single purpose.
 7. Privacy: URL polityki z tabeli. Zaznacz, że wysyłany jest tekst posta do własnego serwera w celu klasyfikacji. Zaznacz, że danych nie sprzedajesz i nie używasz do reklam. Remote code: No.
 8. Uzasadnienia uprawnień: skopiuj akapity z sekcji uprawnień, po jednym na każde uprawnienie, o które panel zapyta.
 9. Wgraj zrzuty 1280x800, kafelek 440x280 i marquee 1400x560.
 10. Homepage: https://sciema.app/linkedin-ai-slop/ . Support: https://github.com/pawelmamcarz/linkedin-ai-slop/issues .
-11. Wyślij do recenzji. Nie publikuj, dopóki nie przejrzysz podglądu.
+11. Przejrzyj podgląd, wyślij do recenzji z automatyczną publikacją po akceptacji i zapisz potwierdzony status w `CHROMEWEBSTORE.md`.

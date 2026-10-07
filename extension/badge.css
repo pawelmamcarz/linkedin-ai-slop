@@ -93,14 +93,14 @@
   inset: 0;
   z-index: 20;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   box-sizing: border-box;
   margin: 0;
-  padding: 16px;
+  padding: 8px;
   border: 0;
   border-radius: inherit;
-  background: rgba(255, 252, 248, 0.92);
-  pointer-events: auto;
+  background: rgba(255, 252, 248, 0.22);
+  pointer-events: none;
 }
 
 .lais-scrim {
@@ -108,8 +108,8 @@
   inset: 0;
   z-index: 20;
   display: block;
-  background: rgba(255, 252, 248, 0.92);
-  pointer-events: auto;
+  background: rgba(255, 252, 248, 0.22);
+  pointer-events: none;
 }
 
 .lais-banner {
@@ -122,12 +122,12 @@
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 16px 18px;
-  border-radius: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
   background: #9f1239;
   color: #fffdf8;
   font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 22px;
+  font-size: 14px;
   font-weight: 750;
   line-height: 1.2;
   pointer-events: auto;
@@ -141,8 +141,8 @@
   left: auto;
   width: 100%;
   margin: 8px 0;
-  padding: 10px 14px;
-  font-size: 18px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
 .lais-cover--below-actor {
