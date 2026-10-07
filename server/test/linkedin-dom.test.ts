@@ -119,7 +119,9 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.equal(photo.style.getPropertyValue("filter"), "");
     const cover = card.querySelector(":scope > .lais-cover") as HTMLElement;
     assert.ok(cover);
-    assert.match(cover.style.getPropertyValue("background"), /0\.92/);
+    assert.match(cover.style.getPropertyValue("background"), /0\.22/);
+    assert.equal(cover.style.getPropertyValue("pointer-events"), "none");
+    assert.equal((cover.querySelector(".lais-banner") as HTMLElement).style.getPropertyValue("pointer-events"), "auto");
     assert.doesNotMatch(cover.style.cssText, /blur\(/);
     const banner = cover.querySelector(".lais-banner") as HTMLElement;
     assert.equal(banner.style.getPropertyValue("width"), "100%");
@@ -272,7 +274,7 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.equal(innerPost!.text.includes("Bang!"), false);
     assert.equal(innerPost!.author.includes("Tomasz"), true);
     const sample = "Bang! #Czympojade jako przykład zastosowania RAG z Bielik AI i klasyfikatorów treści takich jak TypeSafe AI";
-    assert.ok(slop.substantiveText(sample).length < slop.DEFAULTS.minTextChars);
+    assert.ok(slop.substantiveText(sample).length < 200);
     assert.equal(slop.substantiveText(sample).includes("#Czympojade"), false);
   });
 
@@ -304,8 +306,10 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.equal(actor.querySelector(".lais-banner"), null);
     const cover = card.querySelector(":scope > .lais-cover.lais-cover--below-actor");
     assert.ok(cover);
-    assert.equal(cover!.querySelector(".lais-reveal")?.textContent, "Pokaż");
-    cover!.querySelector(".lais-reveal")?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+    assert.equal(cover!.querySelector(".lais-banner"), null);
+    assert.equal(actor.nextElementSibling?.classList.contains("lais-banner"), true);
+    assert.equal(actor.nextElementSibling?.querySelector(".lais-reveal")?.textContent, "Pokaż");
+    actor.nextElementSibling?.querySelector(".lais-reveal")?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
     assert.equal(card.querySelector(".lais-cover"), null);
     assert.equal(actor.nextElementSibling?.classList.contains("lais-banner"), true);
     assert.equal(actor.nextElementSibling?.querySelector(".lais-reveal")?.textContent, "Ukryj");

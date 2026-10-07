@@ -59,7 +59,8 @@ async function evaluate(payload) {
     }),
   });
   const body = await response.json().catch(() => ({ error: "bad_response" }));
-  return { ok: response.ok, status: response.status, body };
+  const retryAfterSec = Number(response.headers.get("Retry-After")) || undefined;
+  return { ok: response.ok, status: response.status, body, retryAfterSec };
 }
 
 async function health(proxyUrl, proToken) {

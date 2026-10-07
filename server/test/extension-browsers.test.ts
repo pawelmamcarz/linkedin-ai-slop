@@ -24,6 +24,7 @@ type ExtApi = {
     proToken: string;
     byokProxyUrl: string;
     blurSlop: boolean;
+    minTextChars: number;
   };
 };
 
@@ -176,6 +177,7 @@ describe("manifest Firefox", () => {
     const linkedIn = firefox.content_scripts.find((entry: { matches: string[] }) =>
       entry.matches.some((match) => match.includes("linkedin.com")),
     );
+    assert.ok(linkedIn);
     assert.ok(linkedIn.matches.includes("*://*.linkedin.com/*"));
   });
 });
@@ -200,7 +202,7 @@ describe("tryby proxy", () => {
     assert.equal(JSON.stringify(pro).includes("TYPESAFE"), false);
     assert.equal(api.resolveSettings({}).blurSlop, true);
     assert.equal(api.resolveSettings({ blurSlop: false }).blurSlop, false);
-    assert.equal(api.resolveSettings({}).minTextChars, 200);
+    assert.equal(api.resolveSettings({}).minTextChars, 100);
     assert.equal(api.resolveSettings({ minTextChars: 80 }).minTextChars, 80);
     assert.equal(api.resolveSettings({ minTextChars: 1 }).minTextChars, 40);
   });

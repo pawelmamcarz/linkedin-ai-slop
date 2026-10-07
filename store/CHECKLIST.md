@@ -1,6 +1,10 @@
 # Checklista Chrome Web Store
 
-Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.5.zip` (`npm run pack:chrome`).
+Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip` (`npm run pack:chrome`). Bieżący stan zgłoszenia: [`../CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
+
+## Wersja 0.2.6
+
+Samodzielne posty: domyślnie 100 znaków; własny komentarz przy udostępnieniu: co najmniej 200. Rozwinięcie tekstu i zmiana treści są ponownie sprawdzane przed zapisaniem wyniku. Limit minutowy przekazuje Retry-After i wznawia kolejkę. Zasłona ma 22% krycia, mały baner pod autorem i nie blokuje kliknięć w post. Nakładka nie przebudowuje się podczas bezczynności. Przed wysłaniem uruchom `npm test`, `npm run typecheck`, `npm run pack:chrome` i sprawdź paczkę oraz Pokaż/Ukryj w przeglądarce.
 
 Poniżej zostaje starsza notatka o `store/linkedin-ai-slop-extension.zip` (`npm run pack:extension`).
 
