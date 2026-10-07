@@ -130,6 +130,10 @@ No extension account, API key or purchase required. Demo is default. Popup: Spra
 
 The 0.2.6 update is authorized to replace 0.2.5 for substantive fixes. Do not report it submitted until the dashboard confirms the version and pending-review status.
 
+Proxy release is deployed: [PR #23](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/23), commit `a320e4c33c6df157a6eebde1107f8fcf45a9f7d6`, Railway deployment `e7040e16-cf7b-48eb-8a52-61518c027bbf`, exact-commit status success. Production health and one synthetic short-post evaluation returned HTTP 200; the evaluation reported 0.93 / slop. CI passed on both the PR and main.
+
+Store update blocker: automatic approval review rejected active-window accessibility reads because another task can switch Chrome to unrelated private panels. The user was asked to pause other Chrome control and confirm the Store panel is active. No 0.2.6 upload, review withdrawal, or resubmission was performed. Use the existing item, the prepared ZIP, [updated description](store/chrome/listing.md), graphics above, and the 447-character reviewer instructions when access is stable; verify version and pending-review status before recording completion.
+
 No previous Chrome Web Store rejection was verified. This submission is now pending review. Google recommends contacting [developer support](https://developer.chrome.com/docs/webstore/review-process) after more than three weeks pending review. Avoid cancelling a pending review merely to accelerate it.
 
 Submission note: native computer control follows the active Chrome window. The browser connector was unavailable; switching back through Chrome's window menu allowed completion. No unrelated project fields were changed. The user clarified that the reported rejection concerned another service, not this Chrome submission.
