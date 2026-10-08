@@ -249,7 +249,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
       headers,
       body: JSON.stringify({
         postId: "urn:li:activity:cache-2",
-        text: `  Shipped   the billing retry last Tuesday.\nFailure rate dropped from 4.1% to 0.6%.  `,
+        text: `  Shipped   the billing retry last Tuesday.  Failure rate dropped from 4.1% to 0.6%.  `,
         author: "Inny autor",
         threshold: 0.95,
       }),

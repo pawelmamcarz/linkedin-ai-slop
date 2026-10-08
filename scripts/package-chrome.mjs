@@ -23,6 +23,7 @@ const files = [
   "manifest.json",
   "background.js",
   "ext-api.js",
+  "verdict-policy.js",
   "content.js",
   "badge.css",
   "options.html",

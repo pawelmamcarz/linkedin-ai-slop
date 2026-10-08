@@ -4,6 +4,7 @@ import {
   INTENSITY_MIXED_MAX,
   SUBSTANCE_THRESHOLD,
 } from "../../jev/thresholds.ts";
+import verdictPolicy from "../../extension/verdict-policy.js";
 
 export type IntensityLabel = "human" | "mixed" | "heavy";
 export type VoiceLabel = "human" | "mixed" | "ai_slop";
@@ -38,6 +39,10 @@ export type EvaluateResult = {
   substanceProbability: number;
   voice: VoiceLabel;
   voiceConfidence: number;
+  voiceProbability: number | null;
+  uncertain: boolean;
+  shouldCover: boolean;
+  policyVersion: string;
   badge: BadgeKind;
   labelPl: string;
   threshold: number;
@@ -63,12 +68,7 @@ export function badgeFromSignals(input: {
   voice: VoiceLabel;
   threshold: number;
 }): BadgeKind {
-  const { slopProbability, intensity, voice, threshold } = input;
-  if (intensity === "heavy" || voice === "ai_slop" || slopProbability >= threshold) {
-    return "slop";
-  }
-  if (intensity === "mixed" || voice === "mixed") return "mixed";
-  return "human";
+  return verdictPolicy.decide(input).badge;
 }
 
 export function mapAnswers(
@@ -87,17 +87,22 @@ export function mapAnswers(
     ? (voiceRaw as VoiceLabel)
     : "mixed";
   const intensity = intensityLabel(slopIntensity);
-  const badge = badgeFromSignals({
+  const selectedProbability = answers.voice?.probabilities?.[voice];
+  const voiceProbability = typeof selectedProbability === "number" && Number.isFinite(selectedProbability) && selectedProbability >= 0 && selectedProbability <= 1
+    ? selectedProbability : null;
+  const decision = verdictPolicy.decide({
     slopProbability,
     intensity,
     voice,
+    voiceProbability,
     threshold,
   });
+  const badge = decision.badge;
 
   return {
     postId,
     model,
-    isAiSlop: slopProbability >= threshold,
+    ...decision,
     slopProbability,
     slopIntensity,
     slopIntensityLabel: intensity,
@@ -105,6 +110,7 @@ export function mapAnswers(
     substanceProbability,
     voice,
     voiceConfidence: clamp01(answers.voice?.confidence ?? 0),
+    voiceProbability,
     badge,
     labelPl: polishLabel(badge),
     threshold,

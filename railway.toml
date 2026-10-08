@@ -6,7 +6,7 @@
 [build]
 builder = "RAILPACK"
 buildCommand = "npm --prefix server ci --include=dev"
-watchPatterns = ["server/**", "jev/**", "railway.toml", "package.json"]
+watchPatterns = ["server/**", "jev/**", "extension/verdict-policy.js", "railway.toml", "package.json"]
 
 [deploy]
 startCommand = "npm --prefix server start"

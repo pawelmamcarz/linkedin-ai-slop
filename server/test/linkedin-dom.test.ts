@@ -77,7 +77,7 @@ describe("selektory LinkedIn (fixture)", () => {
     assert.ok(badge);
     assert.equal(badge!.querySelector(".lais-badge__label")!.textContent, "AI slop");
     assert.ok(badge!.classList.contains("lais-badge--slop"));
-    assert.equal(badge!.getAttribute("title"), "AI slop: 91%");
+    assert.match(badge!.getAttribute("title") || "", /AI slop: 91%/);
     const tip = badge!.querySelector(".lais-tip");
     assert.equal(tip?.querySelector(".lais-tip__pct")?.textContent, "AI slop: 91%");
     assert.match(tip?.querySelector(".lais-tip__meta")?.textContent || "", /Intensywność: heavy/);
@@ -219,8 +219,8 @@ describe("selektory LinkedIn (fixture)", () => {
       hasSubstance: true,
       substanceProbability: 0.62,
     });
-    assert.equal(human.querySelector(".lais-badge")!.getAttribute("title"), "AI slop: 8%");
-    assert.equal(mixed.querySelector(".lais-badge")!.getAttribute("title"), "AI slop: 41%");
+    assert.match(human.querySelector(".lais-badge")!.getAttribute("title") || "", /AI slop: 8%/);
+    assert.match(mixed.querySelector(".lais-badge")!.getAttribute("title") || "", /AI slop: 41%/);
     assert.equal(human.querySelector(".lais-tip__pct")!.textContent, "AI slop: 8%");
     assert.equal(mixed.querySelector(".lais-tip__pct")!.textContent, "AI slop: 41%");
 
