@@ -61,17 +61,35 @@
           <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
         </ul>
         <p class="actions">
-          <a class="button" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Zainstaluj z GitHub</a>
+          <a class="button" href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Zainstaluj z Chrome Web Store</a>
+          <a class="button button-quiet" href="#instalacja">Instalacja ręczna i inne przeglądarki</a>
           <a class="button button-quiet" href="demo.html">Zobacz demo</a>
           <a class="button button-quiet" href="https://mamcarz.com">Autor: mamcarz.com</a>
         </p>
         <p class="fine">
           Hostowane proxy to publiczne demo z limitem. Do codziennej pracy postaw własne proxy i własny klucz (BYOK).
-          Sklep Chrome jeszcze nie jest źródłem instalacji. Ta sama paczka zip działa w Chrome, Brave i Edge.
+          Rozszerzenie jest w Chrome Web Store. Ten sam wpis instalujesz w Chrome, Brave i Edge. Instalacja ręczna z GitHub (rozpakowane rozszerzenie) nadal działa.
           Firefox to osobny XPI (dodatek tymczasowy, bez listy AMO). Safari to build na Macu, bez App Store.
           Produkt działa tylko na LinkedIn.
         </p>
       </section>
+
+      <figure class="demo-video">
+        <video
+          src="media/linkedin-ai-slop-0.2.6-demo.mp4"
+          poster="media/linkedin-ai-slop-0.2.6-demo-poster.jpg"
+          width="720"
+          height="720"
+          autoplay
+          muted
+          loop
+          playsinline
+          controls
+          preload="metadata"
+          aria-label="Nagranie: LinkedIn AI Slop 0.2.6 na feedzie LinkedIn"
+        ></video>
+        <figcaption>Wersja 0.2.6 na moim feedzie LinkedIn: plakietka Ludzki z wynikiem po najechaniu, baner AI slop i przycisk Pokaż. Nagranie bez dźwięku.</figcaption>
+      </figure>
 
       <h2 class="section-title">Jak to działa</h2>
       <div class="grid-3">
@@ -106,24 +124,27 @@
         </article>
       </div>
 
-      <h2 class="section-title">Instalacja</h2>
+      <h2 class="section-title" id="instalacja">Instalacja</h2>
       <div class="grid-2">
         <article class="card">
           <h2>Chrome i Edge</h2>
+          <p class="actions"><a class="button" href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Zainstaluj z Chrome Web Store</a></p>
+          <p>W Edge zezwól na rozszerzenia z innych sklepów, gdy przeglądarka o to zapyta.</p>
+          <p>Instalacja ręczna:</p>
           <ol class="steps">
             <li>Pobierz <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repozytorium</a> albo rozpakuj <code>store/linkedin-ai-slop-extension.zip</code>.</li>
             <li>Otwórz <code>chrome://extensions</code> albo <code>edge://extensions</code> i włącz tryb dewelopera.</li>
             <li><strong>Załaduj rozpakowane</strong> i wskaż katalog <code>extension/</code>.</li>
           </ol>
-          <p>Sklep Chrome jeszcze nie publikuje tej pozycji. Zip odtwarzasz przez <code>npm run pack:extension</code>.</p>
+          <p>Zip odtwarzasz przez <code>npm run pack:extension</code>.</p>
         </article>
         <article class="card">
           <h2>Brave</h2>
-          <p>Ta sama paczka Chromium. Osobnego pliku Brave nie ma.</p>
+          <p>Brave instaluje ten sam wpis z <a href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Chrome Web Store</a>. Osobnego pliku Brave nie ma.</p>
+          <p>Instalacja ręczna:</p>
           <ol class="steps">
             <li>Otwórz <code>brave://extensions</code> i włącz tryb dewelopera.</li>
             <li><strong>Załaduj rozpakowane</strong> i wskaż <code>extension/</code>.</li>
-            <li>Gdy sklep Chrome ruszy, Brave umie wziąć stamtąd ten sam wpis. Dziś go nie ma.</li>
           </ol>
           <p>Notatka: <code>store/BRAVE.md</code>.</p>
         </article>

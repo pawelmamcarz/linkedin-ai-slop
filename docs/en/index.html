@@ -61,17 +61,35 @@
           <li class="lais-badge lais-badge--slop lais-badge--inline">AI slop</li>
         </ul>
         <p class="actions">
-          <a class="button" href="https://github.com/pawelmamcarz/linkedin-ai-slop">Install from GitHub</a>
+          <a class="button" href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Install from Chrome Web Store</a>
+          <a class="button button-quiet" href="#install">Manual install and other browsers</a>
           <a class="button button-quiet" href="../demo.html">Open the demo</a>
           <a class="button button-quiet" href="https://mamcarz.com">Author: mamcarz.com</a>
         </p>
         <p class="fine">
           The hosted proxy is a public demo with limits. For daily use, run your own proxy and your own key (BYOK).
-          The Chrome Web Store is not the install path yet. The same zip runs in Chrome, Brave, and Edge.
+          The extension is in the Chrome Web Store. The same listing installs in Chrome, Brave, and Edge. Manual install from GitHub (load unpacked) still works.
           Firefox is a separate XPI (temporary add-on, no AMO listing). Safari is a Mac build, with no App Store listing.
           The product works on LinkedIn only.
         </p>
       </section>
+
+      <figure class="demo-video">
+        <video
+          src="../media/linkedin-ai-slop-0.2.6-demo.mp4"
+          poster="../media/linkedin-ai-slop-0.2.6-demo-poster.jpg"
+          width="720"
+          height="720"
+          autoplay
+          muted
+          loop
+          playsinline
+          controls
+          preload="metadata"
+          aria-label="Recording: LinkedIn AI Slop 0.2.6 on a LinkedIn feed"
+        ></video>
+        <figcaption>Version 0.2.6 on my LinkedIn feed: the Ludzki (Human) badge with its score on hover, the AI slop banner, and the Pokaż (Show) button. No audio.</figcaption>
+      </figure>
 
       <h2 class="section-title">How it works</h2>
       <div class="grid-3">
@@ -106,24 +124,27 @@
         </article>
       </div>
 
-      <h2 class="section-title">Install</h2>
+      <h2 class="section-title" id="install">Install</h2>
       <div class="grid-2">
         <article class="card">
           <h2>Chrome and Edge</h2>
+          <p class="actions"><a class="button" href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Install from Chrome Web Store</a></p>
+          <p>In Edge, allow extensions from other stores when the browser asks.</p>
+          <p>Manual install:</p>
           <ol class="steps">
             <li>Clone the <a href="https://github.com/pawelmamcarz/linkedin-ai-slop">repository</a> or unzip <code>store/linkedin-ai-slop-extension.zip</code>.</li>
             <li>Open <code>chrome://extensions</code> or <code>edge://extensions</code> and turn on developer mode.</li>
             <li><strong>Load unpacked</strong> and select <code>extension/</code>.</li>
           </ol>
-          <p>The Chrome Web Store listing is not published. Rebuild the zip with <code>npm run pack:extension</code>.</p>
+          <p>Rebuild the zip with <code>npm run pack:extension</code>.</p>
         </article>
         <article class="card">
           <h2>Brave</h2>
-          <p>Same Chromium package. There is no separate Brave file.</p>
+          <p>Brave installs the same listing from the <a href="https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge">Chrome Web Store</a>. There is no separate Brave file.</p>
+          <p>Manual install:</p>
           <ol class="steps">
             <li>Open <code>brave://extensions</code> and turn on developer mode.</li>
             <li><strong>Load unpacked</strong> and select <code>extension/</code>.</li>
-            <li>When a Chrome Web Store listing exists, Brave can install that same item. It does not exist yet.</li>
           </ol>
           <p>Notes: <code>store/BRAVE.md</code>.</p>
         </article>
