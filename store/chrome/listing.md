@@ -1,6 +1,6 @@
-# Chrome Web Store: LinkedIn AI Slop 0.2.6
+# Chrome Web Store: LinkedIn AI Slop 0.2.7
 
-Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip`. Odtworzysz ją przez `npm run pack:chrome`. Stan zgłoszenia i deklaracje danych: [CHROMEWEBSTORE.md](../../CHROMEWEBSTORE.md).
+Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip`. Odtworzysz ją przez `npm run pack:chrome`. Stan zgłoszenia i deklaracje danych: [CHROMEWEBSTORE.md](../../CHROMEWEBSTORE.md).
 
 Język domyślny pozycji: polski. Angielski wklej jako drugi język, jeśli panel na to pozwala.
 
@@ -35,7 +35,7 @@ Marks LinkedIn posts Human, Mixed, or AI slop using Jev. The API key stays on th
 
 LinkedIn AI Slop oznacza posty na feedzie LinkedIn jako Ludzki, Mieszany albo AI slop, aby pomóc Ci zauważyć szablonowe i ogólnikowe treści.
 
-Posty są oceniane podczas przewijania. Po najechaniu na oznaczenie zobaczysz wynik oceny stylu tekstu. Post oznaczony jako AI slop otrzymuje mały baner i lekką zasłonę. „Pokaż” odsłania treść, „Ukryj” przywraca zasłonę. Przyciski posta pozostają dostępne. Zasłanianie możesz wyłączyć w ustawieniach.
+Posty są oceniane podczas przewijania. Po najechaniu na oznaczenie zobaczysz wynik oceny stylu tekstu. Podgląd pokazuje konkretność treści i niepewność oceny. Mocna, zgodna ocena AI slop dodaje mały baner i lekką zasłonę; słabszy lub sprzeczny wynik pozostawia post odsłonięty. Zmiana czułości przelicza dostępne wyniki bez ponownego wysyłania tekstów. „Pokaż” odsłania treść, „Ukryj” przywraca zasłonę. Przyciski posta pozostają dostępne. Zasłanianie możesz wyłączyć w ustawieniach.
 
 W ustawieniach możesz włączyć lub wyłączyć ocenianie, zmienić próg i minimalną długość tekstu oraz wybrać tryb Demo, własne proxy (BYOK) albo Pro. Demo jest bezpłatne i ma limity ocen. Płatny Pro jest opcjonalny. Po limicie minutowym ocenianie wznawia się automatycznie.
 
@@ -56,7 +56,7 @@ Polityka: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
 LinkedIn AI Slop labels LinkedIn feed posts Human, Mixed, or AI slop to help you notice formulaic and generic writing.
 
-Posts are evaluated as you scroll. Hover a badge to see the writing-style score. An AI slop verdict adds a small banner and a light cover. "Pokaż" (Show) reveals the content; "Ukryj" (Hide) restores the cover. Post buttons remain usable. You can disable covering in settings.
+Posts are evaluated as you scroll. Hover a badge to see the writing-style score. The preview shows substance and uncertainty signals. Strong, consistent AI slop assessments add a small banner and a light cover; weaker or conflicting signals leave the post uncovered. Sensitivity changes recalculate available results without sending text again. "Pokaż" (Show) reveals the content; "Ukryj" (Hide) restores the cover. Post buttons remain usable. You can disable covering in settings.
 
 Settings let you enable evaluation, change the threshold and minimum text length, and choose Demo, your own proxy (BYOK), or Pro. Demo is free with evaluation limits; paid Pro is optional. Evaluation resumes automatically after a minute rate limit.
 
@@ -156,8 +156,8 @@ Ikona 128: `extension/icons/icon128.png` (w zipie jest też 16, 32, 48).
 
 1. Otwórz istniejącą pozycję `blekdfdinogdmbpakkgaecdpilanobge` u wydawcy `pawelmamcarz`.
 2. Sprawdź publiczną politykę prywatności z tabeli.
-3. Uruchom testy, typecheck i `npm run pack:chrome`; wybierz ZIP 0.2.6. Nie pakuj katalogu `extension/` ręcznie.
-4. Jeśli 0.2.5 nadal oczekuje na recenzję, wycofaj ją w celu aktualizacji poprawionego pakietu. Wgraj 0.2.6; język domyślny: polski.
+3. Uruchom testy, typecheck i `npm run pack:chrome`; wybierz ZIP 0.2.7. Nie pakuj katalogu `extension/` ręcznie.
+4. Potwierdź bieżący stan pozycji. Wersja 0.2.6 jest opublikowana; wgraj nowy ZIP 0.2.7. Język domyślny: polski.
 5. Wklej nazwę, krótki opis i opis szczegółowy z tego pliku. Kategoria: Productivity.
 6. Wklej single purpose.
 7. Privacy: URL polityki z tabeli. Zaznacz, że wysyłany jest tekst posta do własnego serwera w celu klasyfikacji. Zaznacz, że danych nie sprzedajesz i nie używasz do reklam. Remote code: No.

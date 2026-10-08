@@ -1,0 +1,47 @@
+{
+  "sourceCommit": "011ee1fded336d3d3127315d06435ebc8b22c15d",
+  "extensionVersion": "0.2.6",
+  "date": "2026-10-08",
+  "scope": "Offline synthetic reproductions against existing code; no production changes or accuracy benchmark",
+  "weakVoiceOverride": {
+    "input": {
+      "slopProbability": 0.2,
+      "slopIntensity": 0.2,
+      "substanceProbability": 0.9,
+      "voice": "ai_slop",
+      "voiceConfidence": 0.01,
+      "voiceProbabilities": { "human": 0.33, "mixed": 0.33, "ai_slop": 0.34 }
+    },
+    "outputs": [
+      { "threshold": 0.15, "badge": "slop", "isAiSlop": true },
+      { "threshold": 0.65, "badge": "slop", "isAiSlop": false },
+      { "threshold": 0.95, "badge": "slop", "isAiSlop": false }
+    ]
+  },
+  "formatting": {
+    "paragraphsPreservedByBuildState": false,
+    "paragraphAndFlatTextShareCacheKey": true
+  },
+  "queue": {
+    "initialRequests": 2,
+    "offscreenPostStillSent": true,
+    "harness": "jsdom with simulated IntersectionObserver and bounding rectangles; response to one of two active requests released after third queued card moved offscreen"
+  },
+  "enable": {
+    "initialRequestsAfterEnable": 1,
+    "newCardAutomaticallyEvaluated": false,
+    "harness": "jsdom; boot with enabled false, deliver enabled true storage change, resolve first evaluation, append new visible card and wait 650 ms"
+  },
+  "fallback": {
+    "foreignTextIncluded": true,
+    "extractedChars": 729,
+    "harness": "jsdom with innerText getter mapped to textContent; no known own-text selector; nested update-components-mini-update-v2 contains foreign marker",
+    "limitation": "Isolates disconnected-clone node removal; not full Chrome rendering verification"
+  },
+  "baseline": {
+    "testsPassed": 62,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "typecheck": "passed"
+  }
+}

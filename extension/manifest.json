@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn AI Slop",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena Jev. Klucz API zostaje na proxy.",
   "permissions": ["storage"],
   "host_permissions": [
@@ -34,13 +34,13 @@
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],
-      "js": ["ext-api.js", "content.js"],
+      "js": ["ext-api.js", "verdict-policy.js", "content.js"],
       "css": ["badge.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["http://127.0.0.1:8787/*", "http://localhost:8787/*"],
-      "js": ["ext-api.js", "content.js"],
+      "js": ["ext-api.js", "verdict-policy.js", "content.js"],
       "css": ["badge.css"],
       "run_at": "document_idle"
     }

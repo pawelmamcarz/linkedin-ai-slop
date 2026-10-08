@@ -69,7 +69,7 @@ describe("manifest hostów", () => {
   it("nie ma klucza Safari w manifeście Chromium", () => {
     assert.equal(manifest.browser_specific_settings, undefined);
     assert.equal(manifest.background.service_worker, "background.js");
-    assert.deepEqual(manifest.content_scripts[0].js, ["ext-api.js", "content.js"]);
+    assert.deepEqual(manifest.content_scripts[0].js, ["ext-api.js", "verdict-policy.js", "content.js"]);
   });
 });
 

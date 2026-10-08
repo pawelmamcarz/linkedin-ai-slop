@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { MAX_TEXT_CHARS } from "../../jev/thresholds.ts";
 import { mapAnswers, type EvaluateResult, type JevAnswers } from "./map-answers.ts";
+import { JEV_RUBRIC_VERSION } from "../../jev/questions.ts";
 
 /**
  * Pamięć podręczna werdyktów publicznego proxy.
@@ -39,11 +40,11 @@ const entries = new Map<string, CachedVerdict>();
 const stats = { hits: 0, misses: 0 };
 
 export function normalizePostText(text: string): string {
-  return text.replace(/\s+/g, " ").trim().slice(0, MAX_TEXT_CHARS);
+  return text.replace(/\r\n?/g, "\n").replace(/[^\S\n]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_TEXT_CHARS);
 }
 
 export function verdictCacheKey(text: string): string {
-  return createHash("sha256").update(normalizePostText(text)).digest("hex");
+  return createHash("sha256").update(JEV_RUBRIC_VERSION + "\0" + normalizePostText(text)).digest("hex");
 }
 
 export function verdictCacheConfig(env: NodeJS.ProcessEnv = process.env): CacheConfig {

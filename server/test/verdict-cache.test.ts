@@ -24,7 +24,11 @@ describe("verdict cache", () => {
     const b = verdictCacheKey("Foo bar");
     assert.equal(a, b);
     assert.equal(a.includes("Foo"), false);
-    assert.equal(normalizePostText("  a \n b  "), "a b");
+    assert.equal(normalizePostText("  a \n b  "), "a\nb");
+  });
+
+  it("nie zlewa listy z tekstem bez podziału wierszy", () => {
+    assert.notEqual(verdictCacheKey("Lista:\n• jeden\n• dwa"), verdictCacheKey("Lista: • jeden • dwa"));
   });
 
   it("wyrzuca wpis po TTL i obcina kolejkę do VERDICT_CACHE_MAX", () => {

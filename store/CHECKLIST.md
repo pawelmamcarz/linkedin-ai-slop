@@ -1,6 +1,10 @@
 # Checklista Chrome Web Store
 
-Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip` (`npm run pack:chrome`). Bieżący stan zgłoszenia: [`../CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
+Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip` (`npm run pack:chrome`). Bieżący stan zgłoszenia: [`../CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
+
+## Wersja 0.2.7
+
+Odznaka respektuje próg, zasłona wymaga mocnych zgodnych sygnałów, a podgląd pokazuje konkretność i niepewność. Zmiana samej czułości przelicza wyniki lokalnie. Zachowane akapity i poprawione usuwanie cudzego tekstu; włączenie uruchamia obserwatory, a przewinięte posty nie zużywają żądań. Sprawdź testy, typecheck, manifest i Safari 0.2.7, zawartość ZIP oraz stan publikacji w CHROMEWEBSTORE.md.
 
 ## Wersja 0.2.6
 
@@ -34,11 +38,11 @@ v0.2.1 dodaje na ocenionych odznakach podpowiedź po najechaniu: "AI slop: N%". 
 
 v0.2.1 adds a hover tip on scored badges: "AI slop: N%". The public Demo cap is 60 scores per minute and 200 per day per IP (`EVALUATE_DAILY_IP_CAP=200`).
 
-Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.4).
+Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.7).
 
 ## Przed wysłaniem
 
-- [ ] Wersja w `extension/manifest.json` to 0.2.4
+- [ ] Wersja w `extension/manifest.json` to 0.2.7
 - [ ] `npm run pack:extension` po ostatniej zmianie w `extension/`
 - [ ] W zipie są `icons/icon16.png`, `icons/icon48.png`, `icons/icon128.png`
 - [ ] Domyślny adres proxy to `https://proxy-production-ebcc.up.railway.app`

@@ -34,7 +34,7 @@ describe("odznaka", () => {
     );
   });
 
-  it("jest slop przy heavy lub voice ai_slop", () => {
+  it("nie omija progu przy heavy lub voice ai_slop", () => {
     assert.equal(
       badgeFromSignals({
         slopProbability: 0.2,
@@ -42,7 +42,7 @@ describe("odznaka", () => {
         voice: "human",
         threshold: 0.65,
       }),
-      "slop",
+      "mixed",
     );
     assert.equal(
       badgeFromSignals({
@@ -51,7 +51,7 @@ describe("odznaka", () => {
         voice: "ai_slop",
         threshold: 0.65,
       }),
-      "slop",
+      "mixed",
     );
   });
 
@@ -87,6 +87,31 @@ describe("odznaka", () => {
 });
 
 describe("mapAnswers", () => {
+  it("oddziela mocną zgodną ocenę od niepewnego wyniku i nie myli confidence z prawdopodobieństwem", () => {
+    const answers = {
+      is_ai_slop: { type: "noul" as const, noul: 0.91 },
+      slop_intensity: { type: "score" as const, score: 1.8 },
+      has_substance: { type: "noul" as const, noul: 0.12 },
+      voice: { type: "choice" as const, choice: "ai_slop", confidence: 0.7, probabilities: { human: 0.1, mixed: 0.1, ai_slop: 0.8 } },
+    };
+    const strong = mapAnswers("strong", "fixture", answers) as ReturnType<typeof mapAnswers> & { shouldCover?: boolean; uncertain?: boolean; voiceProbability?: number | null };
+    assert.equal(strong.shouldCover, true);
+    assert.equal(strong.uncertain, false);
+    assert.equal(strong.voiceProbability, 0.8);
+    const strict = mapAnswers("strict", "fixture", { ...answers, is_ai_slop: { type: "noul", noul: 0.99 } }, 0.95) as typeof strong;
+    assert.equal(strict.shouldCover, true);
+    const weak = mapAnswers("weak", "fixture", { ...answers, is_ai_slop: { type: "noul", noul: 0.2 }, voice: { ...answers.voice, confidence: 0.01, probabilities: { human: 0.33, mixed: 0.33, ai_slop: 0.34 } } }, 0.95) as typeof strong;
+    assert.equal(weak.badge, "mixed");
+    assert.equal(weak.isAiSlop, false);
+    assert.equal(weak.shouldCover, false);
+    assert.equal(weak.uncertain, true);
+    const conflict = mapAnswers("conflict", "fixture", { ...answers, slop_intensity: { type: "score", score: 0.1 }, voice: { type: "choice", choice: "human", probabilities: { human: 0.9, mixed: 0.05, ai_slop: 0.05 } } }) as typeof strong;
+    assert.equal(conflict.badge, "slop");
+    assert.equal(conflict.shouldCover, false);
+    assert.equal(conflict.uncertain, true);
+    const missing = mapAnswers("missing", "fixture", { ...answers, voice: { type: "choice", choice: "ai_slop", confidence: 0.99 } }) as typeof strong;
+    assert.equal(missing.voiceProbability, null);
+  });
   it("składa wynik UI z odpowiedzi Jev", () => {
     const result = mapAnswers(
       "urn:li:activity:1",
@@ -109,6 +134,9 @@ describe("mapAnswers", () => {
 });
 
 describe("payload Jev", () => {
+  it("zachowuje akapity i listy w materiale do oceny", () => {
+    assert.equal(buildState({ postId: "x", text: "  Wdrożenie:\r\n\r\n•  trzy   poprawki\n•  dwa testy  " }).post_text, "Wdrożenie:\n\n• trzy poprawki\n• dwa testy");
+  });
   it("trzyma model jev-latest i cztery pytania", () => {
     const payload = buildSystemOnePayload({
       postId: "p1",

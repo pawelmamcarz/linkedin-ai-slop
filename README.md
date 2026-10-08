@@ -12,7 +12,7 @@ Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.
 
 ## Uruchomienie
 
-Wersja 0.2.6 ocenia samodzielne posty od 100 znaków własnego tekstu (przy udostępnieniu co najmniej 200), czeka na rozwinięcie „więcej” i odświeża wynik po zmianie tekstu. Zasłona ma 22% krycia, a mały baner pod autorem nie blokuje przycisków posta. Limit minutowy automatycznie wznawia kolejkę; tylko limit dobowy zatrzymuje Demo do odnowienia limitu. Zapisany własny próg długości zostaje zachowany — jeśli masz wcześniej zapisane 200, ustaw 100 w opcjach i zapisz.
+Wersja 0.2.7 ocenia samodzielne posty od 100 znaków własnego tekstu (przy udostępnieniu co najmniej 200), czeka na rozwinięcie „więcej” i odświeża wynik po zmianie tekstu. Zasłona ma 22% krycia, a mały baner pod autorem nie blokuje przycisków posta. Limit minutowy automatycznie wznawia kolejkę; tylko limit dobowy zatrzymuje Demo do odnowienia limitu. Zapisany własny próg długości zostaje zachowany — jeśli masz wcześniej zapisane 200, ustaw 100 w opcjach i zapisz.
 
 Potrzebny Node.js 20+.
 
@@ -130,24 +130,24 @@ Safari nie ładuje tego katalogu wprost. Na Macu: `bash scripts/build-safari.sh`
 
 Wejdź na [https://www.linkedin.com/feed/](https://www.linkedin.com/feed/) i przewiń. Posty, które wejdą w widok (ok. 35% wysokości), dostają odznakę w prawym górnym rogu karty. Najedź na ocenioną odznakę, żeby zobaczyć "AI slop: N%".
 
-Gdy werdykt to **AI slop**, karta dostaje baner na całą szerokość: „AI slop” i przycisk „Pokaż”. Baner stoi pod nagłówkiem autora (imię i awatar zostają widoczne), nad tekstem. Pod banerem jest lekki scrim, bez `filter: blur`. Treść nie jest czytelna, dopóki nie wybierzesz „Pokaż”. Potem przycisk zmienia się w „Ukryj”, a post da się czytać. Mała odznaka w rogu zostaje dla Ludzki i Mieszany. Przy AI slop baner zastępuje odznakę, żeby nie dublować etykiety. Opcja „Zakrywaj posty AI slop” (Cover AI slop posts, klucz `blurSlop`) jest domyślnie włączona. To samo dotyczy kart recent-activity, które content script już oznacza. Posty zalogowanej osoby są pomijane, gdy da się odczytać profil z menu Ja.
+Odznaka **AI slop** pojawia się po przekroczeniu ustawionego progu. Automatyczna lekka zasłona wymaga wyniku co najmniej 0.80, przekroczenia własnego progu i zgodnych sygnałów stylu. Oceny sprzeczne lub bliskie progowi przy słabszym wyniku pozostawiają post odsłonięty. Najedź na odznakę lub ustaw na niej fokus, żeby zobaczyć intensywność, konkretność i niepewność. To ocena stylu, nie dowód autorstwa AI. Baner zasłanianego posta stoi pod autorem; przyciski posta pozostają dostępne. Pokaż/Ukryj zmienia zasłonę. Opcja `blurSlop` wyłącza zasłanianie. Posty zalogowanej osoby są pomijane, gdy da się rozpoznać jej profil.
 
 Żeby zobaczyć samą nakładkę bez LinkedIn: załaduj rozszerzenie, uruchom proxy i otwórz [http://127.0.0.1:8787/demo](http://127.0.0.1:8787/demo). To fixture z tymi samymi selektorami, nie strona LinkedIn.
 
 ## Progi
 
-Jev zwraca prawdopodobieństwa. Decyzja, co pokazać, jest w kodzie: [`jev/thresholds.ts`](jev/thresholds.ts).
+Jev zwraca prawdopodobieństwa. Decyzja, co pokazać, jest we wspólnej polityce opisanej poniżej.
 
-| Sygnał | Próg | Efekt |
+| Sygnał | Reguła | Efekt |
 | --- | --- | --- |
-| Noul `is_ai_slop` | domyślnie **≥ 0.65** (suwak 0.15–0.95 w opcjach) | `isAiSlop = true` i odznaka **AI slop** |
-| Score `slop_intensity` | **&lt; 0.75** ludzki, **&lt; 1.5** mieszany, **≥ 1.5** ciężki slop | ciężki slop wymusza odznakę **AI slop** |
-| Choice `voice` | etykieta `ai_slop` | też odznaka **AI slop** |
-| Choice `voice` albo intensywność `mixed`, bez warunków wyżej | — | odznaka **Mieszany** |
-| reszta | — | odznaka **Ludzki** |
-| Noul `has_substance` | **≥ 0.50** | tylko w dymku („Substancja: tak/nie”), nie zmienia koloru |
+| Noul `is_ai_slop` | domyślnie ≥ 0.65; suwak 0.15–0.95 | odznaka AI slop i `isAiSlop: true` |
+| Intensywność / voice | nie omijają progu Noul | opis stylu, Mieszany przy sygnale poniżej progu |
+| `voiceProbability` | prawdopodobieństwo wybranej opcji, nie `confidence` | pomocniczy sygnał; brak danych oznacza `null` |
+| `uncertain` | sprzeczne sygnały lub słaby wynik blisko progu | informacja o niepewności, bez automatycznej zasłony |
+| `shouldCover` | Noul ≥ max(0.80, próg), brak niepewności i mocny sygnał stylu | pozwala zasłonić post przy włączonym `blurSlop` |
+| `has_substance` | ≥ 0.50 | informacja o konkretnej treści w podglądzie |
 
-Content script nie wysyła własnego tekstu krótszego niż 200 znaków po odcięciu hashtagów, @wzmianek, linków i emoji. Na proxy limit ciała to 6000 znaków.
+Wspólne reguły: [`extension/verdict-policy.js`](extension/verdict-policy.js). Podane granice zasłaniania są ostrożną polityką produktu, nie wynikiem kalibracji na rzeczywistym feedzie. Zmiana samej czułości przelicza posiadane wyniki bez żądań. Samodzielne posty wymagają 100 znaków, komentarze do udostępnień co najmniej 200. Do modelu trafia maksymalnie 6000 znaków, z zachowanymi akapitami. Cache uwzględnia układ tekstu i wersję rubryki.
 
 ## Pytania Jev
 

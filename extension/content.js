@@ -23,6 +23,8 @@
     }
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function factory() {
+  const verdictPolicy = typeof module === "object" && module.exports
+    ? require("./verdict-policy.js") : globalThis.LinkedInAiSlopVerdict;
   const DEFAULTS = {
     enabled: true,
     threshold: 0.65,
@@ -163,6 +165,7 @@
   const observedPosts = new Set();
   let selectorMissLogged = false;
   let booted = false;
+  let watching = false;
   let generation = 0;
   let lastHref = "";
   const MIN_VISIBLE_PX = 120;
@@ -390,10 +393,10 @@
       if (rootUrn && urn && urn !== rootUrn) drop.push(node);
     }
     for (const node of drop) {
-      if (node.isConnected) node.remove();
+      node.remove();
     }
     clone.querySelectorAll(
-      ".comments-comment-item, .comments-comments-list, .social-details-social-counts, button, nav, .update-components-actor",
+      ".comments-comment-item, .comments-comments-list, .social-details-social-counts, button, nav, script, style, .update-components-actor, .lais-badge, .lais-cover, .lais-banner, .lais-scrim",
     ).forEach((node) => node.remove());
   }
 
@@ -410,7 +413,12 @@
     if (best) return best.slice(0, 6000);
     const clone = el.cloneNode(true);
     stripNestedFromClone(clone, ownUrn(el));
-    const fallback = cleanText(clone.innerText || "");
+    clone.querySelectorAll("br").forEach((node) => node.replaceWith("\n"));
+    clone.querySelectorAll("p, div, li, blockquote, h1, h2, h3").forEach((node) => {
+      node.prepend("\n");
+      node.append("\n");
+    });
+    const fallback = cleanText(clone.textContent || "");
     return fallback ? fallback.slice(0, 6000) : "";
   }
 
@@ -434,8 +442,11 @@
   function cleanText(value) {
     return String(value || "")
       .replace(/\u00a0/g, " ")
-      .replace(/…więcej|…more|see more|więcej$/gi, "")
-      .replace(/\s+/g, " ")
+      .replace(/(?:…\s*(?:więcej|more)|see more|więcej)\s*$/gi, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[^\S\n]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
 
@@ -461,6 +472,7 @@
       badge = (el.ownerDocument || document).createElement("div");
       badge.className = "lais-badge lais-badge--pending";
       badge.setAttribute("role", "status");
+      badge.tabIndex = 0;
       el.appendChild(badge);
     }
     return badge;
@@ -520,8 +532,25 @@
       meta.textContent = intensity;
       tip.appendChild(meta);
     }
+    const substance = Number(result.substanceProbability);
+    if (Number.isFinite(substance)) {
+      const detail = doc.createElement("span");
+      detail.className = "lais-tip__meta";
+      detail.textContent = substance >= 0.5 ? "Zawiera konkretne informacje" : "Mało konkretnej treści";
+      tip.appendChild(detail);
+    }
+    if (result.uncertain) {
+      const caution = doc.createElement("span");
+      caution.className = "lais-tip__meta";
+      caution.textContent = "Ocena niepewna — post pozostaje odsłonięty";
+      tip.appendChild(caution);
+    }
+    const scope = doc.createElement("span");
+    scope.className = "lais-tip__meta";
+    scope.textContent = "Ocena stylu tekstu, nie dowód autorstwa AI";
+    tip.appendChild(scope);
     badge.appendChild(tip);
-    badge.title = percent;
+    badge.title = tip.textContent;
   }
 
   function setBadge(el, state, result) {
@@ -557,16 +586,18 @@
       if (!result) return;
       paintScoredBadge(badge, result);
     } finally {
-      syncCardFromState(el, state);
+      syncCardFromState(el, state, result);
     }
   }
 
-  function syncCardFromState(el, state) {
+  function syncCardFromState(el, state, result) {
     if (state === "slop") {
       el.dataset.laisVerdict = "slop";
+      el.dataset.laisAutoCover = result?.shouldCover === false ? "0" : "1";
     } else {
       delete el.dataset.laisVerdict;
       delete el.dataset.laisRevealed;
+      delete el.dataset.laisAutoCover;
       el.classList.remove("li-ai-slop-revealed", "li-ai-slop-covered", "li-ai-slop-blurred");
     }
     syncCardCover(el);
@@ -579,7 +610,7 @@
   function syncCardCover(el) {
     const slop = el.dataset.laisVerdict === "slop";
     const revealed = el.dataset.laisRevealed === "1";
-    const allow = slop && settings.blurSlop !== false;
+    const allow = slop && el.dataset.laisAutoCover !== "0" && settings.blurSlop !== false;
     el.classList.toggle("li-ai-slop-covered", allow && !revealed);
     el.classList.toggle("li-ai-slop-revealed", allow && revealed);
     el.classList.remove("li-ai-slop-blurred");
@@ -680,7 +711,7 @@
     const badge = el.querySelector(":scope > .lais-badge");
     const label = badge?.querySelector(".lais-badge__label")?.textContent || "AI slop";
     const percent = badge?.querySelector(".lais-tip__pct")?.textContent || "";
-    const meta = badge?.querySelector(".lais-tip__meta")?.textContent || "";
+    const meta = Array.from(badge?.querySelectorAll(".lais-tip__meta") || []).map((node) => node.textContent).join(" · ");
     const title = badge?.getAttribute("title") || percent;
     return { label: String(label).trim() || "AI slop", percent, meta, title };
   }
@@ -1013,7 +1044,7 @@
   }
 
   function coverNeedsRepair(el) {
-    const allow = el.dataset.laisVerdict === "slop" && settings.blurSlop !== false;
+    const allow = el.dataset.laisVerdict === "slop" && el.dataset.laisAutoCover !== "0" && settings.blurSlop !== false;
     const revealed = el.dataset.laisRevealed === "1";
     const hasCover = Boolean(el.querySelector(".lais-cover, .lais-scrim"));
     const hasBanner = Boolean(el.querySelector(".lais-banner"));
@@ -1134,6 +1165,21 @@
     return rect.bottom > 0 && rect.top < height && rect.height > 0;
   }
 
+  function currentVerdict(result) {
+    if (!verdictPolicy || !Number.isFinite(result?.slopProbability)) return result;
+    const intensity = result.slopIntensityLabel || (Number.isFinite(result.slopIntensity)
+      ? result.slopIntensity >= 1.5 ? "heavy" : result.slopIntensity < 0.75 ? "human" : "mixed"
+      : result.badge === "human" ? "human" : "mixed");
+    const decision = verdictPolicy.decide({
+      slopProbability: result.slopProbability,
+      intensity,
+      voice: result.voice || (result.badge === "human" ? "human" : "mixed"),
+      voiceProbability: result.voiceProbability,
+      threshold: settings.threshold,
+    });
+    return { ...result, ...decision, labelPl: decision.badge === result.badge ? result.labelPl : { human: "Ludzki", mixed: "Mieszany", slop: "AI slop" }[decision.badge] };
+  }
+
   function demoLimitActive() {
     if (settings.mode !== "demo") return false;
     const until = Math.max(demoLimitedUntil, readDemoLimitUntil());
@@ -1193,6 +1239,7 @@
     delete el.dataset.laisVerdict;
     delete el.dataset.laisRevealed;
     delete el.dataset.laisTextHash;
+    delete el.dataset.laisAutoCover;
   }
 
   function enqueue(el) {
@@ -1231,7 +1278,7 @@
     if (!settings.enabled || demoLimitActive() || Date.now() < limitedUntil) return;
     while (active < CONCURRENCY && queue.length) {
       const item = queue.shift();
-      if (!item || item.gen !== generation || !item.el.isConnected) continue;
+      if (!item || item.gen !== generation || !item.el.isConnected || (intersect && !isInView(item.el))) continue;
       active += 1;
       const flightKey = `${item.gen}:${item.id}`;
       inFlight.add(flightKey);
@@ -1282,6 +1329,10 @@
     setBadge(item.el, "pending");
     await tryExpand(item.el);
     if (item.gen !== generation || !item.el.isConnected) return;
+    if (intersect && !isInView(item.el)) {
+      clearCardChrome(item.el);
+      return;
+    }
     const current = extractPost(item.el);
     if (!current) {
       clearCardChrome(item.el);
@@ -1300,7 +1351,7 @@
       threshold: settings.threshold,
       proxyUrl: settings.proxyUrl,
     };
-    const result = await requestEvaluation(payload);
+    const result = currentVerdict(await requestEvaluation(payload));
     if (item.gen !== generation) return;
     const latest = extractPost(item.el);
     if (!latest || latest.id !== current.id || hashText(latest.text) !== fingerprint) {
@@ -1416,6 +1467,8 @@
   }
 
   function watch() {
+    if (watching) return;
+    watching = true;
     if (observer) observer.disconnect();
     observer = new MutationObserver((records) => {
       const relevant = records.some((record) => {
@@ -1455,11 +1508,12 @@
       restoreDimmed(node);
     });
     document.querySelectorAll(".lais-badge, .lais-cover, .lais-banner, .lais-scrim").forEach((n) => n.remove());
-    document.querySelectorAll(".li-ai-slop-covered, .li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict]").forEach((el) => {
+    document.querySelectorAll(".li-ai-slop-covered, .li-ai-slop-blurred, .li-ai-slop-revealed, [data-lais-verdict], [data-lais-text-hash], [data-lais-auto-cover]").forEach((el) => {
       el.classList.remove("li-ai-slop-covered", "li-ai-slop-blurred", "li-ai-slop-revealed");
       delete el.dataset.laisVerdict;
       delete el.dataset.laisRevealed;
       delete el.dataset.laisTextHash;
+      delete el.dataset.laisAutoCover;
     });
   }
 
@@ -1470,25 +1524,23 @@
     const api = extensionApi();
     if (api?.onStorageChanged) {
       api.onStorageChanged((changes) => {
-        if (changes.blurSlop) settings.blurSlop = changes.blurSlop.newValue !== false;
-        if (changes.minTextChars) settings.minTextChars = clampMinTextChars(changes.minTextChars.newValue);
-        const changedKeys = Object.keys(changes);
-        if (changedKeys.length > 0 && changedKeys.every((key) => key === "blurSlop")) {
+        const updated = { ...settings };
+        for (const key of Object.keys(DEFAULTS)) {
+          if (changes[key]) updated[key] = changes[key].newValue ?? DEFAULTS[key];
+        }
+        const next = api.resolveSettings ? api.resolveSettings(updated) : updated;
+        const changedKeys = Object.keys(DEFAULTS).filter((key) => next[key] !== settings[key]);
+        settings = next;
+        if (!changedKeys.length) return;
+        if (changedKeys.every((key) => key === "threshold" || key === "blurSlop")) {
+          for (const cached of verdicts.values()) cached.result = currentVerdict(cached.result);
+          if (!settings.enabled) return;
+          document.querySelectorAll("[data-lais-text-hash]").forEach((el) => {
+            const cached = verdicts.get(postId(el));
+            if (cached && cached.fingerprint === el.dataset.laisTextHash) setBadge(el, cached.result.badge, cached.result);
+          });
           applySettings({ blurSlop: settings.blurSlop });
           return;
-        }
-        if (changes.enabled) settings.enabled = changes.enabled.newValue !== false;
-        if (changes.threshold) settings.threshold = Number(changes.threshold.newValue) || DEFAULTS.threshold;
-        if (changes.proxyUrl || changes.mode || changes.proToken || changes.byokProxyUrl) {
-          const apiNow = extensionApi();
-          const next = {
-            ...settings,
-            proxyUrl: changes.proxyUrl ? changes.proxyUrl.newValue : settings.proxyUrl,
-            mode: changes.mode ? changes.mode.newValue : settings.mode,
-            proToken: changes.proToken ? changes.proToken.newValue : settings.proToken,
-            byokProxyUrl: changes.byokProxyUrl ? changes.byokProxyUrl.newValue : settings.byokProxyUrl,
-          };
-          settings = apiNow?.resolveSettings ? apiNow.resolveSettings(next) : next;
         }
         generation += 1;
         queue.length = 0;
@@ -1503,6 +1555,7 @@
         }
         verdicts.clear();
         clearBadges();
+        watch();
         scheduleScan();
       });
     }
