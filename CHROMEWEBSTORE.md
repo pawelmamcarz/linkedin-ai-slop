@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — LinkedIn AI Slop
 
-Last updated: 2026-10-08. Published version: **0.2.6**, confirmed in the refreshed native Package dashboard. Version **0.2.7** is prepared for the approved update and has not yet been uploaded. Update copy is in [the listing](store/chrome/listing.md); validation is in [the release note](docs/audits/2026-10-08-release-0.2.7.md).
+Last updated: 2026-10-08. Published version: **0.2.6**, confirmed in the refreshed native Package dashboard. Version **0.2.7** has been uploaded and submitted for review; the dashboard confirms **Oczekuje na sprawdzenie**. Automatic publication after approval is selected. Update copy is in [the listing](store/chrome/listing.md); validation is in [the release note](docs/audits/2026-10-08-release-0.2.7.md).
 
 ## Submission Status
 
@@ -8,6 +8,7 @@ Last updated: 2026-10-08. Published version: **0.2.6**, confirmed in the refresh
 - Item ID: `blekdfdinogdmbpakkgaecdpilanobge`.
 - [Developer dashboard](https://chrome.google.com/webstore/devconsole/680b68e2-c71f-45d5-aca9-a787c2420ba8/blekdfdinogdmbpakkgaecdpilanobge/edit/status).
 - On 2026-10-08, the refreshed Package tab confirmed **Published — public**, published version **0.2.6**, draft version **0.2.6**, with the upload control enabled. Earlier cached dashboard output still showed the previous review; the refreshed state resolves that discrepancy.
+- On 2026-10-08, ZIP **0.2.7** was uploaded. The Package tab confirmed draft **0.2.7** and published **0.2.6**. The new Polish description and 479-character test instructions were saved. The final submission dialog confirmed receipt. After reload, Package showed **Oczekuje na sprawdzenie**, draft **0.2.7** at revision `00003`, and published **0.2.6**.
 - [Public listing](https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge).
 - Permissions and data use are unchanged in 0.2.7. No private account credentials are required for review.
 
@@ -58,7 +59,7 @@ Single purpose:
 | Small promo tile | 440×280 | `store/chrome/assets/tile-440x280.png` | Available |
 | Marquee | 1400×560 | `store/chrome/assets/marquee-1400x560.png` | Available |
 
-Prepared package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip`, 13 files, 39,064 bytes. SHA-256: `fd30dcf2597c29449cbd81cba87debbb4eaeb6bd570cad502c04c132ba03ec90`. Every packaged file matches `extension/`. No server, credentials, dependencies or tests are included.
+Submitted package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip`, 13 files, 39,064 bytes. SHA-256: `fd30dcf2597c29449cbd81cba87debbb4eaeb6bd570cad502c04c132ba03ec90`. Every packaged file matches `extension/`. No server, credentials, dependencies or tests are included.
 
 ## Permissions Justification
 
@@ -109,19 +110,19 @@ Support: https://github.com/pawelmamcarz/linkedin-ai-slop/issues
 No extension account, API key or purchase required. Demo is default. Popup: Sprawdź proxy. With your LinkedIn test account, open linkedin.com/feed and scroll posts with 100+ characters (reshares: 200+ own characters). Hover/focus badges for substance and uncertainty. Strong consistent slop: light cover, Pokaż/Ukryj; reactions work. Uncertain results stay uncovered. Options: change sensitivity without new requests; disable covering. Popup/settings work without LinkedIn login.
 ```
 
-Prepared instructions use 479 of the dashboard's 500-character limit. Login/password fields are empty. The extension's automatic demo injection is registered for localhost:8787, not the hosted fixture; the LinkedIn feed is the integration test path.
+Saved instructions use 479 of the dashboard's 500-character limit. Login/password fields are empty. The extension's automatic demo injection is registered for localhost:8787, not the hosted fixture; the LinkedIn feed is the integration test path.
 
 ## Version History & Review Notes
 
 | Version | Date | Changes | Verified status |
 | --- | --- | --- | --- |
-| 0.2.7 | 2026-10-08 | Shared sensitivity rules, uncertainty and substance hints, conservative cover, preserved paragraphs, observer and queue fixes. | Prepared; not uploaded yet |
+| 0.2.7 | 2026-10-08 | Shared sensitivity rules, uncertainty and substance hints, conservative cover, preserved paragraphs, observer and queue fixes. | Submitted; pending review verified 2026-10-08; automatic publication after approval |
 | 0.2.5 | 2026-10-07 | Existing package submitted with listing, graphics, privacy, distribution, and reviewer instructions. | Published publicly, verified 2026-10-08 |
 | 0.2.6 | 2026-10-08 | Short standalone posts, asynchronous expansion, text-aware cache, automatic minute-limit retry, light cover and smaller banner. | Published publicly, confirmed in refreshed Package tab 2026-10-08 |
 
 0.2.6 package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip`, 12 files, 37,428 bytes. SHA-256: `6be4786505935a8a492b8af595aab4cafd19cbeca5ff15d1a8dd4b191df18725`. Every packaged file matches `extension/`. Screenshots were regenerated and checked for dimensions and RGB format. Permissions and data use remain as declared above.
 
-Tests pass 62/62 and typecheck passes. Isolated Chrome checks the actual content script with a fixture classification response: short post, flow banner, light cover, reaction click, stable overlay, and Pokaż/Ukryj. Live Demo previously reported 60/min and 500/day; the listing does not claim a fixed daily limit. Detector accuracy on user-labelled LinkedIn posts has not been measured. Existing saved text-length settings are preserved.
+Historical 0.2.6 validation: tests passed 62/62 and typecheck passed. Isolated Chrome checks the actual content script with a fixture classification response: short post, flow banner, light cover, reaction click, stable overlay, and Pokaż/Ukryj. Live Demo previously reported 60/min and 500/day; the listing does not claim a fixed daily limit. Detector accuracy on user-labelled LinkedIn posts has not been measured. Existing saved text-length settings are preserved.
 
 Reviewer instructions saved for 0.2.6:
 
@@ -132,3 +133,5 @@ No extension account, API key or purchase required. Demo is default. Popup: Spra
 Historical submission evidence for 0.2.6: revision `00002` was submitted with automatic publication selected. The refreshed Package tab now confirms publication. See [the 0.2.6 release note](docs/audits/2026-10-07-release-0.2.6.md) for its validation and proxy deployment.
 
 No previous Chrome Web Store rejection was verified. Upload, submission, approval, and publication remain distinct gates; the 0.2.7 state is recorded above after each completed step.
+
+Proxy 0.2.7 is deployed: [PR #27](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/27), commit `02a2a8e73cbd80ca934fd2fca0ffcbab5b0099af`, Railway `78914001-c8c6-42a3-99d5-eeb660e35fd1` SUCCESS. 73/73 tests and typecheck pass; main CI and Pages pass. Live synthetic acceptance confirmed style-v2, selected-choice probability, cover/uncertainty fields and a cache HIT when changing threshold. See the release note for the UI and accuracy limits. Existing store graphics were retained.
