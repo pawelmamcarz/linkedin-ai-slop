@@ -1,16 +1,16 @@
 # Chrome Web Store Listing — LinkedIn AI Slop
 
-Last updated: 2026-10-07. Submitted version: 0.2.5; prepared update: 0.2.6. This document records the last verified submission. Update copy is in [the listing](store/chrome/listing.md), and validation is in [the release note](docs/audits/2026-10-07-release-0.2.6.md).
+Last updated: 2026-10-08. Published version: 0.2.5; update 0.2.6 is pending review. This document records the last verified submission. Update copy is in [the listing](store/chrome/listing.md), and validation is in [the release note](docs/audits/2026-10-07-release-0.2.6.md).
 
 ## Submission Status
 
 - Publisher: `pawelmamcarz`, account `pawel@mamcarz.com`.
-- The publisher dashboard contained no active or archived items. The user authorized a new submission on 2026-10-07.
-- New item ID: `blekdfdinogdmbpakkgaecdpilanobge`.
-- [Developer dashboard](https://chrome.google.com/webstore/devconsole/680b68e2-c71f-45d5-aca9-a787c2420ba8/blekdfdinogdmbpakkgaecdpilanobge/edit).
-- Current verified state: **Pending review** (dashboard: „Oczekuje na sprawdzenie”), submitted on 2026-10-07. The user clicked the final submission button; the dashboard confirmed „Element rozszerzenie został przesłany do sprawdzenia” and „Wersja robocza oczekuje na sprawdzenie”.
-- Automatic publication after approval was selected in the submission confirmation. Approval and public availability remain pending.
-- Saved submission includes package 0.2.5, Polish listing, category, language, homepage, support URL, icon, four screenshots, both promo graphics, privacy declarations, public distribution with optional in-app purchases, all regions, and reviewer instructions. No private account credentials were supplied.
+- Item ID: `blekdfdinogdmbpakkgaecdpilanobge`.
+- [Developer dashboard](https://chrome.google.com/webstore/devconsole/680b68e2-c71f-45d5-aca9-a787c2420ba8/blekdfdinogdmbpakkgaecdpilanobge/edit/status).
+- On 2026-10-08, a refreshed dashboard confirmed **0.2.5 Published — public**. The Package tab independently showed published version 0.2.5. [Public listing](https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge).
+- On 2026-10-08, the prepared ZIP was uploaded and submitted. After refreshing, the Status tab confirmed **Oczekuje na sprawdzenie** and **Wersja robocza oczekuje na sprawdzenie**. The Package tab confirmed **0.2.6 under review / published 0.2.5**, with the submitted CRX at revision `00002`.
+- The updated Polish description and 447-character reviewer instructions were saved. Permissions and data use are unchanged; no private account credentials were supplied.
+- With explicit action-time consent, the banner and options screenshots were replaced, reordered, and saved. The badges and hover screenshots were retained. Automatic publication after approval was selected. **0.2.6 is submitted, but approval and publication are not yet confirmed.**
 
 ## Store Listing
 
@@ -25,21 +25,22 @@ Detailed description for the dashboard:
 ```text
 LinkedIn AI Slop oznacza posty na feedzie LinkedIn jako Ludzki, Mieszany albo AI slop, aby pomóc Ci zauważyć szablonowe i ogólnikowe treści.
 
-Posty są oceniane podczas przewijania. Po najechaniu na oznaczenie zobaczysz wynik oceny stylu tekstu. Post oznaczony jako AI slop otrzymuje baner z przyciskiem Pokaż. Możesz odsłonić treść, zakryć ją ponownie lub wyłączyć zasłanianie w ustawieniach.
+Posty są oceniane podczas przewijania. Po najechaniu na oznaczenie zobaczysz wynik oceny stylu tekstu. Post oznaczony jako AI slop otrzymuje mały baner i lekką zasłonę. „Pokaż” odsłania treść, „Ukryj” przywraca zasłonę. Przyciski posta pozostają dostępne. Zasłanianie możesz wyłączyć w ustawieniach.
 
-W ustawieniach możesz włączyć lub wyłączyć ocenianie, zmienić próg i minimalną długość tekstu oraz wybrać tryb Demo, własne proxy (BYOK) albo Pro. Demo jest bezpłatne i ma limity ocen. Płatny Pro jest opcjonalny.
+W ustawieniach możesz włączyć lub wyłączyć ocenianie, zmienić próg i minimalną długość tekstu oraz wybrać tryb Demo, własne proxy (BYOK) albo Pro. Demo jest bezpłatne i ma limity ocen. Płatny Pro jest opcjonalny. Po limicie minutowym ocenianie wznawia się automatycznie.
 
-Domyślnie tekst krótszy niż 200 znaków po usunięciu hashtagów, wzmianek, linków i emoji jest pomijany. Komentarze pod postami nie są oceniane. Przy udostępnieniu oceniany jest własny komentarz autora, bez tekstu cytowanego posta. Posty zalogowanej osoby są pomijane, jeśli uda się rozpoznać jej profil.
+Domyślnie samodzielny tekst krótszy niż 100 znaków po usunięciu hashtagów, wzmianek, linków i emoji jest pomijany. Komentarze pod postami nie są oceniane. Przy udostępnieniu oceniany jest własny komentarz autora o długości co najmniej 200 znaków, bez tekstu cytowanego posta. Posty zalogowanej osoby są pomijane, jeśli uda się rozpoznać jej profil. Zapisany wcześniej własny próg długości pozostaje bez zmian.
 
 Ocena dotyczy stylu tekstu, może być błędna i nie stanowi dowodu, że post został napisany przez AI.
 
-Do oceny tekst widocznego posta (do 6000 znaków), identyfikator posta i opcjonalnie imię autora są wysyłane na skonfigurowany serwer, a tekst i imię dalej do TypeSafe. Ustawienia i opcjonalny token Pro są zapisywane w pamięci rozszerzenia. Rozszerzenie nie czyta skrzynki LinkedIn, nie publikuje postów i nie sprzedaje danych.
+Do oceny tekst widocznego posta (do 6000 znaków), identyfikator posta i opcjonalnie imię autora są wysyłane na skonfigurowany serwer, a tekst i imię dalej do TypeSafe. Ustawienia i opcjonalny token Pro są zapisywane w pamięci rozszerzenia. Klucz TypeSafe pozostaje na serwerze.
+
+Rozszerzenie nie czyta skrzynki, nie publikuje postów i nie sprzedaje danych.
 
 Rozszerzenie jest niezależnym projektem, niepowiązanym z LinkedIn.
 
-Strona: https://sciema.app/linkedin-ai-slop/
-Pomoc: https://github.com/pawelmamcarz/linkedin-ai-slop/issues
-Prywatność: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
+Kod: https://github.com/pawelmamcarz/linkedin-ai-slop
+Polityka: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 ```
 
 Single purpose:
@@ -52,13 +53,13 @@ Single purpose:
 | --- | --- | --- | --- |
 | Store icon | 128×128 | `extension/icons/icon128.png` | Available |
 | Badges screenshot | 1280×800 | `store/chrome/assets/01-badges-1280x800.png` | Available |
-| Cover screenshot | 1280×800 | `store/chrome/assets/02-banner-1280x800.png` | Available |
+| Cover screenshot | 1280×800 | `store/chrome/assets/02-banner-1280x800.png` | Replaced in submitted 0.2.6 listing |
 | Hover screenshot | 1280×800 | `store/chrome/assets/03-hover-1280x800.png` | Available |
-| Options screenshot | 1280×800 | `store/chrome/assets/04-options-1280x800.png` | Available |
+| Options screenshot | 1280×800 | `store/chrome/assets/04-options-1280x800.png` | Replaced in submitted 0.2.6 listing |
 | Small promo tile | 440×280 | `store/chrome/assets/tile-440x280.png` | Available |
 | Marquee | 1400×560 | `store/chrome/assets/marquee-1400x560.png` | Available |
 
-Package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.5.zip`, 12 files, 36,219 bytes. SHA-256: `e48a488c50d49995445a3bdf84a30609d12d9d28191163a77ad785293d4edc32`. All packaged files match `extension/`. No server, credentials, dependencies, or tests are included.
+Uploaded package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip`, 12 files, 37,428 bytes. SHA-256: `6be4786505935a8a492b8af595aab4cafd19cbeca5ff15d1a8dd4b191df18725`. All packaged files match `extension/`. No server, credentials, dependencies, or tests are included.
 
 ## Permissions Justification
 
@@ -106,34 +107,34 @@ Support: https://github.com/pawelmamcarz/linkedin-ai-slop/issues
 ## Test Instructions
 
 ```text
-No extension account, API key or purchase is required. Select Demo (default). Popup: Sprawdź proxy. Using your LinkedIn test account, open https://www.linkedin.com/feed/ and scroll posts with 200+ characters. Hover badges; AI slop posts: Pokaż/Ukryj. Options: disable Zakrywaj posty AI slop to keep only badges. Popup/settings/connection work without LinkedIn login. Source: https://github.com/pawelmamcarz/linkedin-ai-slop
+No extension account, API key or purchase required. Demo is default. Popup: Sprawdź proxy. With your LinkedIn test account, open https://www.linkedin.com/feed/ and scroll posts with 100+ characters (reshares need 200+ own characters). Hover badges. AI slop: light cover, Pokaż/Ukryj; reactions remain usable. Options: disable covering. Popup/settings/connection work without LinkedIn login. Source: https://github.com/pawelmamcarz/linkedin-ai-slop
 ```
 
-The saved instruction uses 423 of the dashboard's 500-character limit. Login/password fields are empty. The extension's automatic demo injection is registered for localhost:8787, not the hosted fixture; the LinkedIn feed is the integration test path.
+The saved instruction uses 447 of the dashboard's 500-character limit. Login/password fields are empty. The extension's automatic demo injection is registered for localhost:8787, not the hosted fixture; the LinkedIn feed is the integration test path.
 
 ## Version History & Review Notes
 
 | Version | Date | Changes | Verified status |
 | --- | --- | --- | --- |
-| 0.2.5 | 2026-10-07 | Existing package submitted with listing, graphics, privacy, distribution, and reviewer instructions. | Pending review; automatic publication after approval selected |
-| 0.2.6 | 2026-10-07 | Short standalone posts, asynchronous expansion, text-aware cache, automatic minute-limit retry, light cover and smaller banner. | Prepared locally; Store update not yet verified |
+| 0.2.5 | 2026-10-07 | Existing package submitted with listing, graphics, privacy, distribution, and reviewer instructions. | Published publicly, verified 2026-10-08 |
+| 0.2.6 | 2026-10-08 | Short standalone posts, asynchronous expansion, text-aware cache, automatic minute-limit retry, light cover and smaller banner. | Submitted; pending review verified 2026-10-08; automatic publication after approval |
 
 0.2.6 package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.6.zip`, 12 files, 37,428 bytes. SHA-256: `6be4786505935a8a492b8af595aab4cafd19cbeca5ff15d1a8dd4b191df18725`. Every packaged file matches `extension/`. Screenshots were regenerated and checked for dimensions and RGB format. Permissions and data use remain as declared above.
 
 Tests pass 62/62 and typecheck passes. Isolated Chrome checks the actual content script with a fixture classification response: short post, flow banner, light cover, reaction click, stable overlay, and Pokaż/Ukryj. Live Demo previously reported 60/min and 500/day; the listing does not claim a fixed daily limit. Detector accuracy on user-labelled LinkedIn posts has not been measured. Existing saved text-length settings are preserved.
 
-Prepared reviewer instructions for 0.2.6 (replace the saved 0.2.5 instructions when uploading):
+Reviewer instructions saved for 0.2.6:
 
 ```text
 No extension account, API key or purchase required. Demo is default. Popup: Sprawdź proxy. With your LinkedIn test account, open https://www.linkedin.com/feed/ and scroll posts with 100+ characters (reshares need 200+ own characters). Hover badges. AI slop: light cover, Pokaż/Ukryj; reactions remain usable. Options: disable covering. Popup/settings/connection work without LinkedIn login. Source: https://github.com/pawelmamcarz/linkedin-ai-slop
 ```
 
-The 0.2.6 update is authorized to replace 0.2.5 for substantive fixes. Do not report it submitted until the dashboard confirms the version and pending-review status.
+The dashboard confirms 0.2.6 is submitted and pending review. Upload, submission, approval, and publication remain distinct gates; do not report approval or publication until verified.
 
 Proxy release is deployed: [PR #23](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/23), commit `a320e4c33c6df157a6eebde1107f8fcf45a9f7d6`, Railway deployment `e7040e16-cf7b-48eb-8a52-61518c027bbf`, exact-commit status success. Production health and one synthetic short-post evaluation returned HTTP 200; the evaluation reported 0.93 / slop. CI passed on both the PR and main.
 
-Store update blocker: automatic approval review rejected active-window accessibility reads because another task can switch Chrome to unrelated private panels. The user was asked to pause other Chrome control and confirm the Store panel is active. No 0.2.6 upload, review withdrawal, or resubmission was performed. Use the existing item, the prepared ZIP, [updated description](store/chrome/listing.md), graphics above, and the 447-character reviewer instructions when access is stable; verify version and pending-review status before recording completion.
+Store update: the earlier active-window issue was overcome on 2026-10-08 with a user-confirmed native file picker. The package, description, reviewer instructions, and two refreshed screenshots were saved. The final review dialog had automatic publication selected. A refreshed Status tab confirmed pending review, and Package confirmed submitted 0.2.6 at revision `00002`. The public 0.2.5 remains available.
 
-No previous Chrome Web Store rejection was verified. This submission is now pending review. Google recommends contacting [developer support](https://developer.chrome.com/docs/webstore/review-process) after more than three weeks pending review. Avoid cancelling a pending review merely to accelerate it.
+No previous Chrome Web Store rejection was verified. Version 0.2.5 was approved and published; 0.2.6 is pending review. Google recommends contacting [developer support](https://developer.chrome.com/docs/webstore/review-process) after more than three weeks pending review. Avoid cancelling a pending review merely to accelerate it.
 
 Submission note: native computer control follows the active Chrome window. The browser connector was unavailable; switching back through Chrome's window menu allowed completion. No unrelated project fields were changed. The user clarified that the reported rejection concerned another service, not this Chrome submission.
