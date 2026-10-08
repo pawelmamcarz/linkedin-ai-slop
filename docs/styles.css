@@ -628,3 +628,22 @@ code {
   .project-grid { grid-template-columns: 1fr; }
   .top { align-items: flex-start; flex-wrap: wrap; }
 }
+
+.demo-video {
+  margin: 8px 0 32px;
+  max-width: 560px;
+}
+.demo-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--feed);
+}
+.demo-video figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
