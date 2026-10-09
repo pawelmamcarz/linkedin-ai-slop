@@ -12,8 +12,8 @@ Requested price: **19.99 PLN (1999 grosze), one time**. Previous default: 199 PL
 
 ## Release gates
 
-- Code/CI and proxy rollout: pending.
-- Public price/Checkout acceptance: pending. No payment is authorized or made by this check.
-- Browser UI verification and Chrome Web Store upload: blocked by `Sky Computer Use native pipe startup failed`, including a fresh runtime retry. Browser provider inventory is empty. 0.2.8 is prepared, not uploaded/submitted; last confirmed Store checkpoint is 0.2.7 pending review / 0.2.6 public on 2026-10-08. Do not infer current approval/publication from that checkpoint.
+- Code/CI: [PR #29](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/29) merged as `3720de8c16edac948aff3abe5d66aa6e9c3d8702`. PR CI and main Tests run `37935512168` passed; Pages run `37935511001` passed. Railway deployment `e8f2635e-db1b-4c07-a1c3-087a25ef2301` is SUCCESS for that exact commit.
+- Production /billing/offers returned Lifetime **19.99 PLN**, available, and Team **990 PLN**. Public landing and plans pages in PL/EN returned HTTP 200 with the new price. /checkout/lifetime created an anonymous session and redirected HTTP 302 to checkout.stripe.com. No payment was made. The rendered amount on Stripe's UI could not be inspected because browser access remained unavailable; the 1999-grosz request is verified by the automated Stripe-boundary regression.
+- Browser UI verification and Chrome Web Store upload: blocked by `Sky Computer Use native pipe startup failed`, including a fresh runtime retry and retries after the user offered to enable access and after deployment. Browser provider inventory is empty. 0.2.8 is prepared, not uploaded/submitted; last confirmed Store checkpoint is 0.2.7 pending review / 0.2.6 public on 2026-10-08. Do not infer current approval/publication from that checkpoint.
 
 Reference: [Stripe Checkout Session create](https://docs.stripe.com/api/checkout/sessions/create).
