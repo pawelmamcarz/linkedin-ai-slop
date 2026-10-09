@@ -9,7 +9,7 @@ import {
 
 export type CheckoutPlan = "monthly" | "yearly" | "lifetime" | "team";
 
-const DEFAULT_LIFETIME_PLN = 199;
+const DEFAULT_LIFETIME_PLN = 19.99;
 const DEFAULT_TEAM_PLN = 990;
 const DEFAULT_LIFETIME_CAP = 50;
 const DEFAULT_TEAM_SEATS = 10;
@@ -39,13 +39,19 @@ function positiveInt(raw: string | undefined, fallback: number): number {
   return value;
 }
 
-/** Whole PLN. 0 means the env value is unusable and no default applies. */
+/** Parse at most two decimal places directly to grosze, without float multiplication. */
+function amountGrosze(plan: "lifetime" | "team", env: NodeJS.ProcessEnv): number {
+  const configured = plan === "lifetime" ? env.STRIPE_LIFETIME_AMOUNT_PLN : env.STRIPE_TEAM_AMOUNT_PLN;
+  const raw = configured?.trim() || String(plan === "lifetime" ? DEFAULT_LIFETIME_PLN : DEFAULT_TEAM_PLN);
+  const parts = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(raw);
+  if (!parts) return 0;
+  const value = Number(parts[1]) * 100 + Number((parts[2] || "").padEnd(2, "0"));
+  return Number.isSafeInteger(value) && value > 0 ? value : 0;
+}
+
+/** PLN including grosze. 0 means the configured value is unusable. */
 export function amountPln(plan: "lifetime" | "team", env: NodeJS.ProcessEnv = process.env): number {
-  const raw = plan === "lifetime" ? env.STRIPE_LIFETIME_AMOUNT_PLN : env.STRIPE_TEAM_AMOUNT_PLN;
-  if (!raw?.trim()) return plan === "lifetime" ? DEFAULT_LIFETIME_PLN : DEFAULT_TEAM_PLN;
-  const value = Number(raw.trim());
-  if (!Number.isInteger(value) || value <= 0) return 0;
-  return value;
+  return amountGrosze(plan, env) / 100;
 }
 
 export function lifetimeCap(env: NodeJS.ProcessEnv = process.env): number {
@@ -160,7 +166,7 @@ export async function createCheckoutSession(
 ): Promise<{ url: string }> {
   const secret = stripeSecret(env);
   const price = priceIdForPlan(plan, env);
-  const inline = plan === "lifetime" || plan === "team" ? amountPln(plan, env) : 0;
+  const inline = plan === "lifetime" || plan === "team" ? amountGrosze(plan, env) : 0;
   if (!secret || (!price && inline <= 0)) {
     throw Object.assign(new Error("checkout_unconfigured"), { status: 503 });
   }
@@ -177,7 +183,7 @@ export async function createCheckoutSession(
     params.set("line_items[0][price]", price);
   } else {
     params.set("line_items[0][price_data][currency]", "pln");
-    params.set("line_items[0][price_data][unit_amount]", String(inline * 100));
+    params.set("line_items[0][price_data][unit_amount]", String(inline));
     params.set("line_items[0][price_data][product_data][name]", productName(plan, seats));
     if (plan === "team") params.set("line_items[0][price_data][recurring][interval]", "year");
   }

@@ -681,7 +681,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
       const offers = await fetch(`${base}/billing/offers`);
       const offersBody = await offers.json();
       assert.equal(offers.status, 200);
-      assert.equal(offersBody.lifetime.amountPln, 199);
+      assert.equal(offersBody.lifetime.amountPln, 19.99);
       assert.equal(offersBody.lifetime.cap, 50);
       assert.equal(offersBody.lifetime.remaining, 50);
       assert.equal(offersBody.team.amountPln, 990);
@@ -694,7 +694,7 @@ describe("proxy HTTP", { concurrency: false }, () => {
       const lifeParams = new URLSearchParams(stripeBodies.at(-1));
       assert.equal(lifeParams.get("mode"), "payment");
       assert.equal(lifeParams.get("line_items[0][price_data][currency]"), "pln");
-      assert.equal(lifeParams.get("line_items[0][price_data][unit_amount]"), "19900");
+      assert.equal(lifeParams.get("line_items[0][price_data][unit_amount]"), "1999");
       assert.equal(lifeParams.get("customer_creation"), "always");
       assert.equal(lifeParams.get("invoice_creation[enabled]"), "true");
       assert.equal(lifeParams.get("metadata[plan]"), "lifetime");

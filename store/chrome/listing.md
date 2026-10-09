@@ -1,6 +1,6 @@
-# Chrome Web Store: LinkedIn AI Slop 0.2.7
+# Chrome Web Store: LinkedIn AI Slop 0.2.8
 
-Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip`. Odtworzysz ją przez `npm run pack:chrome`. Stan zgłoszenia i deklaracje danych: [CHROMEWEBSTORE.md](../../CHROMEWEBSTORE.md).
+Paczka do wgrania: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.8.zip`. Odtworzysz ją przez `npm run pack:chrome`. Stan zgłoszenia i deklaracje danych: [CHROMEWEBSTORE.md](../../CHROMEWEBSTORE.md).
 
 Język domyślny pozycji: polski. Angielski wklej jako drugi język, jeśli panel na to pozwala.
 
@@ -156,8 +156,8 @@ Ikona 128: `extension/icons/icon128.png` (w zipie jest też 16, 32, 48).
 
 1. Otwórz istniejącą pozycję `blekdfdinogdmbpakkgaecdpilanobge` u wydawcy `pawelmamcarz`.
 2. Sprawdź publiczną politykę prywatności z tabeli.
-3. Uruchom testy, typecheck i `npm run pack:chrome`; wybierz ZIP 0.2.7. Nie pakuj katalogu `extension/` ręcznie.
-4. Potwierdź bieżący stan pozycji. Wersja 0.2.6 jest opublikowana; wgraj nowy ZIP 0.2.7. Język domyślny: polski.
+3. Uruchom testy, typecheck i `npm run pack:chrome`; wybierz ZIP 0.2.8. Nie pakuj katalogu `extension/` ręcznie.
+4. Potwierdź bieżący stan pozycji przed zmianą recenzji. Wgraj nowy ZIP 0.2.8; język domyślny: polski.
 5. Wklej nazwę, krótki opis i opis szczegółowy z tego pliku. Kategoria: Productivity.
 6. Wklej single purpose.
 7. Privacy: URL polityki z tabeli. Zaznacz, że wysyłany jest tekst posta do własnego serwera w celu klasyfikacji. Zaznacz, że danych nie sprzedajesz i nie używasz do reklam. Remote code: No.

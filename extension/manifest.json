@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn AI Slop",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Oznacza posty na LinkedIn: Ludzki, Mieszany albo AI slop. Ocena Jev. Klucz API zostaje na proxy.",
   "permissions": ["storage"],
   "host_permissions": [
