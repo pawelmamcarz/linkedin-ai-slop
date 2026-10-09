@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — LinkedIn AI Slop
 
-Last updated: 2026-10-09. Last dashboard verification: 2026-10-08, published **0.2.6**, **0.2.7** pending review with automatic publication selected. This checkpoint may have changed; the current native browser connection is unavailable. **0.2.8** is prepared with the requested Lifetime price of **19.99 PLN**, but has not been uploaded or submitted. Update copy is in [the listing](store/chrome/listing.md); price validation is in [the release note](docs/audits/2026-10-09-lifetime-price.md).
+Last updated and dashboard verified: 2026-10-09. Published **0.2.7**; **0.2.8** uploaded and submitted as revision **00004**, status **Oczekuje na sprawdzenie**, with automatic publication after approval selected. Lifetime costs **19.99 PLN** on production and in Stripe Checkout. Update copy is in [the listing](store/chrome/listing.md); price validation is in [the release note](docs/audits/2026-10-09-lifetime-price.md).
 
 ## Submission Status
 
@@ -9,8 +9,9 @@ Last updated: 2026-10-09. Last dashboard verification: 2026-10-08, published **0
 - [Developer dashboard](https://chrome.google.com/webstore/devconsole/680b68e2-c71f-45d5-aca9-a787c2420ba8/blekdfdinogdmbpakkgaecdpilanobge/edit/status).
 - On 2026-10-08, the refreshed Package tab confirmed **Published — public**, published version **0.2.6**, draft version **0.2.6**, with the upload control enabled. Earlier cached dashboard output still showed the previous review; the refreshed state resolves that discrepancy.
 - On 2026-10-08, ZIP **0.2.7** was uploaded. The Package tab confirmed draft **0.2.7** and published **0.2.6**. The new Polish description and 479-character test instructions were saved. The final submission dialog confirmed receipt. After reload, Package showed **Oczekuje na sprawdzenie**, draft **0.2.7** at revision `00003`, and published **0.2.6**.
+- On 2026-10-09, after the user completed Google re-login, Package confirmed **0.2.7** published publicly. ZIP **0.2.8** was uploaded and submitted with the user's explicit approval. The receipt dialog confirmed submission; a fresh Package load confirmed **0.2.8**, revision `00004`, **Oczekuje na sprawdzenie**, and published **0.2.7**. Automatic publication after approval was selected. Existing listing copy, reviewer instructions and graphics were retained.
 - [Public listing](https://chromewebstore.google.com/detail/blekdfdinogdmbpakkgaecdpilanobge).
-- Permissions and data use are unchanged in 0.2.7. No private account credentials are required for review.
+- Permissions and data use are unchanged in 0.2.8. No private account credentials are required for review.
 
 ## Store Listing
 
@@ -59,7 +60,7 @@ Single purpose:
 | Small promo tile | 440×280 | `store/chrome/assets/tile-440x280.png` | Available |
 | Marquee | 1400×560 | `store/chrome/assets/marquee-1400x560.png` | Available |
 
-Submitted package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip`, 13 files, 39,064 bytes. SHA-256: `fd30dcf2597c29449cbd81cba87debbb4eaeb6bd570cad502c04c132ba03ec90`. Every packaged file matches `extension/`. No server, credentials, dependencies or tests are included.
+Submitted package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.8.zip`, 13 files, 39,068 bytes. SHA-256: `4ba50d86526874df1e81fefc10d19c7b81a49dfa0108f026e0fe0d22bb1679d3`. Every packaged file matches `extension/` and the runtime packaging allowlist; TypeScript declarations are excluded. No server, credentials, dependencies or tests are included.
 
 ## Permissions Justification
 
@@ -93,7 +94,7 @@ Data-use certifications: not sold; not used outside the extension's single purpo
 Privacy policy: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 English: https://pawelmamcarz.github.io/linkedin-ai-slop/en/privacy.html
 
-Both URLs returned HTTP 200 on 2026-10-07 and include Stripe, storage, and contact sections.
+The Polish URL was opened successfully on 2026-10-09 and includes Stripe, storage, and contact sections. PL/EN policy copy now matches the existing minimum-length behavior: standalone text defaults to 100 characters, reshare commentary requires at least 200, and saved/custom settings remain effective.
 
 ## Distribution & Developer Info
 
@@ -116,8 +117,8 @@ Saved instructions use 479 of the dashboard's 500-character limit. Login/passwor
 
 | Version | Date | Changes | Verified status |
 | --- | --- | --- | --- |
-| 0.2.8 | 2026-10-09 | Lifetime Pro price in options: 19.99 PLN. | Prepared; not uploaded or submitted; native pipe unavailable |
-| 0.2.7 | 2026-10-08 | Shared sensitivity rules, uncertainty and substance hints, conservative cover, preserved paragraphs, observer and queue fixes. | Submitted; pending review verified 2026-10-08; automatic publication after approval |
+| 0.2.8 | 2026-10-09 | Lifetime Pro price in options: 19.99 PLN. | Submitted as revision 00004; pending review verified 2026-10-09; automatic publication after approval |
+| 0.2.7 | 2026-10-08 | Shared sensitivity rules, uncertainty and substance hints, conservative cover, preserved paragraphs, observer and queue fixes. | Published publicly, verified 2026-10-09 |
 | 0.2.5 | 2026-10-07 | Existing package submitted with listing, graphics, privacy, distribution, and reviewer instructions. | Published publicly, verified 2026-10-08 |
 | 0.2.6 | 2026-10-08 | Short standalone posts, asynchronous expansion, text-aware cache, automatic minute-limit retry, light cover and smaller banner. | Published publicly, confirmed in refreshed Package tab 2026-10-08 |
 
@@ -133,10 +134,10 @@ No extension account, API key or purchase required. Demo is default. Popup: Spra
 
 Historical submission evidence for 0.2.6: revision `00002` was submitted with automatic publication selected. The refreshed Package tab now confirms publication. See [the 0.2.6 release note](docs/audits/2026-10-07-release-0.2.6.md) for its validation and proxy deployment.
 
-No previous Chrome Web Store rejection was verified. Upload, submission, approval, and publication remain distinct gates; the 0.2.7 state is recorded above after each completed step.
+No previous Chrome Web Store rejection was verified. Upload, submission, approval, and publication remain distinct gates; 0.2.8 is submitted, with approval and publication pending.
 
 Proxy 0.2.7 is deployed: [PR #27](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/27), commit `02a2a8e73cbd80ca934fd2fca0ffcbab5b0099af`, Railway `78914001-c8c6-42a3-99d5-eeb660e35fd1` SUCCESS. 73/73 tests and typecheck pass; main CI and Pages pass. Live synthetic acceptance confirmed style-v2, selected-choice probability, cover/uncertainty fields and a cache HIT when changing threshold. See the release note for the UI and accuracy limits. Existing store graphics were retained.
 
-Prepared price-update package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.8.zip`, 13 files, 39,068 bytes, SHA-256 `4ba50d86526874df1e81fefc10d19c7b81a49dfa0108f026e0fe0d22bb1679d3`. All files match extension/. Permissions and data use are unchanged. Native computer-use startup failed before access to the Store dashboard; no review was cancelled and no upload was attempted.
+The initial 0.2.8 upload attempt was blocked by native computer-use startup failure. Access was restored later on 2026-10-09; the unchanged, reverified ZIP was then uploaded and submitted. No review was cancelled.
 
-Lifetime price update deployed on 2026-10-09: [PR #29](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/29), commit `3720de8c16edac948aff3abe5d66aa6e9c3d8702`, Railway `e8f2635e-db1b-4c07-a1c3-087a25ef2301` SUCCESS. Production offers reports 19.99 PLN, public PL/EN pages show the new price, and anonymous Checkout returns HTTP 302 to Stripe. 75/75 tests and typecheck pass; main CI/Pages pass. Native access still fails after the user offered to enable it; 0.2.8 remains prepared, not uploaded or submitted.
+Lifetime price update deployed on 2026-10-09: [PR #29](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/29), commit `3720de8c16edac948aff3abe5d66aa6e9c3d8702`, Railway `e8f2635e-db1b-4c07-a1c3-087a25ef2301` SUCCESS. Production offers reports 19.99 PLN, public PL/EN pages show the new price, and the Stripe Checkout UI displays 19.99 PLN. No payment was made. Fresh validation passed 75/75 tests, typecheck, ZIP byte comparison and main CI/Pages for `79b4618`. Chrome 0.2.8 is submitted, awaiting Google's review.
