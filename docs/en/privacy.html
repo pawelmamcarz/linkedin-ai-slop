@@ -30,8 +30,10 @@
         <h2>What leaves the browser</h2>
         <p>
           When a post comes into view, the extension sends the post id, the text (up to 6000 characters),
-          and optionally the name visible on the card. Own text shorter than 200 characters
-          (after hashtags, mentions, links, and emoji are removed) is not sent.
+          and optionally the name visible on the card. By default, standalone text shorter than 100 characters
+          (after hashtags, mentions, links, and emoji are removed) is not sent. You can change the minimum length
+          in settings; previously saved custom settings are preserved. Reshares send only the sharing author's own
+          commentary, with at least 200 characters and meeting the configured minimum length.
           Comments under the post, and the nested reshare text, are skipped for the outer card.
         </p>
         <p>

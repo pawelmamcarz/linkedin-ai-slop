@@ -94,7 +94,7 @@ Data-use certifications: not sold; not used outside the extension's single purpo
 Privacy policy: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 English: https://pawelmamcarz.github.io/linkedin-ai-slop/en/privacy.html
 
-Both URLs returned HTTP 200 on 2026-10-07 and include Stripe, storage, and contact sections.
+The Polish URL was opened successfully on 2026-10-09 and includes Stripe, storage, and contact sections. PL/EN policy copy now matches the existing minimum-length behavior: standalone text defaults to 100 characters, reshare commentary requires at least 200, and saved/custom settings remain effective.
 
 ## Distribution & Developer Info
 
