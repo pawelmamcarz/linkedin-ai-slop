@@ -1,6 +1,10 @@
 # Checklista Chrome Web Store
 
-Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.7.zip` (`npm run pack:chrome`). Bieżący stan zgłoszenia: [`../CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
+Paczka do wgrania w sklep jest w [`chrome/listing.md`](chrome/listing.md): `store/chrome/dist/linkedin-ai-slop-chrome-0.2.8.zip` (`npm run pack:chrome`). Bieżący stan zgłoszenia: [`../CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
+
+## Wersja 0.2.8
+
+Lifetime Pro kosztuje 19,99 zł jednorazowo. Backend przelicza kwotę na dokładnie 1999 groszy; konfiguracja dopuszcza maksymalnie dwa miejsca dziesiętne. Sprawdź /billing/offers, Stripe Checkout i cenę na stronach PL/EN oraz w opcjach rozszerzenia.
 
 ## Wersja 0.2.7
 
@@ -38,11 +42,11 @@ v0.2.1 dodaje na ocenionych odznakach podpowiedź po najechaniu: "AI slop: N%". 
 
 v0.2.1 adds a hover tip on scored badges: "AI slop: N%". The public Demo cap is 60 scores per minute and 200 per day per IP (`EVALUATE_DAILY_IP_CAP=200`).
 
-Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.7).
+Firefox bierze wersję z `extension/manifest.json` przy `npm run pack:firefox`. Safari: `MARKETING_VERSION` w `safari/Config/Shared.xcconfig` ma być taki sam jak manifest (teraz 0.2.8).
 
 ## Przed wysłaniem
 
-- [ ] Wersja w `extension/manifest.json` to 0.2.7
+- [ ] Wersja w `extension/manifest.json` to 0.2.8
 - [ ] `npm run pack:extension` po ostatniej zmianie w `extension/`
 - [ ] W zipie są `icons/icon16.png`, `icons/icon48.png`, `icons/icon128.png`
 - [ ] Domyślny adres proxy to `https://proxy-production-ebcc.up.railway.app`

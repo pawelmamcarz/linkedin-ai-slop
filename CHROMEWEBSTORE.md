@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — LinkedIn AI Slop
 
-Last updated: 2026-10-08. Published version: **0.2.6**, confirmed in the refreshed native Package dashboard. Version **0.2.7** has been uploaded and submitted for review; the dashboard confirms **Oczekuje na sprawdzenie**. Automatic publication after approval is selected. Update copy is in [the listing](store/chrome/listing.md); validation is in [the release note](docs/audits/2026-10-08-release-0.2.7.md).
+Last updated: 2026-10-09. Last dashboard verification: 2026-10-08, published **0.2.6**, **0.2.7** pending review with automatic publication selected. This checkpoint may have changed; the current native browser connection is unavailable. **0.2.8** is prepared with the requested Lifetime price of **19.99 PLN**, but has not been uploaded or submitted. Update copy is in [the listing](store/chrome/listing.md); price validation is in [the release note](docs/audits/2026-10-09-lifetime-price.md).
 
 ## Submission Status
 
@@ -116,6 +116,7 @@ Saved instructions use 479 of the dashboard's 500-character limit. Login/passwor
 
 | Version | Date | Changes | Verified status |
 | --- | --- | --- | --- |
+| 0.2.8 | 2026-10-09 | Lifetime Pro price in options: 19.99 PLN. | Prepared; not uploaded or submitted; native pipe unavailable |
 | 0.2.7 | 2026-10-08 | Shared sensitivity rules, uncertainty and substance hints, conservative cover, preserved paragraphs, observer and queue fixes. | Submitted; pending review verified 2026-10-08; automatic publication after approval |
 | 0.2.5 | 2026-10-07 | Existing package submitted with listing, graphics, privacy, distribution, and reviewer instructions. | Published publicly, verified 2026-10-08 |
 | 0.2.6 | 2026-10-08 | Short standalone posts, asynchronous expansion, text-aware cache, automatic minute-limit retry, light cover and smaller banner. | Published publicly, confirmed in refreshed Package tab 2026-10-08 |
@@ -135,3 +136,5 @@ Historical submission evidence for 0.2.6: revision `00002` was submitted with au
 No previous Chrome Web Store rejection was verified. Upload, submission, approval, and publication remain distinct gates; the 0.2.7 state is recorded above after each completed step.
 
 Proxy 0.2.7 is deployed: [PR #27](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/27), commit `02a2a8e73cbd80ca934fd2fca0ffcbab5b0099af`, Railway `78914001-c8c6-42a3-99d5-eeb660e35fd1` SUCCESS. 73/73 tests and typecheck pass; main CI and Pages pass. Live synthetic acceptance confirmed style-v2, selected-choice probability, cover/uncertainty fields and a cache HIT when changing threshold. See the release note for the UI and accuracy limits. Existing store graphics were retained.
+
+Prepared price-update package: `store/chrome/dist/linkedin-ai-slop-chrome-0.2.8.zip`, 13 files, 39,068 bytes, SHA-256 `4ba50d86526874df1e81fefc10d19c7b81a49dfa0108f026e0fe0d22bb1679d3`. All files match extension/. Permissions and data use are unchanged. Native computer-use startup failed before access to the Store dashboard; no review was cancelled and no upload was attempted.

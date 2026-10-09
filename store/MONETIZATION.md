@@ -7,7 +7,7 @@ Produkt jest tylko na LinkedIn.
 | Free / BYOK | 0 | Rozszerzenie + własne proxy + własny `TYPESAFE_API_KEY`. Live. |
 | Hosted Demo | 0, marketing | Publiczne proxy Railway. Limit ~60/min i około 200/dobę na IP. Nie jest planem płatnym. |
 | Hosted Pro | od ~5 USD/mies. albo ~40 USD/rok | Ten sam proxy, token w nagłówku, wyższe limity. Subskrypcja Stripe. |
-| Lifetime Pro | 199 PLN, jednorazowo | Jeden token Pro bez daty końca. Limit sprzedaży `LIFETIME_PRO_CAP` (domyślnie 50). Po przekroczeniu checkout zwraca 409. |
+| Lifetime Pro | 19,99 zł, jednorazowo | Jeden token Pro bez daty końca. Limit sprzedaży `LIFETIME_PRO_CAP` (domyślnie 50). Po przekroczeniu checkout zwraca 409. |
 | Team | 990 PLN / rok, 10 stanowisk | 10 tokenów Pro (po jednym na instalację). Subskrypcja roczna. Anulowanie cofa wszystkie. Checkout zbiera NIP i adres. |
 
 ## Jak ktoś zostaje Pro
@@ -36,7 +36,7 @@ Root Directory zostaje `/`. W zmiennych serwisu:
 - `PRO_RATE_LIMIT=300`, `PRO_DAILY_CAP=2000` (domyślne, można pominąć)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`
 - `PUBLIC_BASE_URL=https://proxy-production-ebcc.up.railway.app`
-- `STRIPE_LIFETIME_AMOUNT_PLN=199` (opcjonalne, taki jest default)
+- `STRIPE_LIFETIME_AMOUNT_PLN=19.99` (opcjonalne, taki jest default)
 - `STRIPE_TEAM_AMOUNT_PLN=990` (opcjonalne, taki jest default)
 - `LIFETIME_PRO_CAP=50` (opcjonalne, taki jest default)
 - `TEAM_SEATS=10` (opcjonalne, taki jest default)
@@ -56,7 +56,7 @@ Nie commituj wartości sekretów.
 
 ## Adresy checkout (stabilne, do sciema.app)
 
-- `GET /checkout/lifetime` → Stripe Checkout, 199 PLN, `mode=payment`
+- `GET /checkout/lifetime` → Stripe Checkout, 19,99 zł, `mode=payment`
 - `GET /checkout/team` → Stripe Checkout, 990 PLN / rok, `mode=subscription`, NIP i kody rabatowe
 - `GET /billing/offers` → JSON z `lifetime.remaining` i cenami
 - `GET /billing/checkout?plan=monthly|yearly|lifetime|team` zostaje

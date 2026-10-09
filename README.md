@@ -12,7 +12,7 @@ Strona: [https://pawelmamcarz.github.io/linkedin-ai-slop/](https://pawelmamcarz.
 
 ## Uruchomienie
 
-Wersja 0.2.7 ocenia samodzielne posty od 100 znaków własnego tekstu (przy udostępnieniu co najmniej 200), czeka na rozwinięcie „więcej” i odświeża wynik po zmianie tekstu. Zasłona ma 22% krycia, a mały baner pod autorem nie blokuje przycisków posta. Limit minutowy automatycznie wznawia kolejkę; tylko limit dobowy zatrzymuje Demo do odnowienia limitu. Zapisany własny próg długości zostaje zachowany — jeśli masz wcześniej zapisane 200, ustaw 100 w opcjach i zapisz.
+Wersja 0.2.8 ocenia samodzielne posty od 100 znaków własnego tekstu (przy udostępnieniu co najmniej 200), czeka na rozwinięcie „więcej” i odświeża wynik po zmianie tekstu. Zasłona ma 22% krycia, a mały baner pod autorem nie blokuje przycisków posta. Limit minutowy automatycznie wznawia kolejkę; tylko limit dobowy zatrzymuje Demo do odnowienia limitu. Zapisany własny próg długości zostaje zachowany — jeśli masz wcześniej zapisane 200, ustaw 100 w opcjach i zapisz.
 
 Potrzebny Node.js 20+.
 
@@ -44,7 +44,7 @@ Publiczne demo (`POST /evaluate`) ma okno przesuwne **60 żądań na 60 sekund n
 
 Tekst idący do Jev jest obcięty do 6000 znaków (`MAX_TEXT_CHARS`). Content script nie wysyła własnego tekstu, który po odcięciu hashtagów, @wzmianek, linków i emoji ma mniej niż 200 znaków (opcja w ustawieniach, domyślnie 200). Komentarz przy udostępnieniu nie obejmuje tekstu posta w środku. Publiczny hamulec kosztów to limit 60/min oraz pamięć podręczna werdyktów (włączona domyślnie).
 
-Warianty: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok), **Lifetime Pro** (199 PLN jednorazowo, token bez daty końca, limit sprzedaży) i **Team** (990 PLN rocznie, 10 tokenów Pro). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
+Warianty: **Free / BYOK** (własne proxy, rozszerzenie darmowe), **Hosted Demo** (publiczny Railway, marketing, nie plan płatny), **Hosted Pro** (token, wyższe limity, Checkout ~5 USD/mies. albo ~40 USD/rok), **Lifetime Pro** (19,99 zł jednorazowo, token bez daty końca, limit sprzedaży) i **Team** (990 PLN rocznie, 10 tokenów Pro). Kroki wdrożenia: [`store/MONETIZATION.md`](store/MONETIZATION.md).
 
 `DEMO_MODE=1` włącza dobowy limit demo **200** na IP, gdy `EVALUATE_DAILY_IP_CAP` jest puste. Jawna wartość tej zmiennej wygrywa (`0` albo brak i brak `DEMO_MODE` wyłącza dobowy cap, tak jest lokalne BYOK). Na publicznym Railway ustaw `DEMO_MODE=1` albo jawne `EVALUATE_DAILY_IP_CAP=200`. Po wyczerpaniu limitu Demo proxy zwraca `429` z `error: demo_limit` i `upgrade: true` (bez wołania TypeSafe). Pro zostaje przy `rate_limited` / `daily_limited`, bez `upgrade`.
 
@@ -66,7 +66,7 @@ Pamięć podręczna trzyma odpowiedzi Jev pod kluczem SHA-256 znormalizowanego t
 | `STRIPE_SECRET_KEY` | puste | Checkout Session; puste = „wkrótce” |
 | `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY` | puste | price id ~5 USD/mies. i ~40 USD/rok |
 | `STRIPE_WEBHOOK_SECRET` | puste | podpis webhooka, wydanie i cofnięcie tokenu |
-| `STRIPE_LIFETIME_AMOUNT_PLN` | 199 | kwota Lifetime Pro w PLN, gdy brak `STRIPE_PRICE_LIFETIME` |
+| `STRIPE_LIFETIME_AMOUNT_PLN` | 19.99 | kwota Lifetime Pro w PLN, gdy brak `STRIPE_PRICE_LIFETIME` |
 | `STRIPE_TEAM_AMOUNT_PLN` | 990 | kwota Team w PLN za rok, gdy brak `STRIPE_PRICE_TEAM` |
 | `STRIPE_PRICE_LIFETIME` / `STRIPE_PRICE_TEAM` | puste | opcjonalny price id; gdy ustawiony, wygrywa z kwotą inline |
 | `LIFETIME_PRO_CAP` | 50 | ile sztuk Lifetime Pro wolno sprzedać |
