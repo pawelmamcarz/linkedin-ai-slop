@@ -1,6 +1,6 @@
 # Ocena treści — zatwierdzona specyfikacja pilotażu
 
-Status: zakres produktowy zatwierdzony przez właściciela w rozmowie 2026-10-13. Nie jest to opis wdrożonego produktu. Plan techniczny podlega osobnemu przeglądowi.
+Status: zakres produktowy zatwierdzony przez właściciela w rozmowie 2026-10-13. Nie jest to opis wdrożonego produktu. Plan techniczny został następnie zatwierdzony do lokalnej implementacji.
 
 ## Odbiorca i wartość
 
@@ -38,4 +38,4 @@ Ocena użytkownika jest punktem odniesienia, nie obiektywnym dowodem jakości an
 
 ## Granice wykonania
 
-Zgoda obejmuje przygotowanie planu. Implementacja, publikacja pakietów, produkcja, zaproszenia i wysyłanie wiadomości nie zostały zlecone w tym etapie. Metoda przechowywania zgłoszeń, migracja ustawień i sposób rozpoczęcia okresu testowego poniżej są propozycjami technicznymi w planie, a nie wcześniejszymi decyzjami użytkownika.
+Po zatwierdzeniu specyfikacji właściciel zatwierdził plan i lokalną implementację, następnie przekazał pozostałe poprawki na farmę tmux. Publikacja pakietów, produkcja, zaproszenia i wysyłanie wiadomości wymagają osobnego zlecenia. Zatwierdzone decyzje techniczne są opisane w planie.

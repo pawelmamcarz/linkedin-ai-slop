@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Execution status (2026-10-13):** Local implementation and review fixes committed; 113 tests, typecheck, packaging and Safari build pass. See `docs/pilot/verification-2026-10-13.md`. Real corpus, Stripe/LinkedIn acceptance and launch remain pending. Original checklist retained as acceptance reference, not a claim of completed external operations.
+
 **Goal:** Wprowadzić ostrożną ocenę użyteczności postów i przygotować 14-dniowy test z pomiarem deklarowanego użycia oraz rzeczywistych zakupów.
 
 **Architecture:** Zachować obecne rozszerzenie Manifest V3, proxy Node i Jev. Dodać osobny kontrakt `content-v1` obok istniejącego `style-v2`, wspólną deterministyczną politykę oceny oraz oddzielny, trwały rejestr tokenów testowych. Zgłoszenia obsłuży mały formularz rozszerzenia i prywatny plik na trwałym wolumenie proxy.
