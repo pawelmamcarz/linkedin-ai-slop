@@ -33,6 +33,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       JSON.stringify({
         model: "jev-1.13.0",
         answers: {
+          low_information: { type: "noul", noul: slop ? 0.94 : 0.08 },
           is_ai_slop: { type: "noul", noul: slop ? 0.93 : 0.08 },
           slop_intensity: { type: "score", score: slop ? 1.8 : 0.2, confidence: 0.8 },
           has_substance: { type: "noul", noul: slop ? 0.1 : 0.88 },
@@ -56,6 +57,23 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 process.env.TYPESAFE_API_KEY = "test-key-not-a-real-secret";
 
 describe("proxy HTTP", { concurrency: false }, () => {
+  it("isolates quality cache and keeps legacy contract", async () => {
+    const payload = { postId: "quality", text: "We shipped a new importer with resumable transactions and saved 12 minutes." };
+    const send = (assessment?: string) => fetch(`${base}/evaluate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, assessment }) });
+    const legacy = await send();
+    assert.equal((await legacy.json()).badge, "human");
+    const first = await send("content-v1");
+    assert.equal(first.headers.get("x-cache"), "MISS");
+    const result = await first.json();
+    assert.equal(result.badge, "concrete");
+    assert.equal(result.assessment, "content-v1");
+    const hit = await send("content-v1");
+    assert.equal(hit.headers.get("x-cache"), "HIT");
+    assert.deepEqual(await hit.json(), result);
+    assert.equal((await send("unknown")).status, 400);
+    jevCalls.length = 0;
+    resetVerdictCache();
+  });
   let server: Server;
   let base: string;
 

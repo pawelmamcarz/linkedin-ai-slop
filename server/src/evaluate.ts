@@ -1,3 +1,5 @@
+import { CONTENT_QUESTIONS } from "../../jev/content-questions.ts";
+import { mapContentAnswers, type ContentAnswers } from "./content-answers.ts";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { JEV_MODEL, JEV_QUESTIONS, type JevPostState } from "../../jev/questions.ts";
 import { DEFAULT_SLOP_THRESHOLD } from "../../jev/thresholds.ts";
@@ -95,4 +97,12 @@ export function clampThreshold(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return DEFAULT_SLOP_THRESHOLD;
   return Math.min(0.95, Math.max(0.15, n));
+}
+
+export async function evaluateContentWithMeta(input: EvaluateRequest) {
+  const response = await getClient().systemOne({ model: JEV_MODEL, state: buildState(input), questions: CONTENT_QUESTIONS });
+  const answers = response.answers as ContentAnswers;
+  const model = response.model ?? JEV_MODEL;
+  return { result: mapContentAnswers(input.postId, model, answers), answers, model,
+    inputTokens: finiteToken(response.usage?.input_tokens), outputTokens: finiteToken(response.usage?.output_tokens) };
 }

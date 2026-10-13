@@ -14,7 +14,17 @@ if (typeof importScripts === "function") {
 
 const DEFAULT_PROXY = "https://proxy-production-ebcc.up.railway.app";
 
-ExtApi.onMessage((message) => {
+ExtApi.onMessage((message, sender) => {
+  if (message?.type === "open-feedback") {
+    const badge = ["concrete", "low_information", "uncertain"].includes(message.badge) ? message.badge : "uncertain";
+    const api = globalThis.browser || globalThis.chrome;
+    return Promise.resolve(api.tabs.create({ url: api.runtime.getURL(`feedback.html?badge=${badge}`) })).then(() => ({ ok: true }));
+  }
+  if (message?.type === "feedback") {
+    const api = globalThis.browser || globalThis.chrome;
+    if (!sender?.url?.startsWith(api.runtime.getURL("feedback.html"))) return Promise.resolve({ ok: false, status: 403 });
+    return feedback(message.payload).catch(() => ({ ok: false, status: 0 }));
+  }
   if (!message || (message.type !== "evaluate" && message.type !== "health")) return undefined;
   const task = message.type === "health" ? health(message.proxyUrl, message.proToken) : evaluate(message.payload);
   return task.catch((error) => ({
@@ -53,6 +63,7 @@ async function evaluate(payload) {
     },
     body: JSON.stringify({
       postId: payload?.postId,
+      assessment: payload?.assessment,
       text: payload?.text,
       author: payload?.author,
       threshold: payload?.threshold,
@@ -68,4 +79,16 @@ async function health(proxyUrl, proToken) {
   const response = await fetch(`${base}/health`, { headers: await proHeaders(proToken) });
   const body = await response.json().catch(() => ({ error: "bad_response" }));
   return { ok: response.ok, status: response.status, body };
+}
+
+async function feedback(payload) {
+  const base = await proxyBase();
+  const url = new URL(base);
+  const local = ["localhost", "127.0.0.1"].includes(url.hostname) && url.protocol === "http:";
+  if (base !== DEFAULT_PROXY && !local) return { ok: false, status: 403 };
+  const response = await fetch(`${base}/feedback`, {
+    method: "POST", headers: { "Content-Type": "application/json", ...(await proHeaders()) },
+    body: JSON.stringify(payload), signal: AbortSignal.timeout(15000), redirect: "error",
+  });
+  return { ok: response.ok, status: response.status, body: await response.json() };
 }

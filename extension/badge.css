@@ -194,3 +194,10 @@
 .lais-badge--error {
   background: #57534e;
 }
+
+.lais-badge--concrete { background: #ecfdf5; color: #065f46; }
+.lais-badge--low_information { background: #fff7ed; color: #9a3412; }
+.lais-badge--uncertain { background: #f1f5f9; color: #334155; }
+.lais-badge:focus .lais-tip, .lais-badge:focus-within .lais-tip { opacity: 1; visibility: visible; display: block; }
+
+.lais-feedback { font: inherit; color: inherit; border: 0; background: transparent; text-decoration: underline; cursor: pointer; margin-left: 8px; }

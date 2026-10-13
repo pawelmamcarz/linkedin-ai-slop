@@ -9,6 +9,8 @@ const DEFAULTS = {
   minTextChars: 100,
 };
 
+const assessmentEl = document.querySelector("#assessment");
+const qualityDimEl = document.querySelector("#quality-dim");
 const enabledEl = document.querySelector("#enabled");
 const blurSlopEl = document.querySelector("#blur-slop");
 const minTextEl = document.querySelector("#min-text");
@@ -55,6 +57,9 @@ fetch(`${DEFAULTS.proxyUrl}/billing/offers`)
 
 ExtApi.storageGet(DEFAULTS).then((stored) => {
   const settings = ExtApi.resolveSettings(stored);
+  assessmentEl.value = settings.assessment;
+  syncAssessment();
+  qualityDimEl.checked = settings.qualityDimEnabled;
   enabledEl.checked = settings.enabled !== false;
   blurSlopEl.checked = settings.blurSlop !== false;
   minTextEl.value = String(settings.minTextChars ?? DEFAULTS.minTextChars);
@@ -79,6 +84,8 @@ form.addEventListener("submit", async (event) => {
   const previous = ExtApi.resolveSettings(await ExtApi.storageGet(DEFAULTS));
   const byokProxyUrl = mode === "byok" ? proxyUrl : previous.byokProxyUrl;
   await ExtApi.storageSet({
+    assessment: assessmentEl.value,
+    qualityDimEnabled: qualityDimEl.checked,
     enabled: enabledEl.checked,
     blurSlop: blurSlopEl.checked,
     minTextChars: Number(minTextEl.value),
@@ -109,6 +116,16 @@ document.querySelector("#check").addEventListener("click", async () => {
       proxyUrl,
       proToken: mode === "pro" ? tokenEl.value.trim() : "",
     });
+    if (response?.body?.error === "trial_expired") {
+      statusEl.textContent = "Test zakończony. Kup Lifetime Pro lub ręcznie wybierz Demo.";
+      return;
+    }
+    if (response?.ok && response.body?.trial) {
+      const trial = response.body.trial;
+      statusEl.textContent = trial.status === "pending" ? "Dostęp testowy gotowy. 14 dni rozpocznie się przy pierwszej ocenie posta."
+        : `Dostęp testowy aktywny do ${new Date(trial.expiresAt).toLocaleString("pl-PL")}.`;
+      return;
+    }
     if (response?.status === 401) {
       statusEl.textContent = "Token Pro odrzucony. Sprawdź wklejkę. To nie jest klucz TypeSafe.";
       return;
@@ -145,3 +162,11 @@ async function ensureProxyPermission(proxyUrl) {
   if (has) return true;
   return ExtApi.permissionsRequest(origin);
 }
+
+function syncAssessment() {
+  const quality = assessmentEl.value === "content-v1";
+  thresholdEl.disabled = quality;
+  blurSlopEl.disabled = quality;
+  qualityDimEl.disabled = !quality;
+}
+assessmentEl.addEventListener("change", syncAssessment);

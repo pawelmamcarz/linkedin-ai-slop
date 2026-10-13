@@ -191,6 +191,8 @@
     const proToken = mode === "pro" ? String(merged.proToken || "").trim() : "";
     return {
       enabled: merged.enabled !== false,
+      assessment: source.assessment === "content-v1" ? "content-v1" : "style-v2",
+      qualityDimEnabled: source.qualityDimEnabled === true,
       threshold: Number(merged.threshold) || defaults.threshold,
       mode,
       proxyUrl,

@@ -60,3 +60,7 @@ Próg: **≥ 0.50** → jest substancja. Pokazywane w dymku odznaki, nie steruje
 | `ai_slop` | Wymienny głos LLM-LinkedIn. |
 
 Używane jako dodatkowy sygnał; etykieta odznaki idzie przede wszystkim z `slop_intensity` + progu `is_ai_slop`.
+
+## Opcjonalny kontrakt content-v1
+
+`content-questions.ts`: has_substance i low_information oceniają wyłącznie przekaz. Odznaka negatywna wymaga substance <= 0.20 oraz low_information >= 0.85; konkretna substance >= 0.80 oraz low_information <= 0.20. Brakujące lub sprzeczne sygnały dają niepewność. Progi są startową hipotezą do testu 50 przykładów. Cache izolowany wersją rubryki.

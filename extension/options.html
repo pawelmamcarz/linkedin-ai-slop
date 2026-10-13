@@ -13,6 +13,9 @@
         (<code>jev-latest</code>). Klucz API nie trafia do rozszerzenia.
       </p>
       <form id="settings">
+        <label>Rodzaj oceny <select id="assessment"><option value="style-v2">Dotychczasowa ocena stylu</option><option value="content-v1">Pilotaż: ocena treści</option></select></label>
+        <label><input id="quality-dim" type="checkbox" /> Przyciemniaj mało treściwe posty w pilotażu</label>
+        <p>Przy niepewności post pozostaje widoczny. Pilotaż ocenia treść, nie autorstwo.</p>
         <label class="check">
           <input id="enabled" type="checkbox" />
           Oceniaj posty podczas scrollowania

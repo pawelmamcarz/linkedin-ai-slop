@@ -1,3 +1,6 @@
+import { saveFeedback, pruneFeedback } from "./feedback.ts";
+import { resolveTrial } from "./trial-tokens.ts";
+import { mapContentAnswers } from "./content-answers.ts";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,7 +25,7 @@ import {
   type CheckoutPlan,
   type StripeSession,
 } from "./billing.ts";
-import { evaluateWithMeta, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
+import { evaluateWithMeta, evaluateContentWithMeta, MissingApiKeyError, clampThreshold } from "./evaluate.ts";
 import { readPresentedToken, resolveTier } from "./pro-tokens.ts";
 import { clientIp, consumeDailySlot, consumeEvaluateSlot, dailyIpCap, demoMode, evaluateRateConfig } from "./rate-limit.ts";
 import {
@@ -44,7 +47,8 @@ if (existsSync(envPath)) {
 const DEMO_HTML = resolve(import.meta.dirname, "../demo/feed.html");
 
 export function createProxyServer(): Server {
-  return createServer(async (req, res) => {
+  pruneFeedback();
+  const server = createServer(async (req, res) => {
     try {
       applyCors(req, res);
       if (req.method === "OPTIONS") {
@@ -57,11 +61,12 @@ export function createProxyServer(): Server {
 
       if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
         const presented = readPresentedToken(req);
-        const tier = resolveTier(presented);
+        const trial = presented?.startsWith("trial_") ? resolveTrial(presented, { activate: false, now: Date.now() }) : null;
+        const tier = trial ? (["pending", "active"].includes(trial.status) ? "pro" : "invalid") : resolveTier(presented);
         if (tier === "invalid") {
           json(res, 401, {
-            error: "invalid_pro_token",
-            message: "Token Pro jest nieprawidłowy albo został cofnięty.",
+            error: trial?.status === "expired" ? "trial_expired" : "invalid_pro_token",
+            message: trial?.status === "expired" ? "Okres testowy zakończony. Możesz kupić Lifetime Pro lub wybrać Demo." : "Token Pro jest nieprawidłowy albo został cofnięty.",
           });
           return;
         }
@@ -79,6 +84,7 @@ export function createProxyServer(): Server {
           dailyIpCap: dailyIpCap(process.env, tier),
           rateLimit: limits.limit,
           stripeCheckout: stripeCheckoutConfigured(),
+          ...(trial ? { trial } : {}),
         });
         return;
       }
@@ -128,13 +134,23 @@ export function createProxyServer(): Server {
         return;
       }
 
+      if (req.method === "POST" && url.pathname === "/feedback") {
+        const raw = await readRaw(req, 16384);
+        let payload;
+        try { payload = JSON.parse(raw.toString("utf8")); }
+        catch { json(res, 400, { error: "invalid_feedback" }); return; }
+        const result = saveFeedback(payload, readPresentedToken(req));
+        json(res, result.status, result.body);
+        return;
+      }
       if (req.method === "POST" && url.pathname === "/evaluate") {
         const presented = readPresentedToken(req);
-        const tier = resolveTier(presented);
+        const trial = presented?.startsWith("trial_") ? resolveTrial(presented, { activate: false, now: Date.now() }) : null;
+        const tier = trial ? (["pending", "active"].includes(trial.status) ? "pro" : "invalid") : resolveTier(presented);
         if (tier === "invalid") {
           json(res, 401, {
-            error: "invalid_pro_token",
-            message: "Token Pro jest nieprawidłowy albo został cofnięty.",
+            error: trial?.status === "expired" ? "trial_expired" : "invalid_pro_token",
+            message: trial?.status === "expired" ? "Okres testowy zakończony. Możesz kupić Lifetime Pro lub wybrać Demo." : "Token Pro jest nieprawidłowy albo został cofnięty.",
           });
           return;
         }
@@ -188,7 +204,7 @@ export function createProxyServer(): Server {
         const author = typeof body.author === "string" ? body.author : undefined;
         const threshold = clampThreshold(body.threshold);
 
-        if (!postId || text.length < 8) {
+        if (typeof body.postId !== "string" || typeof body.text !== "string" || !postId || text.length < 8) {
           json(res, 400, {
             error: "invalid_request",
             message: "Wymagane: postId oraz text (min. 8 znaków).",
@@ -196,8 +212,15 @@ export function createProxyServer(): Server {
           return;
         }
 
+        if (body.assessment !== undefined && body.assessment !== "style-v2" && body.assessment !== "content-v1") {
+          json(res, 400, { error: "invalid_assessment" });
+          return;
+        }
+        if (trial && presented) resolveTrial(presented, { activate: true, now: Date.now() });
+        const quality = body.assessment === "content-v1";
+        const rubric = quality ? "content-v1" : "style-v2";
         const textChars = normalizePostText(text).length;
-        const cached = readVerdict(text);
+        const cached = readVerdict(text, Date.now(), process.env, rubric);
         if (cached) {
           logTokenUsage({
             cache: "HIT",
@@ -207,17 +230,17 @@ export function createProxyServer(): Server {
             textChars,
             tier,
           });
-          json(res, 200, verdictFromCache(postId, cached, threshold), { "X-Cache": "HIT" });
+          json(res, 200, (quality ? mapContentAnswers(postId, cached.model, cached.answers) : verdictFromCache(postId, cached, threshold)), { "X-Cache": "HIT" });
           return;
         }
 
-        const evaluated = await evaluateWithMeta({ postId, text, author, threshold });
+        const evaluated = await (quality ? evaluateContentWithMeta : evaluateWithMeta)({ postId, text, author, threshold });
         storeVerdict(text, {
           model: evaluated.model,
           answers: evaluated.answers,
           inputTokens: evaluated.inputTokens,
           outputTokens: evaluated.outputTokens,
-        });
+        }, Date.now(), process.env, rubric);
         logTokenUsage({
           cache: "MISS",
           inputTokens: evaluated.inputTokens,
@@ -235,6 +258,12 @@ export function createProxyServer(): Server {
       handleError(res, error);
     }
   });
+  const cleanup = setInterval(() => {
+    try { pruneFeedback(); } catch { console.error("[proxy] feedback_retention_failed"); }
+  }, 86400000);
+  cleanup.unref();
+  server.on("close", () => clearInterval(cleanup));
+  return server;
 }
 
 /** HOST wygrywa. Sam PORT (Railway) oznacza 0.0.0.0, nie 127.0.0.1. */
@@ -416,7 +445,9 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   const raw = await readRaw(req);
   if (raw.length === 0) return {};
   try {
-    return JSON.parse(raw.toString("utf8")) as Record<string, unknown>;
+    const value = JSON.parse(raw.toString("utf8"));
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Expected an object");
+    return value as Record<string, unknown>;
   } catch {
     throw Object.assign(new Error("Niepoprawny JSON"), { status: 400 });
   }
@@ -450,6 +481,6 @@ function handleError(res: ServerResponse, error: unknown): void {
     json(res, 503, { error: "overloaded", message: "Jev przeciążony (529). Retry za chwilę." });
     return;
   }
-  console.error("[proxy]", name || "error", message);
+  console.error("[proxy]", name || "error");
   json(res, 502, { error: "evaluate_failed", message: "Proxy nie oceniło posta (Jev)." });
 }
