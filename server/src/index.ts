@@ -47,7 +47,11 @@ if (existsSync(envPath)) {
 const DEMO_HTML = resolve(import.meta.dirname, "../demo/feed.html");
 
 export function createProxyServer(): Server {
-  pruneFeedback();
+  let feedbackAvailable = true;
+  try { pruneFeedback(); } catch {
+    feedbackAvailable = false;
+    console.error("[proxy] feedback_retention_failed");
+  }
   const server = createServer(async (req, res) => {
     try {
       applyCors(req, res);
@@ -135,6 +139,7 @@ export function createProxyServer(): Server {
       }
 
       if (req.method === "POST" && url.pathname === "/feedback") {
+        if (!feedbackAvailable) { json(res, 503, { error: "feedback_unavailable" }); return; }
         const raw = await readRaw(req, 16384);
         let payload;
         try { payload = JSON.parse(raw.toString("utf8")); }

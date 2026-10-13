@@ -39,7 +39,12 @@ export function saveFeedback(value: unknown, token: string | null, env: NodeJS.P
     const path = env.FEEDBACK_FILE?.trim();
     if (!path) return fail(503, "feedback_unavailable");
     const rows = load(path).filter((r) => r.createdAt > now - RETENTION);
-    if (rows.some((r) => r.submissionId === data.submissionId)) return { status: 200, body: { saved: true } };
+    const existing = rows.find((r) => r.submissionId === data.submissionId);
+    if (existing) {
+      if (existing.assessment !== data.assessment || existing.badge !== data.badge
+        || existing.reason !== data.reason || existing.excerpt !== data.excerpt) return fail(409, "feedback_conflict");
+      return { status: 200, body: { saved: true } };
+    }
     const key = path + tokenDigest(token!);
     for (const [k, v] of limits) if (v.start + 3600000 <= now) limits.delete(k);
     const limit = limits.get(key) ?? { start: now, count: 0 };

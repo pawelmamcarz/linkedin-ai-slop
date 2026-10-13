@@ -31,3 +31,19 @@ it("fails closed on broken storage", () => {
     assert.equal(readFileSync(env.FEEDBACK_FILE, "utf8"), "broken");
   } finally { rmSync(dir, { recursive: true }); }
 });
+
+it("rejects changed content under an existing submission ID without overwriting it", () => {
+  const dir = mkdtempSync(join(tmpdir(), "feedback-conflict-"));
+  const env = { FEEDBACK_FILE: join(dir, "feedback.jsonl"), PRO_TOKENS: "test-secret" };
+  const body = { submissionId: randomUUID(), assessment: "content-v1", badge: "concrete", reason: "Original", excerpt: "User text" };
+  try {
+    assert.equal(saveFeedback(body, "test-secret", env).status, 201);
+    const original = readFileSync(env.FEEDBACK_FILE, "utf8");
+    for (const change of [{ reason: "Edited" }, { badge: "uncertain" }, { excerpt: "Edited excerpt" }, { excerpt: undefined }]) {
+      const result = saveFeedback({ ...body, ...change }, "test-secret", env);
+      assert.deepEqual(result, { status: 409, body: { error: "feedback_conflict" } });
+      assert.equal(readFileSync(env.FEEDBACK_FILE, "utf8"), original);
+    }
+    assert.equal(saveFeedback({ ...body, reason: " Original " }, "test-secret", env).status, 200);
+  } finally { rmSync(dir, { recursive: true }); }
+});
