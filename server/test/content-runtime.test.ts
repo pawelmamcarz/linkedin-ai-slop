@@ -13,7 +13,7 @@ const slop = { badge: "slop", labelPl: "AI slop", slopProbability: 0.93, slopInt
 const text = "Prawdziwy sukces zaczyna się tam, gdzie kończy się strefa komfortu. Każdy dzień jest nową szansą, by zmienić wyzwania w możliwości i inspirować innych do działania.";
 type Payload = { postId: string; text: string };
 
-function fixture(evaluate: (payload: Payload) => Promise<unknown>, postText = text, enabled = true) {
+function fixture(evaluate: (payload: Payload) => Promise<unknown>, postText = text, enabled = true, extra: Record<string, unknown> = {}) {
   const dom = new JSDOM('<html data-slop-demo="1"><body><article class="feed-shared-update-v2" data-urn="urn:li:activity:test"><div class="update-components-actor">Ada</div><div class="update-components-text"></div><button class="reaction">Lubię to</button></article></body></html>', {
     url: "http://localhost:8787/demo", runScripts: "outside-only", pretendToBeVisual: true,
   });
@@ -22,8 +22,9 @@ function fixture(evaluate: (payload: Payload) => Promise<unknown>, postText = te
   copy.textContent = postText;
   win.eval(extApi);
   win.eval(readFileSync(resolve(extension, "verdict-policy.js"), "utf8"));
+  win.eval(readFileSync(resolve(extension, "content-quality-policy.js"), "utf8"));
   let changed!: (changes: Record<string, { newValue: unknown }>) => void;
-  win.ExtApi = { ...win.ExtApi, hasRuntime: () => false, storageGet: async (defaults: object) => ({ ...defaults, enabled }), onStorageChanged: (cb: typeof changed) => { changed = cb; }, sendMessage: async (message: { payload: Payload }) => evaluate(message.payload) };
+  win.ExtApi = { ...win.ExtApi, hasRuntime: () => false, storageGet: async (defaults: object) => ({ ...defaults, enabled, ...extra }), onStorageChanged: (cb: typeof changed) => { changed = cb; }, sendMessage: async (message: { payload: Payload }) => evaluate(message.payload) };
   // Only the external classification boundary is replaced; DOM, observers and queues are real.
   win.eval(content);
   win.ExtApi.hasRuntime = () => true;
@@ -339,4 +340,27 @@ it("service worker przekazuje Retry-After do content scriptu", async () => {
   });
   const response = await listener({ type: "evaluate", payload: { proxyUrl: "http://localhost:8787", postId: "test", text } });
   assert.equal(response.retryAfterSec, 7);
+});
+
+it("quality mode rejects legacy responses without covering", async () => {
+  const f = fixture(async () => ({ ok: true, body: slop }), text, true, { assessment: "content-v1", qualityDimEnabled: true });
+  try {
+    await f.boot();
+    await waitFor(() => f.card.textContent!.includes("Ocena treści niedostępna"));
+    assert.equal(f.card.classList.contains("li-ai-slop-covered"), false);
+  } finally { f.dom.window.close(); }
+});
+it("quality dim consent can be toggled without requesting another verdict", async () => {
+  let calls = 0;
+  const f = fixture(async () => { calls++; return { ok: true, body: { assessment: "content-v1", policyVersion: "content-v1", substanceProbability: 0.1, lowInformationProbability: 0.95 } }; }, text, true, { assessment: "content-v1", blurSlop: true });
+  try {
+    await f.boot();
+    await waitFor(() => f.card.textContent!.includes("Mało treściwy"));
+    assert.equal(f.card.classList.contains("li-ai-slop-covered"), false);
+    f.change({ qualityDimEnabled: { newValue: true } });
+    await waitFor(() => f.card.classList.contains("li-ai-slop-covered"));
+    f.change({ qualityDimEnabled: { newValue: false } });
+    await waitFor(() => !f.card.classList.contains("li-ai-slop-covered"));
+    assert.equal(calls, 1);
+  } finally { f.dom.window.close(); }
 });

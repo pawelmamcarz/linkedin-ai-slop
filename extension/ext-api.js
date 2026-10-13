@@ -81,8 +81,9 @@
   async function storageGet(defaults) {
     for (const area of storageAreas()) {
       try {
-        const stored = await call(area.get.bind(area), [defaults]);
-        if (stored && typeof stored === "object") return stored;
+        // get({}) selects no keys; defaults must not hide other saved settings.
+        const stored = await call(area.get.bind(area), [null]);
+        if (stored && typeof stored === "object") return { ...defaults, ...stored };
       } catch {
         /* Safari czasem nie ma sync bez iCloud — schodzimy na local */
       }
@@ -191,6 +192,8 @@
     const proToken = mode === "pro" ? String(merged.proToken || "").trim() : "";
     return {
       enabled: merged.enabled !== false,
+      assessment: source.assessment === "content-v1" ? "content-v1" : "style-v2",
+      qualityDimEnabled: source.qualityDimEnabled === true,
       threshold: Number(merged.threshold) || defaults.threshold,
       mode,
       proxyUrl,

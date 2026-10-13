@@ -39,3 +39,17 @@ History favors imperative subjects, such as “Remove redundant localhost option
 ## Security & Configuration Tips
 
 Keep TypeSafe and Stripe secrets server-side; never commit credentials or Pro tokens. Preserve logging without post text or secrets. Railway must deploy from repository root because `server/` imports `jev/`. Review `store/CHECKLIST.md` before packaging a release.
+
+## Agent skills
+
+### Issue tracker
+
+Use GitHub Issues for tasks and specs. Read `docs/agents/issue-tracker.md` before tracker operations.
+
+### Triage labels
+
+Use the five canonical triage roles. Read `docs/agents/triage-labels.md` before triaging issues.
+
+### Domain docs
+
+Use a single-context domain layout. Read `docs/agents/domain.md` before domain exploration or modeling.

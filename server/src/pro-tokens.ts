@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { writePrivateFile } from "./private-file.ts";
 import type { IncomingMessage } from "node:http";
 
 export type Tier = "demo" | "pro";
@@ -59,31 +59,30 @@ export function resetProTokens(): void {
 function loadIssued(env: NodeJS.ProcessEnv): void {
   const path = tokenFile(env);
   if (!path || path === loadedFile) return;
-  loadedFile = path;
-  issuedByCustomer.clear();
-  if (!existsSync(path)) return;
-  try {
-    const parsed = JSON.parse(readFileSync(path, "utf8")) as { tokens?: IssuedToken[] };
-    for (const row of parsed.tokens ?? []) {
-      if (!row?.customerId || !row.token || !row.digest) continue;
-      issuedByCustomer.set(row.customerId, {
-        customerId: row.customerId,
-        token: row.token,
-        digest: row.digest,
-        status: row.status === "revoked" ? "revoked" : "active",
-      });
+  const next = new Map<string, IssuedToken>();
+  if (existsSync(path)) {
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as { tokens: (IssuedToken & { key?: string })[] };
+    if (!Array.isArray(parsed.tokens)) throw new Error("Invalid private token file");
+    for (const row of parsed.tokens) {
+      if (!row?.customerId || !row.token || row.digest !== tokenDigest(row.token) || !["active", "revoked"].includes(row.status)) throw new Error("Invalid private token record");
+      const key = row.key || (row.kind === "lifetime" || row.plan === "lifetime" ? `${row.customerId}#lifetime`
+        : row.plan === "team" && row.seat ? `${row.customerId}#team:${row.seat}` : row.customerId);
+      if (next.has(key)) throw new Error("Duplicate private token identity");
+      next.set(key, { customerId: row.customerId, token: row.token, digest: row.digest, status: row.status,
+        kind: row.kind, plan: row.plan, seat: row.seat, subscriptionId: row.subscriptionId });
     }
-  } catch (error) {
-    console.error("[proxy] pro_token_file_unreadable", error instanceof Error ? error.name : "error");
   }
+  issuedByCustomer.clear();
+  for (const [key, row] of next) issuedByCustomer.set(key, row);
+  loadedFile = path;
 }
 
 function persistIssued(env: NodeJS.ProcessEnv): void {
   const path = tokenFile(env);
   if (!path) return;
-  mkdirSync(dirname(path), { recursive: true });
-  const tokens = [...issuedByCustomer.values()];
-  writeFileSync(path, JSON.stringify({ tokens }, null, 2));
+  const tokens = [...issuedByCustomer.entries()].map(([key, row]) => ({ key, ...row }));
+  try { writePrivateFile(path, JSON.stringify({ version: 2, tokens }, null, 2)); }
+  catch (error) { resetProTokens(); throw error; }
   loadedFile = path;
 }
 

@@ -141,3 +141,13 @@ Privacy: https://pawelmamcarz.github.io/linkedin-ai-slop/privacy.html
 
 - Kategoria: narzędzia produktywności albo społecznościowe (bliżej narzędzi)
 - Język pozycji: polski, z angielskim opisem wklejonym w szczegółach jeśli sklep pozwala na jeden język naraz. Wtedy wyślij polski jako główny.
+
+## Pilotaż content-v1 (przed publikacją)
+
+- [ ] Raport jakości 50 przykładów spełnia próg.
+- [ ] Trwały rejestr trial i paid-token v2 przeszedł restart.
+- [ ] Prywatny formularz i retencja 30 dni zweryfikowane.
+- [ ] Cena rzeczywistego Stripe Price 1999 groszy i dostępność oferty potwierdzone.
+- [ ] Wersja i listing zatwierdzone; zgodny rollback oraz osobna zgoda na publikację.
+
+Opis pilota: Pomaga odsiać powtarzalne i mało treściwe posty. Oceny dotyczą informacji, nie autorstwa; przyciemnianie tylko na życzenie. Nazwa produktu pozostaje LinkedIn AI Slop.

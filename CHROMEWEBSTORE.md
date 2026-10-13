@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — LinkedIn AI Slop
 
-Last updated and dashboard verified: 2026-10-09. Published **0.2.7**; **0.2.8** uploaded and submitted as revision **00004**, status **Oczekuje na sprawdzenie**, with automatic publication after approval selected. Lifetime costs **19.99 PLN** on production and in Stripe Checkout. Update copy is in [the listing](store/chrome/listing.md); price validation is in [the release note](docs/audits/2026-10-09-lifetime-price.md).
+Documentation updated: 2026-10-13. Local candidate **0.2.9** adds opt-in content-quality pilot, trial access and private feedback; not submitted or published. Dashboard last verified: 2026-10-09. Published **0.2.7**; **0.2.8** uploaded and submitted as revision **00004**, status **Oczekuje na sprawdzenie**, with automatic publication after approval selected. Lifetime costs **19.99 PLN** on production and in Stripe Checkout. Update copy is in [the listing](store/chrome/listing.md); price validation is in [the release note](docs/audits/2026-10-09-lifetime-price.md).
 
 ## Submission Status
 
@@ -141,3 +141,7 @@ Proxy 0.2.7 is deployed: [PR #27](https://github.com/pawelmamcarz/linkedin-ai-sl
 The initial 0.2.8 upload attempt was blocked by native computer-use startup failure. Access was restored later on 2026-10-09; the unchanged, reverified ZIP was then uploaded and submitted. No review was cancelled.
 
 Lifetime price update deployed on 2026-10-09: [PR #29](https://github.com/pawelmamcarz/linkedin-ai-slop/pull/29), commit `3720de8c16edac948aff3abe5d66aa6e9c3d8702`, Railway `e8f2635e-db1b-4c07-a1c3-087a25ef2301` SUCCESS. Production offers reports 19.99 PLN, public PL/EN pages show the new price, and the Stripe Checkout UI displays 19.99 PLN. No payment was made. Fresh validation passed 75/75 tests, typecheck, ZIP byte comparison and main CI/Pages for `79b4618`. Chrome 0.2.8 is submitted, awaiting Google's review.
+
+## Local candidate 0.2.9 — content-quality pilot
+
+Optional ratings: Konkretny / Mało treściwy / Niepewna ocena, with explanations and explicit dimming consent. Existing style mode remains available. New runtime scripts require no additional permissions. Feedback opens an extension page and sends only the selected rating, reason and optionally pasted excerpt to the proxy after submission; private retention 30 days, no automatic activity telemetry. Update Store data-use disclosures for voluntarily submitted user content before submission. Refresh screenshots for the pilot UI and feedback page. Trial users receive 14 days from first assessment; purchase remains explicit. Quality-corpus acceptance and deployment approval are pending.

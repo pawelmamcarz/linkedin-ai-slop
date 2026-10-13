@@ -25,7 +25,11 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function factory() {
   const verdictPolicy = typeof module === "object" && module.exports
     ? require("./verdict-policy.js") : globalThis.LinkedInAiSlopVerdict;
+  const qualityPolicy = typeof module === "object" && module.exports
+    ? require("./content-quality-policy.js") : globalThis.LinkedInContentQuality;
   const DEFAULTS = {
+    assessment: "style-v2",
+    qualityDimEnabled: false,
     enabled: true,
     threshold: 0.65,
     proxyUrl: "https://proxy-production-ebcc.up.railway.app",
@@ -508,6 +512,30 @@
 
   function paintScoredBadge(badge, result) {
     const doc = badge.ownerDocument || document;
+    if (result.assessment === "content-v1") {
+      badge.replaceChildren();
+      const label = doc.createElement("span");
+      label.className = "lais-badge__label";
+      label.textContent = result.labelPl;
+      const reason = doc.createElement("span");
+      reason.className = "lais-tip";
+      reason.setAttribute("role", "tooltip");
+      reason.textContent = result.reasonCode === "specific_information" ? "Post zawiera konkretne informacje lub opis doświadczenia"
+        : result.reasonCode === "generic_without_detail" ? "Przeważają ogólniki bez wspierających konkretów"
+        : "Sygnały są niepełne lub sprzeczne";
+      const report = doc.createElement("button");
+      report.type = "button";
+      report.className = "lais-feedback";
+      report.textContent = "Zgłoś pomyłkę";
+      report.addEventListener("click", (event) => {
+        event.preventDefault(); event.stopPropagation();
+        extensionApi()?.sendMessage({ type: "open-feedback", badge: result.badge }).catch(() => {});
+      });
+      badge.append(label, reason, report);
+      badge.title = reason.textContent;
+      badge.tabIndex = 0;
+      return;
+    }
     const percent = slopPercentLine(result);
     const intensity = intensityLine(result);
     badge.replaceChildren();
@@ -556,7 +584,7 @@
   function setBadge(el, state, result) {
     const badge = ensureBadge(el);
     badge.className = `lais-badge lais-badge--${state}`;
-    const scored = state === "human" || state === "mixed" || state === "slop" || state === "heavy";
+    const scored = ["concrete", "low_information", "uncertain"].includes(state) || state === "human" || state === "mixed" || state === "slop" || state === "heavy";
     try {
       if (!scored) {
         clearTip(badge);
@@ -591,7 +619,8 @@
   }
 
   function syncCardFromState(el, state, result) {
-    if (state === "slop") {
+    el.dataset.laisAssessment = result?.assessment === "content-v1" ? "content-v1" : "style-v2";
+    if (state === "slop" || state === "low_information") {
       el.dataset.laisVerdict = "slop";
       el.dataset.laisAutoCover = result?.shouldCover === false ? "0" : "1";
     } else {
@@ -610,7 +639,7 @@
   function syncCardCover(el) {
     const slop = el.dataset.laisVerdict === "slop";
     const revealed = el.dataset.laisRevealed === "1";
-    const allow = slop && el.dataset.laisAutoCover !== "0" && settings.blurSlop !== false;
+    const allow = slop && el.dataset.laisAutoCover !== "0" && (el.dataset.laisAssessment === "content-v1" ? settings.qualityDimEnabled === true : settings.blurSlop !== false);
     el.classList.toggle("li-ai-slop-covered", allow && !revealed);
     el.classList.toggle("li-ai-slop-revealed", allow && revealed);
     el.classList.remove("li-ai-slop-blurred");
@@ -730,10 +759,21 @@
     button.textContent = revealed ? "Ukryj" : "Pokaż";
     button.title = revealed
       ? "Ukryj treść tego posta"
-      : "Post zakryty, bo sklasyfikowano go jako AI slop. Pokaż ten post.";
+      : el.dataset.laisAssessment === "content-v1" ? "Post przyciemniony: mało treściwy. Pokaż ten post." : "Post zakryty, bo sklasyfikowano go jako AI slop. Pokaż ten post.";
     button.setAttribute("aria-pressed", revealed ? "true" : "false");
     button.addEventListener("click", onRevealClick);
     banner.append(label, button);
+    if (el.dataset.laisAssessment === "content-v1") {
+      const report = doc.createElement("button");
+      report.type = "button";
+      report.className = "lais-feedback";
+      report.textContent = "Zgłoś pomyłkę";
+      report.addEventListener("click", (event) => {
+        event.preventDefault(); event.stopPropagation();
+        extensionApi()?.sendMessage({ type: "open-feedback", badge: "low_information" }).catch(() => {});
+      });
+      banner.append(report);
+    }
     if (copy.percent) {
       const tip = doc.createElement("span");
       tip.className = "lais-tip";
@@ -1044,7 +1084,7 @@
   }
 
   function coverNeedsRepair(el) {
-    const allow = el.dataset.laisVerdict === "slop" && el.dataset.laisAutoCover !== "0" && settings.blurSlop !== false;
+    const allow = el.dataset.laisVerdict === "slop" && el.dataset.laisAutoCover !== "0" && (el.dataset.laisAssessment === "content-v1" ? settings.qualityDimEnabled === true : settings.blurSlop !== false);
     const revealed = el.dataset.laisRevealed === "1";
     const hasCover = Boolean(el.querySelector(".lais-cover, .lais-scrim"));
     const hasBanner = Boolean(el.querySelector(".lais-banner"));
@@ -1166,6 +1206,12 @@
   }
 
   function currentVerdict(result) {
+    if (settings.assessment === "content-v1") {
+      if (result?.assessment !== "content-v1" || result?.policyVersion !== "content-v1" || !qualityPolicy) {
+        return { badge: "info", labelPl: "Ocena treści niedostępna", message: "Proxy wymaga aktualizacji do oceny treści.", shouldCover: false };
+      }
+      return { ...result, ...qualityPolicy.decideQuality(result) };
+    }
     if (!verdictPolicy || !Number.isFinite(result?.slopProbability)) return result;
     const intensity = result.slopIntensityLabel || (Number.isFinite(result.slopIntensity)
       ? result.slopIntensity >= 1.5 ? "heavy" : result.slopIntensity < 0.75 ? "human" : "mixed"
@@ -1349,6 +1395,7 @@
       text,
       author: current.author || undefined,
       threshold: settings.threshold,
+      assessment: settings.assessment,
       proxyUrl: settings.proxyUrl,
     };
     const result = currentVerdict(await requestEvaluation(payload));
@@ -1532,7 +1579,7 @@
         const changedKeys = Object.keys(DEFAULTS).filter((key) => next[key] !== settings[key]);
         settings = next;
         if (!changedKeys.length) return;
-        if (changedKeys.every((key) => key === "threshold" || key === "blurSlop")) {
+        if (changedKeys.every((key) => key === "threshold" || key === "blurSlop" || key === "qualityDimEnabled")) {
           for (const cached of verdicts.values()) cached.result = currentVerdict(cached.result);
           if (!settings.enabled) return;
           document.querySelectorAll("[data-lais-text-hash]").forEach((el) => {

@@ -43,8 +43,8 @@ export function normalizePostText(text: string): string {
   return text.replace(/\r\n?/g, "\n").replace(/[^\S\n]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_TEXT_CHARS);
 }
 
-export function verdictCacheKey(text: string): string {
-  return createHash("sha256").update(JEV_RUBRIC_VERSION + "\0" + normalizePostText(text)).digest("hex");
+export function verdictCacheKey(text: string, rubricVersion = JEV_RUBRIC_VERSION): string {
+  return createHash("sha256").update(rubricVersion + "\0" + normalizePostText(text)).digest("hex");
 }
 
 export function verdictCacheConfig(env: NodeJS.ProcessEnv = process.env): CacheConfig {
@@ -86,13 +86,13 @@ export function verdictCacheStats(env: NodeJS.ProcessEnv = process.env): {
   };
 }
 
-export function readVerdict(text: string, now = Date.now(), env: NodeJS.ProcessEnv = process.env): CachedVerdict | null {
+export function readVerdict(text: string, now = Date.now(), env: NodeJS.ProcessEnv = process.env, rubricVersion = JEV_RUBRIC_VERSION): CachedVerdict | null {
   const config = verdictCacheConfig(env);
   if (!config.enabled) {
     stats.misses += 1;
     return null;
   }
-  const key = verdictCacheKey(text);
+  const key = verdictCacheKey(text, rubricVersion);
   const hit = entries.get(key);
   if (!hit) {
     stats.misses += 1;
@@ -114,10 +114,11 @@ export function storeVerdict(
   value: Omit<CachedVerdict, "expiresAt">,
   now = Date.now(),
   env: NodeJS.ProcessEnv = process.env,
+  rubricVersion = JEV_RUBRIC_VERSION,
 ): void {
   const config = verdictCacheConfig(env);
   if (!config.enabled) return;
-  const key = verdictCacheKey(text);
+  const key = verdictCacheKey(text, rubricVersion);
   entries.delete(key);
   entries.set(key, { ...value, expiresAt: now + config.ttlMs });
   while (entries.size > config.max) {

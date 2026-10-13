@@ -211,3 +211,7 @@ Aplikacja mobilna, wątki komentarzy. Wysłanie paczki do Chrome Web Store jest 
 ## Prywatność
 
 Tekst widocznego posta i opcjonalnie imię autora idą na skonfigurowane proxy (domyślnie host Railway), a stamtąd do TypeSafe. Proxy nie zapisuje postów. Rozszerzenie trzyma w storage przeglądarki włącznik, próg, tryb, URL i opcjonalny token Pro. Klucza TypeSafe tam nie ma. Polityka: [docs/privacy.html](docs/privacy.html).
+
+## Opcjonalny pilotaż oceny treści
+
+Tryb `content-v1` ocenia konkretność informacji; odznaki: Konkretny, Mało treściwy, Niepewna ocena. Wybierany w opcjach, z osobną zgodą na przyciemnianie. Stare klienty zachowują `style-v2`. Przygotowanie, 14-dniowe tokeny i bramka jakości: [instrukcja pilotażu](docs/pilot/runbook.md). Podgląd bez modelu: `server/demo/content-quality.html`. Pilotaż nie jest jeszcze uruchomiony.

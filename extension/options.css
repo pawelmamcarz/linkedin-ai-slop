@@ -129,3 +129,5 @@ legend {
 input[type="url"]:read-only {
   background: #efeae3;
 }
+
+textarea, select { box-sizing: border-box; width: 100%; font: inherit; margin: 6px 0 14px; padding: 8px; }
