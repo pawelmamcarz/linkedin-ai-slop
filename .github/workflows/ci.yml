@@ -5,9 +5,15 @@ on:
   pull_request:
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, bielik]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
